@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Formation;
+use App\Models\InscriptionFormation;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -10,42 +12,50 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
-        return view('auth.register');
+        $formations = Formation::where('statut', 'publie')->get();
+        return view('auth.register', compact('formations'));
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'nom'          => ['required', 'string', 'max:255'],
+            'prenom'       => ['required', 'string', 'max:255'],
+            'email'        => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'telephone'    => ['nullable', 'string', 'max:20'],
+            'formation_id' => ['nullable', 'exists:formations,id'],
+            'password'     => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'nom'      => $request->nom,
+            'prenom'   => $request->prenom,
+            'email'    => $request->email,
+            'telephone'=> $request->telephone,
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        // Assigner le rôle client
+        $user->assignRole('client');
 
+        // Inscrire à la formation si choisie
+        if ($request->formation_id) {
+            InscriptionFormation::create([
+                'user_id'      => $user->id,
+                'formation_id' => $request->formation_id,
+                'statut'       => 'en_attente',
+            ]);
+        }
+
+        event(new Registered($user));
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('verification.notice'));
     }
 }
