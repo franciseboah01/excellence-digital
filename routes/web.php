@@ -2,11 +2,22 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\ServiceController;
+use App\Http\Controllers\Public\FormationController;
+use App\Http\Controllers\Public\ContactController;
 
 // ===== ROUTES PUBLIQUES =====
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
+Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
+Route::get('/formations/{formation}', [FormationController::class, 'show'])->name('formations.show');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
+Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name('demande.form');
+Route::post('/demande-service', [ContactController::class, 'demandeStore'])->name('demande.store');
+
 
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
