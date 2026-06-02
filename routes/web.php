@@ -6,6 +6,7 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ServiceController;
 use App\Http\Controllers\Public\FormationController;
 use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Client\ClientController;
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -22,12 +23,21 @@ Route::post('/demande-service', [ContactController::class, 'demandeStore'])->nam
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
 
-// ===== ROUTES CLIENT =====
-Route::middleware(['auth', 'verified', 'role:client'])->prefix('client')->name('client.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('client.dashboard');
-    })->name('dashboard');
-});
+// ===== CLIENT =====
+Route::middleware(['auth', 'verified', 'role:client'])
+    ->prefix('client')
+    ->name('client.')
+    ->group(function () {
+        Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
+        Route::get('/demandes', [ClientController::class, 'demandes'])->name('demandes');
+        Route::get('/formations', [ClientController::class, 'formations'])->name('formations');
+        Route::get('/formations/{formation}/ressources', [ClientController::class, 'ressources'])->name('ressources');
+        Route::get('/ressources/{ressource}/pdf', [ClientController::class, 'voirPdf'])->name('pdf');
+        Route::get('/notifications', [ClientController::class, 'notifications'])->name('notifications');
+        Route::get('/profil', [ClientController::class, 'profil'])->name('profil');
+        Route::post('/profil', [ClientController::class, 'profilUpdate'])->name('profil.update');
+        Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
+    });
 
 // ===== ROUTES ENSEIGNANT =====
 Route::middleware(['auth', 'verified', 'role:enseignant'])->prefix('enseignant')->name('enseignant.')->group(function () {
