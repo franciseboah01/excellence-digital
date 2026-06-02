@@ -28,7 +28,7 @@
 
         {{-- Téléphone --}}
         <div class="mt-4">
-            <x-input-label for="telephone" :value="__('Téléphone (WhatsApp)'" />
+            <x-input-label for="telephone" :value="__('Téléphone (WhatsApp)')" />
             <x-text-input id="telephone" class="block mt-1 w-full" type="text"
                 name="telephone" :value="old('telephone')" />
             <x-input-error :messages="$errors->get('telephone')" class="mt-2" />

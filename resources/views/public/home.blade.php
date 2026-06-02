@@ -151,7 +151,7 @@
 @endif
 
 {{-- CTA FINAL --}}
-<section class="bg-blue-900 text-white py-16 px-4 text-center">
+<section class="bg-blue-900 text-white py-16 px-40 text-center">
     <h2 class="text-3xl font-bold mb-4">Prêt à commencer ?</h2>
     <p class="text-blue-200 mb-8 text-lg">Contactez-nous ou faites une demande de service dès maintenant.</p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">

@@ -80,17 +80,17 @@
     </main>
 
     {{-- FOOTER --}}
-    <footer class="bg-blue-900 text-white mt-16">
+    <footer class="bg-black text-white">
         <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
                 <h3 class="text-xl font-bold mb-3">EDC</h3>
-                <p class="text-blue-200 text-sm leading-relaxed">
+                <p class="text-gray-400 text-sm leading-relaxed">
                     Excellence Digital Center — votre partenaire en bureautique, digital et formation à Korhogo / Sirasso.
                 </p>
             </div>
             <div>
                 <h3 class="text-lg font-semibold mb-3">Liens rapides</h3>
-                <ul class="space-y-2 text-blue-200 text-sm">
+                <ul class="space-y-2 text-gray-400 text-sm">
                     <li><a href="{{ route('home') }}" class="hover:text-white transition">Accueil</a></li>
                     <li><a href="{{ route('services.index') }}" class="hover:text-white transition">Services</a></li>
                     <li><a href="{{ route('formations.index') }}" class="hover:text-white transition">Formations</a></li>
@@ -99,20 +99,20 @@
             </div>
             <div>
                 <h3 class="text-lg font-semibold mb-3">Contact</h3>
-                <ul class="space-y-2 text-blue-200 text-sm">
+                <ul class="space-y-2 text-gray-400 text-sm">
                     <li>📍 Korhogo / Sirasso</li>
                     <li>
                         📲
-                        <a href="https://wa.me/2250748746140"
+                        <a href="https://wa.me/22507000000" 
                             class="hover:text-white transition" target="_blank">
-                            +225 07 48 74 61 40
+                            +225 07 00 00 00 
                         </a>
                     </li>
                     <li>✉️ contact@excellencedigital.ci</li>
                 </ul>
             </div>
         </div>
-        <div class="border-t border-blue-800 text-center py-4 text-blue-300 text-sm">
+        <div class="border-t border-gray-800 text-center py-4 text-gray-500 text-sm">
             © {{ date('Y') }} Excellence Digital Center — Former • Créer • Réussir 🚀
         </div>
     </footer>
