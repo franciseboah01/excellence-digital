@@ -31,7 +31,6 @@ class ContactController extends Controller
             'message' => 'required|string|min:10',
         ]);
 
-        // Email à l'admin
         $admins = User::role('admin')->get();
         foreach ($admins as $admin) {
             Mail::to($admin->email)->send(new ContactMail($request->all()));
@@ -39,7 +38,8 @@ class ContactController extends Controller
             Notification::create([
                 'user_id' => $admin->id,
                 'titre'   => '📩 Nouveau message de contact',
-                'message' => "Message de {$request->nom} ({$request->email}) : {$request->sujet}",
+                // ✅ CORRECTION 2 : échappement XSS avec e()
+                'message' => "Message de " . e($request->nom) . " (" . e($request->email) . ") : " . e($request->sujet),
                 'type'    => 'info',
             ]);
         }
@@ -57,40 +57,39 @@ class ContactController extends Controller
 
     // Traitement demande de service
     public function demandeStore(Request $request)
-    {
-        $request->validate([
-            'nom_visiteur'      => 'required|string|max:100',
-            'email_visiteur'    => 'required|email',
-            'telephone_visiteur'=> 'nullable|string|max:20',
-            'service_id'        => 'required|exists:services,id',
-            'message'           => 'nullable|string',
+{
+    $request->validate([
+        'nom_visiteur'       => 'required|string|max:100',
+        'email_visiteur'     => 'required|email',
+        'telephone_visiteur' => 'nullable|string|max:20',
+        'service_id'         => 'required|exists:services,id',
+        'message'            => 'nullable|string|max:1000',
+    ]);
+
+    // ✅ CORRECTION 3 : user_id renseigné (null pour visiteurs)
+    $demande = DemandeService::create([
+        'user_id'            => auth()->id() ?? null,
+        'nom_visiteur'       => $request->nom_visiteur,
+        'email_visiteur'     => $request->email_visiteur,
+        'telephone_visiteur' => $request->telephone_visiteur,
+        'service_id'         => $request->service_id,
+        'message'            => $request->message,
+        'statut'             => 'en_attente',
+    ]);
+
+    Mail::to($request->email_visiteur)
+        ->send(new DemandeServiceMail($demande));
+
+    $admins = User::role('admin')->get();
+    foreach ($admins as $admin) {
+        Notification::create([
+            'user_id' => $admin->id,
+            'titre'   => '🔔 Nouvelle demande de service',
+            'message' => "Demande de " . e($request->nom_visiteur) . " pour : " . e($demande->service->titre),
+            'type'    => 'info',
         ]);
-
-        // Enregistrer la demande
-        $demande = DemandeService::create([
-            'nom_visiteur'       => $request->nom_visiteur,
-            'email_visiteur'     => $request->email_visiteur,
-            'telephone_visiteur' => $request->telephone_visiteur,
-            'service_id'         => $request->service_id,
-            'message'            => $request->message,
-            'statut'             => 'en_attente',
-        ]);
-
-        // Email de confirmation au visiteur
-        Mail::to($request->email_visiteur)
-            ->send(new DemandeServiceMail($demande));
-
-        // Notification aux admins
-        $admins = User::role('admin')->get();
-        foreach ($admins as $admin) {
-            Notification::create([
-                'user_id' => $admin->id,
-                'titre'   => '🔔 Nouvelle demande de service',
-                'message' => "Demande de {$request->nom_visiteur} pour le service : {$demande->service->titre}",
-                'type'    => 'info',
-            ]);
-        }
-
-        return back()->with('success', '✅ Votre demande a bien été enregistrée ! Nous vous contacterons sous 24h.');
     }
+
+    return back()->with('success', '✅ Votre demande a bien été enregistrée ! Nous vous contacterons sous 24h.');
+}
 }

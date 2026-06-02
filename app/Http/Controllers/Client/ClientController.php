@@ -94,14 +94,19 @@ class ClientController extends Controller
     // ===== VISUALISER UN PDF =====
     public function voirPdf(Ressource $ressource)
     {
-        // Vérifier accès
+        // Vérifier accès inscription
         $inscription = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $ressource->formation_id)
             ->where('statut', 'valide')
             ->firstOrFail();
 
-        if (!$ressource->fichier_path || !Storage::exists($ressource->fichier_path)) {
-            abort(404, 'Fichier introuvable.');
+        // ✅ CORRECTION 4 : message d'erreur explicite
+        if (!$ressource->fichier_path) {
+            return back()->with('error', 'Aucun fichier associé à cette ressource.');
+        }
+
+        if (!Storage::exists($ressource->fichier_path)) {
+            return back()->with('error', 'Le fichier est introuvable sur le serveur. Contactez un enseignant.');
         }
 
         return response()->file(Storage::path($ressource->fichier_path), [
