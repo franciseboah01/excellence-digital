@@ -7,6 +7,7 @@ use App\Http\Controllers\Public\ServiceController;
 use App\Http\Controllers\Public\FormationController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Client\ClientController;
+use App\Http\Controllers\Enseignant\EnseignantController;
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -39,12 +40,30 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
     });
 
-// ===== ROUTES ENSEIGNANT =====
-Route::middleware(['auth', 'verified', 'role:enseignant'])->prefix('enseignant')->name('enseignant.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('enseignant.dashboard');
-    })->name('dashboard');
-});
+
+
+// ===== ENSEIGNANT =====
+Route::middleware(['auth', 'verified', 'role:enseignant'])
+    ->prefix('enseignant')
+    ->name('enseignant.')
+    ->group(function () {
+        Route::get('/dashboard', [EnseignantController::class, 'dashboard'])->name('dashboard');
+
+        // Ressources
+        Route::get('/ressources', [EnseignantController::class, 'ressourcesIndex'])->name('ressources.index');
+        Route::get('/ressources/ajouter', [EnseignantController::class, 'ressourcesCreate'])->name('ressources.create');
+        Route::post('/ressources', [EnseignantController::class, 'ressourcesStore'])->name('ressources.store');
+        Route::get('/ressources/{ressource}/modifier', [EnseignantController::class, 'ressourcesEdit'])->name('ressources.edit');
+        Route::put('/ressources/{ressource}', [EnseignantController::class, 'ressourcesUpdate'])->name('ressources.update');
+        Route::delete('/ressources/{ressource}', [EnseignantController::class, 'ressourcesDestroy'])->name('ressources.destroy');
+
+        // Notifications
+        Route::get('/notifications', [EnseignantController::class, 'notificationsForm'])->name('notifications.form');
+        Route::post('/notifications', [EnseignantController::class, 'notificationsEnvoyer'])->name('notifications.envoyer');
+
+        // AJAX
+        Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');
+    });
 
 // ===== ROUTES ADMIN =====
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
