@@ -9,6 +9,8 @@ use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Enseignant\EnseignantController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\UserController;
+
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -74,14 +76,20 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // Placeholders pour les jours suivants
-        Route::get('/users', fn() => view('admin.users.index'))->name('users.index');
-        Route::get('/services', fn() => view('admin.services.index'))->name('services.index');
-        Route::get('/demandes', fn() => view('admin.demandes.index'))->name('demandes.index');
-        Route::get('/formations', fn() => view('admin.formations.index'))->name('formations.index');
-        Route::get('/notifications', fn() => view('admin.notifications'))->name('notifications.form');
-        Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
-    });
+        
+
+        // Utilisateurs
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::post('/users/{user}/toggle-statut', [UserController::class, 'toggleStatut'])->name('users.toggle-statut');
+        Route::post('/users/inscriptions/{inscription}/valider', [UserController::class, 'validerInscription'])->name('users.inscription.valider');
+        Route::post('/users/inscriptions/{inscription}/rejeter', [UserController::class, 'rejeterInscription'])->name('users.inscription.rejeter');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Enseignants
+        Route::get('/enseignants', [UserController::class, 'enseignants'])->name('enseignants.index');
+        Route::post('/enseignants', [UserController::class, 'storeEnseignant'])->name('enseignants.store');
+        Route::put('/enseignants/{user}', [UserController::class, 'updateEnseignant'])->name('enseignants.update');    });
 
 // ===== PROFIL =====
 Route::middleware('auth')->group(function () {

@@ -38,6 +38,13 @@
                     Gestion
                 </p>
 
+                <a href="{{ route('admin.enseignants.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.enseignants.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>👨‍🏫</span><span>Enseignants</span>
+                </a>
+
                 <a href="{{ route('admin.users.index') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
                     {{ request()->routeIs('admin.users.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
