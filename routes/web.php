@@ -8,6 +8,7 @@ use App\Http\Controllers\Public\FormationController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Enseignant\EnseignantController;
+use App\Http\Controllers\Admin\AdminController;
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -65,12 +66,22 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
         Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');
     });
 
-// ===== ROUTES ADMIN =====
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-});
+
+// ===== ADMIN =====
+Route::middleware(['auth', 'verified', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+        // Placeholders pour les jours suivants
+        Route::get('/users', fn() => view('admin.users.index'))->name('users.index');
+        Route::get('/services', fn() => view('admin.services.index'))->name('services.index');
+        Route::get('/demandes', fn() => view('admin.demandes.index'))->name('demandes.index');
+        Route::get('/formations', fn() => view('admin.formations.index'))->name('formations.index');
+        Route::get('/notifications', fn() => view('admin.notifications'))->name('notifications.form');
+        Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
+    });
 
 // ===== PROFIL =====
 Route::middleware('auth')->group(function () {
