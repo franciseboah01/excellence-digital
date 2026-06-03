@@ -1,8 +1,20 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactMail;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Test d'envoi d'email simple
+Artisan::command('send-mail', function () {
+
+    Mail::to('franciseboah87@gmail.com')
+        ->send(new ContactMail([
+            'nom'     => 'Test Utilisateur',
+            'email'   => 'test@test.com',
+            'sujet'   => 'Test depuis Excellence Digital Center',
+            'message' => 'Ceci est un email de test envoyé depuis Laravel via Mailtrap.',
+        ]));
+
+    $this->info('✅ Email envoyé ! Vérifiez votre boîte Mailtrap.');
+
+})->purpose('Tester l\'envoi d\'email');
