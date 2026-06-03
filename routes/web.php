@@ -10,6 +10,8 @@ use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Enseignant\EnseignantController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\DemandeController;
+
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -43,8 +45,6 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
     });
 
-
-
 // ===== ENSEIGNANT =====
 Route::middleware(['auth', 'verified', 'role:enseignant'])
     ->prefix('enseignant')
@@ -68,15 +68,12 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
         Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');
     });
 
-
 // ===== ADMIN =====
 Route::middleware(['auth', 'verified', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
-        
 
         // Utilisateurs
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -89,7 +86,28 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Enseignants
         Route::get('/enseignants', [UserController::class, 'enseignants'])->name('enseignants.index');
         Route::post('/enseignants', [UserController::class, 'storeEnseignant'])->name('enseignants.store');
-        Route::put('/enseignants/{user}', [UserController::class, 'updateEnseignant'])->name('enseignants.update');    });
+        Route::put('/enseignants/{user}', [UserController::class, 'updateEnseignant'])->name('enseignants.update');
+
+        
+        // Services
+        Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+        Route::get('/services/creer', [ServiceController::class, 'create'])->name('services.create');
+        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+        Route::get('/services/{service}/modifier', [ServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+        Route::post('/services/{service}/toggle', [ServiceController::class, 'toggleActif'])->name('services.toggle');
+
+        // Demandes
+        Route::get('/demandes', [DemandeController::class, 'index'])->name('demandes.index');
+        Route::get('/demandes/{demande}', [DemandeController::class, 'show'])->name('demandes.show');
+        Route::post('/demandes/{demande}/statut', [DemandeController::class, 'changerStatut'])->name('demandes.statut');
+
+         // Placeholders pour les jours suivants
+        Route::get('/formations', fn() => view('admin.formations.index'))->name('formations.index');
+        Route::get('/notifications', fn() => view('admin.notifications'))->name('notifications.form');
+        Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
+    });        
 
 // ===== PROFIL =====
 Route::middleware('auth')->group(function () {

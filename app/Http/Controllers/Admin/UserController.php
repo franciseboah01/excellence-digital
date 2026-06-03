@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
+
 class UserController extends Controller
 {
     // ===== LISTE CLIENTS =====
@@ -164,4 +165,30 @@ class UserController extends Controller
     }
 
     // ===== MODIFIER ENSEIGNANT =====
-    public function updateEnseignant(Request $request, User $
+    public function updateEnseignant(Request $request, User $user)
+    {
+        abort_if(!$user->hasRole('enseignant'), 403);
+
+        $request->validate([
+            'nom'       => 'required|string|max:100',
+            'prenom'    => 'required|string|max:100',
+            'telephone' => 'nullable|string|max:20',
+        ]);
+
+        $user->update([
+            'nom'       => $request->nom,
+            'prenom'    => $request->prenom,
+            'telephone' => $request->telephone,
+        ]);
+
+        return back()->with('success', 'Enseignant mis à jour avec succès !');
+    }
+
+    // ===== SUPPRIMER UTILISATEUR =====
+    public function destroy(User $user)
+    {
+        abort_if($user->hasRole('admin'), 403, 'Impossible de supprimer un administrateur.');
+        $user->delete();
+        return back()->with('success', 'Utilisateur supprimé.');
+    }
+}
