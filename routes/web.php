@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DemandeController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\FormationController as AdminFormationController;
+use App\Http\Controllers\Admin\NotificationController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -132,9 +133,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/inscriptions/{inscription}/valider', [AdminFormationController::class, 'validerInscription'])->name('formations.inscription.valider');
         Route::post('/inscriptions/{inscription}/rejeter', [AdminFormationController::class, 'rejeterInscription'])->name('formations.inscription.rejeter');
         Route::delete('/inscriptions/{inscription}/desinscrire', [AdminFormationController::class, 'desinscrire'])->name('formations.inscription.desinscrire');
+        
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'form'])->name('notifications.form');
+        Route::post('/notifications/cible', [NotificationController::class, 'envoyerCible'])->name('notifications.cible');
+        Route::post('/notifications/groupe', [NotificationController::class, 'envoyerGroupe'])->name('notifications.groupe');
+        Route::post('/notifications/tous', [NotificationController::class, 'envoyerTous'])->name('notifications.tous');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
         // Placeholder 
-        Route::get('/notifications', fn() => view('admin.notifications'))->name('notifications.form');
+       
         Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
     });        
 
@@ -143,4 +151,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ===== NOTIFICATIONS AJAX =====
+Route::middleware(['auth'])->group(function () {
+    Route::post('/notifications/marquer-lu', [NotificationController::class, 'marquerLu'])->name('notifications.marquer-lu');
+    Route::get('/notifications/non-lues', [NotificationController::class, 'compterNonLues'])->name('notifications.non-lues');
+    Route::get('/notifications/dernieres', [NotificationController::class, 'dernieres'])->name('notifications.dernieres');
 });

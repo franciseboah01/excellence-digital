@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{-- CSRF TOKEN --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'Mon Espace — EDC')</title>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -34,6 +39,93 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') fermerPdf();
     });
+
+    {{-- POLLING NOTIFICATIONS TEMPS RÉEL --}}
+
+    // Mise à jour badge cloche toutes les 30 secondes
+    function mettreAJourCloche() {
+        fetch('{{ route("notifications.non-lues") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const badges = document.querySelectorAll('.notif-badge');
+            badges.forEach(badge => {
+                if (data.count > 0) {
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            });
+        })
+        .catch(() => {});
+    }
+
+    // Lancer immédiatement puis toutes les 30s
+    mettreAJourCloche();
+    setInterval(mettreAJourCloche, 30000);
+
+    // Dropdown notifications rapides
+    function toggleNotifDropdown() {
+        const dropdown = document.getElementById('notifDropdown');
+        if (dropdown.classList.contains('hidden')) {
+            chargerDernieresNotifs();
+            dropdown.classList.remove('hidden');
+        } else {
+            dropdown.classList.add('hidden');
+        }
+    }
+
+    function chargerDernieresNotifs() {
+        const container = document.getElementById('notifContainer');
+        container.innerHTML = '<p class="text-center text-gray-400 text-xs py-3">Chargement...</p>';
+
+        fetch('{{ route("notifications.dernieres") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(notifs => {
+            if (notifs.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 text-xs py-4">✅ Aucune nouvelle notification</p>';
+                return;
+            }
+
+            const icones = { info: '📢', success: '✅', warning: '⚠️', error: '❌' };
+            container.innerHTML = notifs.map(n => `
+                <div class="flex items-start space-x-2 p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                    <span class="text-base">${icones[n.type] || '📢'}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-semibold text-gray-800 truncate">${n.titre}</p>
+                        <p class="text-xs text-gray-500 mt-0.5 truncate">${n.message}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Marquer comme lues
+            fetch('{{ route("notifications.marquer-lu") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            }).then(() => mettreAJourCloche());
+        })
+        .catch(() => {
+            container.innerHTML = '<p class="text-center text-gray-400 text-xs py-3">Erreur de chargement</p>';
+        });
+    }
+
+    // Fermer dropdown si clic en dehors
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('notifDropdown');
+        const btn = document.getElementById('notifBtn');
+        if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
 </script>
 
 <body class="bg-gray-100 font-sans">
@@ -72,22 +164,36 @@
                 {{-- Droite : Notif + Avatar --}}
                 <div class="flex items-center space-x-4">
 
-                    {{-- Cloche notifications --}}
-                    <a href="{{ route('client.notifications') }}" class="relative">
-                        <svg class="w-6 h-6 text-gray-600 hover:text-blue-700 transition" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        @php
-                            $notifCount = auth()->user()->notifications()->where('lu', false)->count();
-                        @endphp
-                        @if($notifCount > 0)
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                            {{ $notifCount > 9 ? '9+' : $notifCount }}
-                        </span>
-                        @endif
-                    </a>
+                    {{-- Cloche notifications avec dropdown --}}
+                    <div class="relative">
+                        <button id="notifBtn" onclick="toggleNotifDropdown()"
+                            class="relative focus:outline-none">
+                            <svg class="w-6 h-6 text-gray-600 hover:text-blue-700 transition"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            {{-- Badge --}}
+                            @php $notifCount = auth()->user()->notifications()->where('lu', false)->count(); @endphp
+                            <span class="notif-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold
+                                {{ $notifCount == 0 ? 'hidden' : '' }}">
+                                {{ $notifCount > 9 ? '9+' : $notifCount }}
+                            </span>
+                        </button>
+
+                        {{-- Dropdown rapide --}}
+                        <div id="notifDropdown"
+                            class="hidden absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50">
+                            <div class="flex justify-between items-center px-4 py-3 border-b border-gray-100">
+                                <p class="font-semibold text-gray-800 text-sm">🔔 Notifications</p>
+                                <a href="{{ route('client.notifications') }}"
+                                    class="text-xs text-blue-600 hover:underline">Tout voir</a>
+                            </div>
+                            <div id="notifContainer" class="max-h-64 overflow-y-auto">
+                                <p class="text-center text-gray-400 text-xs py-4">Cliquez pour charger</p>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Avatar + Dropdown --}}
                     <div class="relative" x-data="{ open: false }">
