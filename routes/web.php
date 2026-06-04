@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\DemandeController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\FormationController as AdminFormationController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\EmailController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -30,18 +31,6 @@ Route::post('/demande-service', [ContactController::class, 'demandeStore'])->nam
 
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
-
-// Route globale dashboard
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-
-    return match ($user->role) {
-        'admin' => redirect()->route('admin.dashboard'),
-        'enseignant' => redirect()->route('enseignant.dashboard'),
-        'client' => redirect()->route('client.dashboard'),
-        default => abort(403),
-    };
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 // ===== CLIENT =====
 Route::middleware(['auth', 'verified', 'role:client'])
@@ -77,6 +66,8 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
         // Notifications
         Route::get('/notifications', [EnseignantController::class, 'notificationsForm'])->name('notifications.form');
         Route::post('/notifications', [EnseignantController::class, 'notificationsEnvoyer'])->name('notifications.envoyer');
+
+        Route::post('/emails', [EnseignantController::class, 'envoyerEmail'])->name('emails.envoyer');
 
         // AJAX
         Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');
@@ -141,9 +132,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/notifications/tous', [NotificationController::class, 'envoyerTous'])->name('notifications.tous');
         Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-        // Placeholder 
-       
-        Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
+        // Emails
+        Route::get('/emails', [EmailController::class, 'form'])->name('emails.form');
+        Route::post('/emails', [EmailController::class, 'envoyer'])->name('emails.envoyer');
     });        
 
 // ===== PROFIL =====

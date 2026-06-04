@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\Ressource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\MailService;
 
 class EnseignantController extends Controller
 {
@@ -222,5 +223,41 @@ class EnseignantController extends Controller
     {
         $niveaux = $formation->niveaux()->orderBy('ordre')->get(['id', 'nom', 'ordre']);
         return response()->json($niveaux);
+    }
+
+
+// ===== EMAIL AUX APPRENANTS =====
+    public function envoyerEmail(Request $request)
+    {
+        $request->validate([
+            'formation_id' => 'required|exists:formations,id',
+            'sujet'        => 'required|string|max:200',
+            'message'      => 'required|string|min:10',
+        ]);
+
+        $enseignant = auth()->user();
+
+        // Vérifier accès
+        $aAcces = \App\Models\Ressource::where('enseignant_id', $enseignant->id)
+            ->where('formation_id', $request->formation_id)
+            ->exists();
+
+        abort_if(!$aAcces, 403);
+
+        $apprenants = InscriptionFormation::where('formation_id', $request->formation_id)
+            ->where('statut', 'valide')
+            ->with('user')
+            ->get()
+            ->pluck('user')
+            ->toArray();
+
+        $count = MailService::enseignantVersApprenants(
+            $enseignant,
+            collect($apprenants)->map(fn($u) => \App\Models\User::find($u['id']))->toArray(),
+            $request->sujet,
+            $request->message
+        );
+
+        return back()->with('success', "✅ Email envoyé à {$count} apprenant(s) !");
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Services\MailService;
 
 class RegisteredUserController extends Controller
 {
@@ -34,17 +35,17 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'nom'      => $request->nom,
-            'prenom'   => $request->prenom,
-            'email'    => $request->email,
-            'telephone'=> $request->telephone,
-            'password' => Hash::make($request->password),
+            'nom'       => $request->nom,
+            'prenom'    => $request->prenom,
+            'email'     => $request->email,
+            'telephone' => $request->telephone,
+            'password'  => Hash::make($request->password),
         ]);
 
         // Assigner le rôle client
         $user->assignRole('client');
 
-        // Inscrire à la formation si choisie
+        // Inscription à une formation si sélectionnée
         if ($request->formation_id) {
             InscriptionFormation::create([
                 'user_id'      => $user->id,
@@ -53,6 +54,10 @@ class RegisteredUserController extends Controller
             ]);
         }
 
+        // ✅ Email de bienvenue (AJOUT IMPORTANT)
+        MailService::bienvenue($user);
+
+        // Laravel auth flow standard
         event(new Registered($user));
         Auth::login($user);
 

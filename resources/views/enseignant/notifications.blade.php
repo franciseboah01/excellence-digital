@@ -64,6 +64,45 @@
         </form>
     </div>
 
+    {{-- SECTION EMAIL --}}
+    <div class="bg-white rounded-xl shadow p-6 mt-6">
+        <h2 class="text-lg font-bold text-blue-900 mb-5">✉️ Envoyer un email aux apprenants</h2>
+
+        <form method="POST" action="{{ route('enseignant.emails.envoyer') }}">
+            @csrf
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Formation *</label>
+                <select name="formation_id" required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Choisir --</option>
+                    @foreach($formations as $formation)
+                    <option value="{{ $formation->id }}">{{ $formation->titre }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Sujet *</label>
+                <input type="text" name="sujet" required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex : Nouveau cours disponible">
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Message *</label>
+                <textarea name="message" rows="4" required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Votre message..."></textarea>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-green-700 text-white py-3 rounded-xl font-bold hover:bg-green-800 transition">
+                📧 Envoyer l'email
+            </button>
+        </form>
+    </div>
+
     {{-- Apprenants par formation --}}
     <div class="bg-white rounded-xl shadow p-6">
         <h2 class="text-lg font-bold text-blue-900 mb-5">👥 Apprenants par formation</h2>
