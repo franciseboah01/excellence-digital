@@ -3,23 +3,24 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\HomeController;
-use App\Http\Controllers\Public\ServiceController;
-use App\Http\Controllers\Public\FormationController;
+use App\Http\Controllers\Public\ServiceController as PublicServiceController;
+use App\Http\Controllers\Public\FormationController as PublicFormationController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Enseignant\EnseignantController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DemandeController;
-
+use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\FormationController as AdminFormationController;
 
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
-Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
-Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
-Route::get('/formations/{formation}', [FormationController::class, 'show'])->name('formations.show');
+Route::get('/services', [PublicServiceController::class, 'index'])->name('services.index');
+Route::get('/services/{service}', [PublicServiceController::class, 'show'])->name('services.show');
+Route::get('/formations', [PublicFormationController::class, 'index'])->name('formations.index');
+Route::get('/formations/{formation}', [PublicFormationController::class, 'show'])->name('formations.show');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name('demande.form');
@@ -28,6 +29,18 @@ Route::post('/demande-service', [ContactController::class, 'demandeStore'])->nam
 
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
+
+// Route globale dashboard
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+
+    return match ($user->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'enseignant' => redirect()->route('enseignant.dashboard'),
+        'client' => redirect()->route('client.dashboard'),
+        default => abort(403),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // ===== CLIENT =====
 Route::middleware(['auth', 'verified', 'role:client'])
@@ -87,24 +100,40 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/enseignants', [UserController::class, 'enseignants'])->name('enseignants.index');
         Route::post('/enseignants', [UserController::class, 'storeEnseignant'])->name('enseignants.store');
         Route::put('/enseignants/{user}', [UserController::class, 'updateEnseignant'])->name('enseignants.update');
-
         
         // Services
-        Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
-        Route::get('/services/creer', [ServiceController::class, 'create'])->name('services.create');
-        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
-        Route::get('/services/{service}/modifier', [ServiceController::class, 'edit'])->name('services.edit');
-        Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
-        Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
-        Route::post('/services/{service}/toggle', [ServiceController::class, 'toggleActif'])->name('services.toggle');
+        Route::get('/services', [AdminServiceController::class, 'index'])->name('services.index');
+        Route::get('/services/creer', [AdminServiceController::class, 'create'])->name('services.create');
+        Route::post('/services', [AdminServiceController::class, 'store'])->name('services.store');
+        Route::get('/services/{service}/modifier', [AdminServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [AdminServiceController::class, 'destroy'])->name('services.destroy');
+        Route::post('/services/{service}/toggle', [AdminServiceController::class, 'toggleActif'])->name('services.toggle');
 
         // Demandes
         Route::get('/demandes', [DemandeController::class, 'index'])->name('demandes.index');
         Route::get('/demandes/{demande}', [DemandeController::class, 'show'])->name('demandes.show');
         Route::post('/demandes/{demande}/statut', [DemandeController::class, 'changerStatut'])->name('demandes.statut');
 
-         // Placeholders pour les jours suivants
-        Route::get('/formations', fn() => view('admin.formations.index'))->name('formations.index');
+        // Formation
+        Route::get('/formations', [AdminFormationController::class, 'index'])->name('formations.index');
+        Route::get('/formations/creer', [AdminFormationController::class, 'create'])->name('formations.create');
+        Route::post('/formations', [AdminFormationController::class, 'store'])->name('formations.store');
+        Route::get('/formations/{formation}', [AdminFormationController::class, 'show'])->name('formations.show');
+        Route::get('/formations/{formation}/modifier', [AdminFormationController::class, 'edit'])->name('formations.edit');
+        Route::put('/formations/{formation}', [AdminFormationController::class, 'update'])->name('formations.update');
+        Route::delete('/formations/{formation}', [AdminFormationController::class, 'destroy'])->name('formations.destroy');
+
+        // Niveaux
+        Route::post('/formations/{formation}/niveaux', [AdminFormationController::class, 'storeNiveau'])->name('formations.niveaux.store');
+        Route::delete('/niveaux/{niveau}', [AdminFormationController::class, 'destroyNiveau'])->name('formations.niveaux.destroy');
+
+        // Inscriptions
+        Route::post('/inscriptions/{inscription}/valider', [AdminFormationController::class, 'validerInscription'])->name('formations.inscription.valider');
+        Route::post('/inscriptions/{inscription}/rejeter', [AdminFormationController::class, 'rejeterInscription'])->name('formations.inscription.rejeter');
+        Route::delete('/inscriptions/{inscription}/desinscrire', [AdminFormationController::class, 'desinscrire'])->name('formations.inscription.desinscrire');
+
+        // Placeholder 
         Route::get('/notifications', fn() => view('admin.notifications'))->name('notifications.form');
         Route::get('/emails', fn() => view('admin.emails'))->name('emails.form');
     });        
