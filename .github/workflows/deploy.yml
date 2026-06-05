@@ -2,36 +2,47 @@ name: Deploy to Alwaysdata
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ssh1.alwaysdata.com
+          host: ssh-excellencedigital.alwaysdata.net
           username: excellencedigital
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          debug: true
+          command_timeout: 10m
           script: |
+            set -e
+
+            echo "🚀 Deployment started"
+
             cd /home/excellencedigital/laravel
 
-            # Synchronisation propre du code
-            git fetch origin main
+            echo "📥 Pulling latest code"
+            git fetch origin
             git reset --hard origin/main
 
-            # Backend Laravel
+            echo "📦 Installing PHP dependencies"
             composer install --no-interaction --prefer-dist --optimize-autoloader
+
+            echo "🧱 Running migrations"
             php artisan migrate --force
+
+            echo "⚡ Laravel cache"
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            # Frontend
+            echo "🎨 Frontend build"
             npm install
             npm run build
+
+            echo "✅ Deployment finished"
