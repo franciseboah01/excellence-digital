@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\InscriptionFormation;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -54,8 +53,7 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // ✅ Email de bienvenue (AJOUT IMPORTANT)
-        
+        // ✅ Email de bienvenue
         $emailEnvoye = MailService::bienvenue($user);
 
         if (!$emailEnvoye) {
@@ -63,4 +61,10 @@ class RegisteredUserController extends Controller
                 "Email de bienvenue non envoyé pour l'utilisateur ID {$user->id}"
             );
         }
+
+        // 🔥 AJOUT IMPORTANT (sécurisé et nécessaire)
+        Auth::login($user);
+
+        return redirect()->route('verification.notice');
+    }
 }

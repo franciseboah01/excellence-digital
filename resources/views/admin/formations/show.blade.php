@@ -69,21 +69,63 @@
 
         {{-- Enseignants assignés --}}
         <div class="bg-white rounded-xl shadow p-6">
-            <h3 class="text-lg font-bold text-blue-900 mb-4">👨‍🏫 Enseignants</h3>
+            <h3 class="text-lg font-bold text-blue-900 mb-4">👨‍🏫 Enseignants assignés</h3>
+
+            {{-- Formulaire assignation --}}
+            <form method="POST"
+                action="{{ route('admin.formations.assigner-enseignant', $formation) }}"
+                class="mb-4">
+                @csrf
+                <div class="flex space-x-2">
+                    <select name="enseignant_id" required
+                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Assigner un enseignant --</option>
+                        @foreach($enseignants as $enseignant)
+                            @if(!$enseignantsFormation->contains('id', $enseignant->id))
+                            <option value="{{ $enseignant->id }}">
+                                {{ $enseignant->prenom }} {{ $enseignant->nom }}
+                            </option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <button type="submit"
+                        class="bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-900 transition">
+                        ➕ Assigner
+                    </button>
+                </div>
+            </form>
+
+            {{-- Liste enseignants assignés --}}
             @forelse($enseignantsFormation as $enseignant)
-            <div class="flex items-center space-x-3 py-2 border-b border-gray-100 last:border-0">
-                <div class="w-8 h-8 rounded-full bg-green-700 flex items-center justify-center text-white text-xs font-bold">
-                    {{ strtoupper(substr($enseignant->prenom, 0, 1)) }}
+            <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-green-700 flex items-center justify-center text-white text-sm font-bold">
+                        {{ strtoupper(substr($enseignant->prenom, 0, 1)) }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">
+                            {{ $enseignant->prenom }} {{ $enseignant->nom }}
+                        </p>
+                        <p class="text-xs text-gray-400">{{ $enseignant->email }}</p>
+                        <p class="text-xs text-purple-600">
+                            📚 {{ $enseignant->ressources->where('formation_id', $formation->id)->count() }} ressource(s)
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-800">{{ $enseignant->nom_complet }}</p>
-                    <p class="text-xs text-gray-400">{{ $enseignant->email }}</p>
-                </div>
+                <form method="POST"
+                    action="{{ route('admin.formations.retirer-enseignant', [$formation, $enseignant]) }}"
+                    onsubmit="return confirm('Retirer cet enseignant ? Ses ressources seront supprimées.')">
+                    @csrf @method('DELETE')
+                    <button type="submit"
+                        class="text-xs text-red-600 hover:underline font-medium">
+                        🗑️ Retirer
+                    </button>
+                </form>
             </div>
             @empty
             <p class="text-gray-400 text-sm text-center py-3">
                 Aucun enseignant assigné.<br>
-                <span class="text-xs">Les enseignants sont assignés automatiquement quand ils ajoutent des ressources.</span>
+                <span class="text-xs">Utilisez le formulaire ci-dessus.</span>
             </p>
             @endforelse
         </div>

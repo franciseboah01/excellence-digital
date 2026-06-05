@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\HomeController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\Admin\EmailController;
 
 
 // ===== ROUTES PUBLIQUES =====
+
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/services', [PublicServiceController::class, 'index'])->name('services.index');
 Route::get('/services/{service}', [PublicServiceController::class, 'show'])->name('services.show');
@@ -28,6 +31,29 @@ Route::post('/contact', [ContactController::class, 'send'])->name('contact.send'
 Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name('demande.form');
 Route::post('/demande-service', [ContactController::class, 'demandeStore'])->name('demande.store');
 
+// ===== ROUTE DASHBOARD UNIFIÉE =====
+Route::middleware('auth')->get('/dashboard', function () {
+
+    $user = Auth::user();
+
+    if ($user->hasRole('admin')) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user->hasRole('enseignant')) {
+        return redirect()->route('enseignant.dashboard');
+    }
+
+    if ($user->hasRole('client')) {
+        return redirect()->route('client.dashboard');
+    }
+
+    Auth::logout();
+
+    return redirect()->route('login')
+        ->with('error', "Votre compte n'a pas de rôle assigné. Contactez l'administrateur.");
+
+})->name('dashboard');
 
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
@@ -119,6 +145,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Niveaux
         Route::post('/formations/{formation}/niveaux', [AdminFormationController::class, 'storeNiveau'])->name('formations.niveaux.store');
         Route::delete('/niveaux/{niveau}', [AdminFormationController::class, 'destroyNiveau'])->name('formations.niveaux.destroy');
+
+        // Assignation enseignants ↔ formations
+        Route::post('/formations/{formation}/assigner-enseignant', [AdminFormationController::class, 'assignerEnseignant'])->name('formations.assigner-enseignant');
+        Route::delete('/formations/{formation}/retirer-enseignant/{enseignant}', [AdminFormationController::class, 'retirerEnseignant'])->name('formations.retirer-enseignant');
 
         // Inscriptions
         Route::post('/inscriptions/{inscription}/valider', [AdminFormationController::class, 'validerInscription'])->name('formations.inscription.valider');
