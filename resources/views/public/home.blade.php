@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', 'Accueil  — Excellence Digital Center')
+@section('title', 'Accueil — Excellence Digital Center')
 
 @section('content')
 
