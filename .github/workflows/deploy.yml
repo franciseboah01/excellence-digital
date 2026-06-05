@@ -15,16 +15,23 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ssh-excellencedigital.alwaysdata.net
+          host: ssh1.alwaysdata.com
           username: excellencedigital
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/excellencedigital/laravel
-            git pull origin main
+
+            # Synchronisation propre du code
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Backend Laravel
             composer install --no-interaction --prefer-dist --optimize-autoloader
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+
+            # Frontend
             npm install
             npm run build
