@@ -1,0 +1,30 @@
+name: Deploy to Alwaysdata
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ssh-excellencedigital.alwaysdata.net
+          username: excellencedigital
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/excellencedigital/laravel
+            git pull origin main
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            npm install
+            npm run build
