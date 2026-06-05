@@ -36,9 +36,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Nom complet
+    
+        /**
+     * Nom complet : Prénom NOM
+     * FIX 12 : Alias explicite conservé pour compatibilité
+    */
     public function getNomCompletAttribute(): string
     {
-        return $this->prenom . ' ' . $this->nom;
+        return "{$this->prenom} {$this->nom}";
+    }
+
+    /**
+     * Alias anglais pour clarté dans le code
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->nom_complet;
     }
 
     // Relations

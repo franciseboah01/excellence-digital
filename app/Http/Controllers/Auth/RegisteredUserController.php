@@ -55,12 +55,12 @@ class RegisteredUserController extends Controller
         }
 
         // ✅ Email de bienvenue (AJOUT IMPORTANT)
-        MailService::bienvenue($user);
+        
+        $emailEnvoye = MailService::bienvenue($user);
 
-        // Laravel auth flow standard
-        event(new Registered($user));
-        Auth::login($user);
-
-        return redirect(route('verification.notice'));
-    }
+        if (!$emailEnvoye) {
+            \Illuminate\Support\Facades\Log::warning(
+                "Email de bienvenue non envoyé pour l'utilisateur ID {$user->id}"
+            );
+        }
 }

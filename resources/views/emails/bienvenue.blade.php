@@ -79,6 +79,19 @@
         </a>
     </div>
 
+    {{-- Bouton vérification email --}}
+    <hr class="divider">
+    <p class="text" style="color:#dc2626; font-weight:bold;">
+        ⚠️ Vérifiez votre adresse email pour activer votre compte :
+    </p>
+    <a href="{{ $verificationUrl }}" class="btn"
+        style="background:#059669; margin-top:10px;">
+        ✅ Vérifier mon email
+    </a>
+    <p style="font-size:11px; color:#9ca3af; margin-top:8px;">
+        Ce lien expire dans 60 minutes.
+    </p>
+
     {{-- FOOTER --}}
     <div class="footer">
         <p>© {{ date('Y') }} Excellence Digital Center</p>

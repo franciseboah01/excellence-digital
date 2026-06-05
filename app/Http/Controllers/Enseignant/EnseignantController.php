@@ -237,23 +237,25 @@ class EnseignantController extends Controller
 
         $enseignant = auth()->user();
 
-        // Vérifier accès
+        abort_if(!$enseignant->hasRole('enseignant'), 403); // FIX 10
+
         $aAcces = \App\Models\Ressource::where('enseignant_id', $enseignant->id)
             ->where('formation_id', $request->formation_id)
             ->exists();
 
-        abort_if(!$aAcces, 403);
+        abort_if(!$aAcces, 403, "Vous n'enseignez pas dans cette formation.");
 
+        // FIX 5 : Récupérer directement les objets User sans requête supplémentaire
         $apprenants = InscriptionFormation::where('formation_id', $request->formation_id)
             ->where('statut', 'valide')
             ->with('user')
             ->get()
-            ->pluck('user')
-            ->toArray();
+            ->map(fn($inscription) => $inscription->user)
+            ->filter(); // Retirer les nulls éventuels
 
         $count = MailService::enseignantVersApprenants(
             $enseignant,
-            collect($apprenants)->map(fn($u) => \App\Models\User::find($u['id']))->toArray(),
+            $apprenants,
             $request->sujet,
             $request->message
         );
