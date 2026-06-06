@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
     })
+        // Protection CSRF globale
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Aucune exception — toutes les routes POST protégées
     })->create();
