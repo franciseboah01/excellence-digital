@@ -79,4 +79,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Temoignage::class);
     }
+
+    public function messagesEnvoyes()
+    {
+        return $this->hasMany(Message::class, 'expediteur_id');
+    }
+
+    public function messagesRecus()
+    {
+        return $this->hasMany(Message::class, 'destinataire_id');
+    }
+
+    // Nombre de messages non lus
+    public function getNbMessagesNonLusAttribute(): int
+    {
+        return $this->messagesRecus()->where('lu', false)->count();
+    }
 }

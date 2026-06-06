@@ -195,6 +195,21 @@
                         </div>
                     </div>
 
+                    {{-- Badge Messages --}}
+                    <a href="{{ route('messages.index') }}" class="relative">
+                        <svg class="w-6 h-6 text-gray-600 hover:text-blue-700 transition"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                        </svg>
+                        @php $msgCount = \App\Models\Message::where('destinataire_id', auth()->id())->where('lu', false)->count(); @endphp
+                        @if($msgCount > 0)
+                        <span class="msg-badge absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {{ $msgCount > 9 ? '9+' : $msgCount }}
+                        </span>
+                        @endif
+                    </a>
+
                     {{-- Avatar + Dropdown --}}
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open"

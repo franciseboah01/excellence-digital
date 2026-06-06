@@ -16,6 +16,10 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\FormationController as AdminFormationController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\EmailController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\Client\TemoignageController as ClientTemoignageController;
+use App\Http\Controllers\Admin\TemoignageController as AdminTemoignageController;
+
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -58,6 +62,17 @@ Route::middleware('auth')->get('/dashboard', function () {
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
 
+
+// ===== MESSAGERIE =====
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{user}', [MessageController::class, 'conversation'])->name('messages.conversation');
+    Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
+    Route::get('/messages/non-lus/count', [MessageController::class, 'compterNonLus'])->name('messages.non-lus');
+    Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+});
+
+
 // ===== CLIENT =====
 Route::middleware(['auth', 'verified', 'role:client'])
     ->prefix('client')
@@ -72,6 +87,11 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/profil', [ClientController::class, 'profil'])->name('profil');
         Route::post('/profil', [ClientController::class, 'profilUpdate'])->name('profil.update');
         Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
+        Route::get('/temoignages', [ClientTemoignageController::class, 'index'])->name('temoignages.index');
+        Route::post('/temoignages', [ClientTemoignageController::class, 'store'])->name('temoignages.store');
+        Route::delete('/temoignages/{temoignage}', [ClientTemoignageController::class, 'destroy'])->name('temoignages.destroy');
+
+    
     });
 
 // ===== ENSEIGNANT =====
@@ -171,6 +191,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Emails
         Route::get('/emails', [EmailController::class, 'form'])->name('emails.form');
         Route::post('/emails', [EmailController::class, 'envoyer'])->name('emails.envoyer');
+
+        // Temoignage
+        Route::get('/temoignages', [AdminTemoignageController::class, 'index'])->name('temoignages.index');
+        Route::post('/temoignages/{temoignage}/valider', [AdminTemoignageController::class, 'valider'])->name('temoignages.valider');
+        Route::post('/temoignages/{temoignage}/refuser', [AdminTemoignageController::class, 'refuser'])->name('temoignages.refuser');
+        Route::delete('/temoignages/{temoignage}', [AdminTemoignageController::class, 'destroy'])->name('temoignages.destroy');
     });        
 
 // ===== PROFIL =====

@@ -119,5 +119,11 @@
         @endforelse
     </div>
 
+    {{-- TEMIGNAGE --}}
+    <a href="{{ route('client.temoignages.index') }}"
+        class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full hover:bg-yellow-200 transition font-medium">
+        ⭐ Laisser un avis
+    </a>
+
 </div>
 @endsection
