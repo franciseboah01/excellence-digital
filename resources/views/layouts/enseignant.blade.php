@@ -154,28 +154,38 @@
                 </div>
 
                 {{-- AVATAR --}}
-                <div class="relative">
-                    <button @click="open = !open" class="flex items-center space-x-2">
-                        <div class="w-9 h-9 rounded-full bg-green-700 flex items-center justify-center text-white font-bold text-sm">
+                <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open"
+                    class="flex items-center space-x-2 focus:outline-none">
+                    <div class="w-9 h-9 rounded-full bg-green-700 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+                        @if(auth()->user()->avatar)
+                            <img src="{{ asset('storage/' . auth()->user()->avatar) }}"
+                                class="w-full h-full object-cover">
+                        @else
                             {{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
-                        </div>
-                        <span class="hidden md:block text-sm">
-                            {{ auth()->user()->prenom }}
-                        </span>
-                    </button>
-
-                    <div x-show="open" @click.away="open = false"
-                        class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                🚪 Déconnexion
-                            </button>
-                        </form>
+                        @endif
                     </div>
+                    <span class="hidden md:block text-sm font-medium text-gray-700">
+                        {{ auth()->user()->prenom }}
+                    </span>
+                </button>
+
+                <div x-show="open" @click.away="open = false"
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                    <a href="{{ route('enseignant.profil') }}"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                        👤 Mon profil
+                    </a>
+                    <hr class="my-1">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                            🚪 Déconnexion
+                        </button>
+                    </form>
                 </div>
+            </div>
 
             </div>
 

@@ -93,7 +93,13 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
         Route::get('/notifications', [EnseignantController::class, 'notificationsForm'])->name('notifications.form');
         Route::post('/notifications', [EnseignantController::class, 'notificationsEnvoyer'])->name('notifications.envoyer');
 
+        // Mail
         Route::post('/emails', [EnseignantController::class, 'envoyerEmail'])->name('emails.envoyer');
+
+        // Profil
+        Route::get('/profil', [EnseignantController::class, 'profil'])->name('profil');
+        Route::post('/profil', [EnseignantController::class, 'profilUpdate'])->name('profil.update');
+        Route::post('/profil/password', [EnseignantController::class, 'passwordUpdate'])->name('password.update');
 
         // AJAX
         Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');

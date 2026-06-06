@@ -8,8 +8,10 @@ use App\Models\InscriptionFormation;
 use App\Models\Notification;
 use App\Models\Ressource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Services\MailService;
+
 
 class EnseignantController extends Controller
 {
@@ -279,5 +281,55 @@ class EnseignantController extends Controller
         );
 
         return back()->with('success', "✅ Email envoyé à {$count} apprenant(s) !");
+    }
+
+    // ===== PROFIL =====
+    public function profil()
+    {
+        return view('enseignant.profil');
+    }
+
+    public function profilUpdate(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'nom'       => 'required|string|max:100',
+            'prenom'    => 'required|string|max:100',
+            'telephone' => 'nullable|string|max:20',
+            'avatar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) Storage::disk('public')->delete($user->avatar);
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->update([
+            'nom'       => $request->nom,
+            'prenom'    => $request->prenom,
+            'telephone' => $request->telephone,
+            'avatar'    => $user->avatar,
+        ]);
+
+        return back()->with('success', 'Profil mis à jour avec succès !');
+    }
+
+    public function passwordUpdate(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password'         => 'required|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($request->current_password, auth()->user()->password)) {
+            return back()->withErrors(['current_password' => 'Mot de passe actuel incorrect.']);
+        }
+
+        auth()->user()->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return back()->with('success', 'Mot de passe modifié avec succès !');
     }
 }
