@@ -13,34 +13,52 @@ use App\Services\MailService;
 
 class EnseignantController extends Controller
 {
-    // ===== DASHBOARD =====
+        // ===== DASHBOARD =====
     public function dashboard()
     {
         $enseignant = auth()->user();
 
-        // Formations assignées à cet enseignant
         $formations = Formation::whereHas('ressources', function ($q) use ($enseignant) {
             $q->where('enseignant_id', $enseignant->id);
         })->withCount([
-            'inscriptions as total_apprenants' => function ($q) {
-                $q->where('statut', 'valide');
-            }
+            'inscriptions as total_apprenants' => fn($q) => $q->where('statut', 'valide'),
+            'ressources as ressources_count'   => fn($q) => $q->where('enseignant_id', $enseignant->id),
         ])->get();
 
         $stats = [
-            'formations'  => $formations->count(),
-            'ressources'  => Ressource::where('enseignant_id', $enseignant->id)->count(),
-            'apprenants'  => InscriptionFormation::whereIn(
-                                'formation_id', $formations->pluck('id')
-                             )->where('statut', 'valide')->count(),
-            'notifs_envoyees' => Notification::where('data->expediteur_id', $enseignant->id)->count(),
+            'formations'      => $formations->count(),
+            'ressources'      => Ressource::where('enseignant_id', $enseignant->id)->count(),
+            'apprenants'      => InscriptionFormation::whereIn(
+                                    'formation_id',
+                                    $formations->pluck('id')
+                                )
+                                ->where('statut', 'valide')
+                                ->count(),
+            'notifs_envoyees' => Notification::where(
+                                    'data->expediteur_id',
+                                    $enseignant->id
+                                )->count(),
         ];
 
-        $dernieres_ressources = Ressource::where('enseignant_id', $enseignant->id)
-            ->with('formation')
-            ->latest()->take(5)->get();
+        // Répartition des ressources par type
+        $repartitionTypes = Ressource::where('enseignant_id', $enseignant->id)
+            ->selectRaw('type, COUNT(*) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type')
+            ->toArray();
 
-        return view('enseignant.dashboard', compact('stats', 'formations', 'dernieres_ressources'));
+        $dernieres_ressources = Ressource::where('enseignant_id', $enseignant->id)
+            ->with(['formation', 'niveau'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('enseignant.dashboard', compact(
+            'stats',
+            'formations',
+            'dernieres_ressources',
+            'repartitionTypes'
+        ));
     }
 
     // ===== LISTE RESSOURCES =====
