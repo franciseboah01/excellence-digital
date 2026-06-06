@@ -25,6 +25,45 @@
                     <a href="{{ route('services.index') }}" class="text-gray-700 hover:text-blue-700 font-medium transition">Services</a>
                     <a href="{{ route('formations.index') }}" class="text-gray-700 hover:text-blue-700 font-medium transition">Formations</a>
                     <a href="{{ route('contact') }}" class="text-gray-700 hover:text-blue-700 font-medium transition">Contact</a>
+                    <a href="{{ route('blog.index') }}" class="text-gray-700 hover:text-blue-700 font-medium transition">Blog</a>
+                    <a href="{{ route('faq') }}" class="text-gray-700 hover:text-blue-700 font-medium transition">FAQ</a>
+                </div>
+
+                {{-- BARRE DE RECHERCHE --}}
+                <div class="hidden md:flex items-center relative" x-data="{ resultats: [], query: '' }">
+                    <form action="{{ route('recherche') }}" method="GET" class="flex">
+                        <input type="text" name="q"
+                            x-model="query"
+                            @input.debounce.300ms="
+                                if(query.length >= 2) {
+                                    fetch('/recherche/autocomplete?q=' + encodeURIComponent(query))
+                                        .then(r => r.json())
+                                        .then(data => resultats = data);
+                                } else { resultats = []; }
+                            "
+                            @click.away="resultats = []"
+                            placeholder="🔍 Rechercher..."
+                            class="border border-gray-300 rounded-l-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
+                        <button type="submit"
+                            class="bg-blue-800 text-white px-4 py-2 rounded-r-lg hover:bg-blue-900 transition text-sm">
+                            🔍
+                        </button>
+                    </form>
+
+                    {{-- Suggestions autocomplete --}}
+                    <div x-show="resultats.length > 0"
+                        class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-50 mt-1 overflow-hidden">
+                        <template x-for="r in resultats" :key="r.url">
+                            <a :href="r.url"
+                                class="flex items-center space-x-2 px-4 py-3 hover:bg-blue-50 transition border-b border-gray-100 last:border-0">
+                                <span x-text="r.type === 'service' ? '💼' : r.type === 'formation' ? '🎓' : '📰'"></span>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800" x-text="r.label"></p>
+                                    <p class="text-xs text-gray-400 capitalize" x-text="r.type"></p>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Auth Buttons --}}

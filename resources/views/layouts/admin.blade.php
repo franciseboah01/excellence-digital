@@ -90,21 +90,29 @@
                     <span>🔔</span><span>Notifications</span>
                 </a>
 
-                {{-- Badge Messages --}}
-                <a href="{{ route('messages.index') }}" class="relative">
-                    <svg class="w-6 h-6 text-gray-600 hover:text-blue-700 transition"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{-- Message --}}
+                <a href="{{ route('messages.index') }}"
+                    class="relative flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('messages.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
                     </svg>
-                    @php $msgCount = \App\Models\Message::where('destinataire_id', auth()->id())->where('lu', false)->count(); @endphp
+                    <span>Messages</span>
+                    @php
+                        $msgCount = \App\Models\Message::where('destinataire_id', auth()->id())
+                            ->where('lu', false)
+                            ->count();
+                    @endphp
                     @if($msgCount > 0)
-                    <span class="msg-badge absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                        {{ $msgCount > 9 ? '9+' : $msgCount }}
-                    </span>
+                        <span class="msg-badge absolute top-2 right-2 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {{ $msgCount > 9 ? '9+' : $msgCount }}
+                        </span>
                     @endif
                 </a>
 
+                {{-- Mail --}}
                 <a href="{{ route('admin.emails.form') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
                     {{ request()->routeIs('admin.emails.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
@@ -112,21 +120,43 @@
                     <span>✉️</span><span>Emails</span>
                 </a>
 
+                {{-- Temoignage --}}
+                <a href="{{ route('admin.temoignages.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.temoignages.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>⭐</span><span>Témoignages</span>
+                    @if($stats['en_attente'] ?? 0 > 0)
+                    <span class="ml-auto bg-yellow-500 text-white text-xs rounded-full px-2 py-0.5">
+                        {{ $stats['en_attente'] }}
+                    </span>
+                    @endif
+                </a>
+
+                {{-- Après Emails, dans section Communication --}}
+                <a href="{{ route('admin.articles.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.articles.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>📰</span><span>Blog</span>
+                </a>
+
+                <a href="{{ route('admin.faqs.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.faqs.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>❓</span><span>FAQ</span>
+                </a>
+
+                <a href="{{ route('admin.paiements.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.paiements.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>💰</span><span>Paiements</span>
+                </a>
+
             </nav>
-
-            {{-- Temoignage --}}
-            <a href="{{ route('admin.temoignages.index') }}"
-                class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
-                {{ request()->routeIs('admin.temoignages.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
-                transition text-sm font-medium">
-                <span>⭐</span><span>Témoignages</span>
-                @if($stats['en_attente'] ?? 0 > 0)
-                <span class="ml-auto bg-yellow-500 text-white text-xs rounded-full px-2 py-0.5">
-                    {{ $stats['en_attente'] }}
-                </span>
-                @endif
-            </a>
-
+        
             {{-- Profil Admin --}}
             <div class="px-4 py-4 border-t border-blue-800">
                 <div class="flex items-center space-x-3">

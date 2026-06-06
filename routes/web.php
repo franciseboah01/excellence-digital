@@ -19,12 +19,14 @@ use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\Client\TemoignageController as ClientTemoignageController;
 use App\Http\Controllers\Admin\TemoignageController as AdminTemoignageController;
-
+use App\Http\Controllers\Admin\PaiementController;
+use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Public\BlogController;
+use App\Http\Controllers\Public\SearchController;
 
 
 // ===== ROUTES PUBLIQUES =====
-
-
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/services', [PublicServiceController::class, 'index'])->name('services.index');
 Route::get('/services/{service}', [PublicServiceController::class, 'show'])->name('services.show');
@@ -34,6 +36,9 @@ Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name('demande.form');
 Route::post('/demande-service', [ContactController::class, 'demandeStore'])->name('demande.store');
+Route::get('/recherche', [SearchController::class, 'search'])->name('recherche');
+Route::get('/recherche/autocomplete', [SearchController::class, 'autocomplete'])->name('recherche.autocomplete');
+
 
 // ===== ROUTE DASHBOARD UNIFIÉE =====
 Route::middleware('auth')->get('/dashboard', function () {
@@ -58,6 +63,11 @@ Route::middleware('auth')->get('/dashboard', function () {
         ->with('error', "Votre compte n'a pas de rôle assigné. Contactez l'administrateur.");
 
 })->name('dashboard');
+
+    Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+    Route::get('/blog/{article:slug}', [BlogController::class, 'show'])->name('blog.show');
+    Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
+
 
 // ===== ROUTES AUTH (Breeze) =====
 require __DIR__.'/auth.php';
@@ -197,6 +207,30 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/temoignages/{temoignage}/valider', [AdminTemoignageController::class, 'valider'])->name('temoignages.valider');
         Route::post('/temoignages/{temoignage}/refuser', [AdminTemoignageController::class, 'refuser'])->name('temoignages.refuser');
         Route::delete('/temoignages/{temoignage}', [AdminTemoignageController::class, 'destroy'])->name('temoignages.destroy');
+    
+            // Paiement
+        Route::get('/paiements', [PaiementController::class, 'index'])->name('paiements.index');
+        Route::get('/paiements/creer', [PaiementController::class, 'create'])->name('paiements.create');
+        Route::post('/paiements', [PaiementController::class, 'store'])->name('paiements.store');
+        Route::get('/paiements/{paiement}', [PaiementController::class, 'show'])->name('paiements.show');
+        Route::put('/paiements/{paiement}', [PaiementController::class, 'update'])->name('paiements.update');
+        Route::get('/paiements/{paiement}/recu', [PaiementController::class, 'recu'])->name('paiements.recu');
+        Route::get('/clients/{user}/paiements', [PaiementController::class, 'historique'])->name('paiements.historique');
+
+        // FAQ
+        Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
+        Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');
+        Route::put('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+        Route::post('/faqs/{faq}/toggle', [FaqController::class, 'toggleActif'])->name('faqs.toggle');
+        Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+
+        // Articles/Blog
+        Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+        Route::get('/articles/creer', [ArticleController::class, 'create'])->name('articles.create');
+        Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+        Route::get('/articles/{article}/modifier', [ArticleController::class, 'edit'])->name('articles.edit');
+        Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
+        Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
     });        
 
 // ===== PROFIL =====

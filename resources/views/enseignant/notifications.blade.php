@@ -118,8 +118,9 @@
             <div class="flex flex-wrap gap-2">
                 @foreach($formation->inscriptions->take(5) as $inscription)
                 <div class="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white text-xs font-bold"
-                    title="{{ $inscription->user->nom_complet }}">
-                    {{ strtoupper(substr($inscription->user->prenom, 0, 1)) }}
+                    title="{{ $inscription->user?->nom_complet ?? 'Utilisateur inconnu' }}">
+
+                    {{ strtoupper(substr($inscription->user?->prenom ?? '?', 0, 1)) }}
                 </div>
                 @endforeach
                 @if($formation->inscriptions->count() > 5)
