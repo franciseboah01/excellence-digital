@@ -154,7 +154,12 @@
                     transition text-sm font-medium">
                     <span>💰</span><span>Paiements</span>
                 </a>
-
+                <a href="{{ route('admin.configurations.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.configurations.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>⚙️</span><span>Configurations</span>
+                </a>
             </nav>
         
             {{-- Profil Admin --}}

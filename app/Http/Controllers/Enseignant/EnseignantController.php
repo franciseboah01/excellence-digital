@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Services\MailService;
+use App\Services\FichierService;
 
 
 class EnseignantController extends Controller
@@ -85,26 +86,42 @@ class EnseignantController extends Controller
     }
 
     // ===== ENREGISTRER RESSOURCE =====
+
     public function ressourcesStore(Request $request)
     {
+        // Récupérer les types autorisés dynamiquement
+        $typesAutorises = FichierService::typesAutorises();
+        $tailleMax      = FichierService::tailleMaxMb();
+
         $request->validate([
             'formation_id' => 'required|exists:formations,id',
             'niveau_id'    => 'nullable|exists:niveaux_formation,id',
             'type'         => 'required|in:pdf,ebook,lien,video,document',
             'titre'        => 'required|string|max:200',
             'description'  => 'nullable|string|max:500',
-            'fichier'      => 'required_if:type,pdf,ebook,document|nullable|file|mimes:pdf,doc,docx,epub|max:20480',
-            'lien_url'     => 'required_if:type,lien,video|nullable|url',
+            'fichier'      => [
+                'required_if:type,pdf,ebook,document',
+                'nullable',
+                'file',
+                'mimes:' . implode(',', $typesAutorises),
+                'max:' . ($tailleMax * 1024), // Convertir MB en KB pour Laravel
+            ],
+            'lien_url' => 'required_if:type,lien,video|nullable|url',
         ]);
 
         $fichier_path = null;
 
-        // Upload du fichier
         if ($request->hasFile('fichier')) {
-            $fichier_path = $request->file('fichier')->store(
-                'ressources/' . $request->formation_id,
-                'local'
-            );
+            try {
+                $fichier_path = FichierService::uploaderRessource(
+                    $request->file('fichier'),
+                    $request->formation_id
+                );
+            } catch (\InvalidArgumentException $e) {
+                return back()
+                    ->withErrors(['fichier' => $e->getMessage()])
+                    ->withInput();
+            }
         }
 
         Ressource::create([
@@ -138,36 +155,52 @@ class EnseignantController extends Controller
     {
         abort_if($ressource->enseignant_id !== auth()->id(), 403);
 
+        $typesAutorises = FichierService::typesAutorises();
+        $tailleMax      = FichierService::tailleMaxMb();
+
         $request->validate([
             'formation_id' => 'required|exists:formations,id',
             'niveau_id'    => 'nullable|exists:niveaux_formation,id',
             'type'         => 'required|in:pdf,ebook,lien,video,document',
             'titre'        => 'required|string|max:200',
             'description'  => 'nullable|string|max:500',
-            'fichier'      => 'nullable|file|mimes:pdf,doc,docx,epub|max:20480',
-            'lien_url'     => 'nullable|url',
+            'fichier'      => [
+                'nullable',
+                'file',
+                'mimes:' . implode(',', $typesAutorises),
+                'max:' . ($tailleMax * 1024),
+            ],
+            'lien_url' => 'nullable|url',
         ]);
 
-        // Nouveau fichier uploadé
         if ($request->hasFile('fichier')) {
-            if ($ressource->fichier_path) Storage::delete($ressource->fichier_path);
-            $ressource->fichier_path = $request->file('fichier')->store(
-                'ressources/' . $request->formation_id, 'local'
-            );
+            // Supprimer l'ancien fichier
+            if ($ressource->fichier_path) {
+                FichierService::supprimer($ressource->fichier_path);
+            }
+
+            try {
+                $ressource->fichier_path = FichierService::uploaderRessource(
+                    $request->file('fichier'),
+                    $request->formation_id
+                );
+            } catch (\InvalidArgumentException $e) {
+                return back()->withErrors(['fichier' => $e->getMessage()])->withInput();
+            }
         }
 
         $ressource->update([
-            'formation_id' => $request->formation_id,
-            'niveau_id'    => $request->niveau_id,
-            'type'         => $request->type,
-            'titre'        => $request->titre,
-            'description'  => $request->description,
-            'lien_url'     => $request->lien_url,
-            'fichier_path' => $ressource->fichier_path,
+            'formation_id'  => $request->formation_id,
+            'niveau_id'     => $request->niveau_id,
+            'type'          => $request->type,
+            'titre'         => $request->titre,
+            'description'   => $request->description,
+            'lien_url'      => $request->lien_url,
+            'fichier_path'  => $ressource->fichier_path,
         ]);
 
         return redirect()->route('enseignant.ressources.index')
-            ->with('success', 'Ressource mise à jour avec succès !');
+            ->with('success', 'Ressource mise à jour !');
     }
 
     // ===== SUPPRIMER RESSOURCE =====

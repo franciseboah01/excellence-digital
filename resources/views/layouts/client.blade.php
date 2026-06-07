@@ -25,6 +25,29 @@
 </div>
 
 <script>
+    function ouvrirFichierSecurise(ressourceId, type) {
+        fetch(`/ressources/${ressourceId}/url-signee`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert('❌ ' + data.error);
+                return;
+            }
+            if (type === 'pdf') {
+                // Ouvrir PDF dans la visionneuse
+                ouvrirPdf(data.url);
+            } else {
+                // Télécharger directement
+                window.location.href = data.url;
+            }
+        })
+        .catch(() => alert('❌ Erreur lors de la génération du lien.'));
+    }
     function ouvrirPdf(url) {
         document.getElementById('pdfViewer').src = url;
         document.getElementById('pdfModal').classList.remove('hidden');

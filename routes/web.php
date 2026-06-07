@@ -24,6 +24,8 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Public\BlogController;
 use App\Http\Controllers\Public\SearchController;
+use App\Http\Controllers\FichierController;
+use App\Http\Controllers\Admin\ConfigurationController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -231,6 +233,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/articles/{article}/modifier', [ArticleController::class, 'edit'])->name('articles.edit');
         Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+
+        //Configuration
+        Route::get('/configurations', [ConfigurationController::class, 'index'])->name('configurations.index');
+        Route::put('/configurations', [ConfigurationController::class, 'update'])->name('configurations.update');
     });        
 
 // ===== PROFIL =====
@@ -246,3 +252,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/non-lues', [NotificationController::class, 'compterNonLues'])->name('notifications.non-lues');
     Route::get('/notifications/dernieres', [NotificationController::class, 'dernieres'])->name('notifications.dernieres');
 });
+
+// ===== FICHIERS SÉCURISÉS =====
+// Route avec middleware URL signée + vérification accès
+Route::get('/ressources/{ressource}/fichier', [FichierController::class, 'afficher'])
+    ->name('ressources.fichier')
+    ->middleware(['auth', 'acces_fichier']);
+
+// Route AJAX pour générer une URL signée
+Route::get('/ressources/{ressource}/url-signee', [FichierController::class, 'urlSignee'])
+    ->name('ressources.url-signee')
+    ->middleware('auth');

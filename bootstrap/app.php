@@ -19,6 +19,18 @@ return Application::configure(basePath: dirname(__DIR__))
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
     })
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'admin'               => \App\Http\Middleware\AdminMiddleware::class,
+            'client'              => \App\Http\Middleware\ClientMiddleware::class,
+            'enseignant'          => \App\Http\Middleware\EnseignantMiddleware::class,
+            'role'                => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'          => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'acces_fichier'       => \App\Http\Middleware\VerifierAccesFichier::class,
+        ]);
+    })
+
         // Protection CSRF globale
     ->withExceptions(function (Exceptions $exceptions): void {
         // Aucune exception — toutes les routes POST protégées
