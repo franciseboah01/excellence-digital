@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Http\Requests\StorePaiementRequest;
 
 class PaiementController extends Controller
 {
@@ -76,20 +77,9 @@ class PaiementController extends Controller
     }
 
     // ===== ENREGISTRER =====
-    public function store(Request $request)
+    public function store(StorePaiementRequest $request)
     {
-        $request->validate([
-            'user_id'        => 'required|exists:users,id',
-            'montant_total'  => 'required|numeric|min:1',
-            'montant_paye'   => 'required|numeric|min:0',
-            'mode_paiement'  => 'required|in:especes,mobile_money,virement,autre',
-            'formation_id'   => 'nullable|exists:formations,id',
-            'service_id'     => 'nullable|exists:services,id',
-            'demande_id'     => 'nullable|exists:demandes_service,id',
-            'notes'          => 'nullable|string|max:500',
-            'date_paiement'  => 'nullable|date',
-        ]);
-
+        // Validation automatique
         $montantPaye = min($request->montant_paye, $request->montant_total);
 
         $statut = 'en_attente';

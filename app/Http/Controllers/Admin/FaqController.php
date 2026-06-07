@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreFaqRequest;
 
 class FaqController extends Controller
 {
@@ -14,15 +15,10 @@ class FaqController extends Controller
         return view('admin.faqs.index', compact('faqs'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'question'  => 'required|string|max:300',
-            'reponse'   => 'required|string',
-            'categorie' => 'required|string|max:50',
-            'ordre'     => 'nullable|integer|min:0',
-        ]);
+    
 
+    public function store(StoreFaqRequest $request)
+    {
         Faq::create([
             'question'  => $request->question,
             'reponse'   => $request->reponse,

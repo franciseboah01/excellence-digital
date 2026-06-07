@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DemandeService;
 use App\Models\Formation;
 use App\Models\InscriptionFormation;
+use App\Models\Paiement;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -14,20 +15,33 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        // ===== STATS GLOBALES =====
+        // ===== STATS GLOBALES (requêtes agrégées optimisées) =====
+        $statsUsers = User::selectRaw("
+            SUM(CASE WHEN roles.name = 'client' THEN 1 ELSE 0 END) as clients,
+            SUM(CASE WHEN roles.name = 'enseignant' THEN 1 ELSE 0 END) as enseignants
+        ")
+        ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+        ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+        ->first();
+
+        $statsDemandes = DemandeService::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN statut = 'en_attente' THEN 1 ELSE 0 END) as en_attente,
+            SUM(CASE WHEN statut = 'en_cours' THEN 1 ELSE 0 END) as en_cours,
+            SUM(CASE WHEN statut = 'termine' THEN 1 ELSE 0 END) as terminees
+        ")->first();
+
         $stats = [
-            'clients'      => User::role('client')->count(),
-            'enseignants'  => User::role('enseignant')->count(),
+            'clients'      => $statsUsers->clients ?? 0,
+            'enseignants'  => $statsUsers->enseignants ?? 0,
             'services'     => Service::where('actif', true)->count(),
             'formations'   => Formation::where('statut', 'publie')->count(),
-            'demandes'     => DemandeService::count(),
-            'en_attente'   => DemandeService::where('statut', 'en_attente')->count(),
-            'en_cours'     => DemandeService::where('statut', 'en_cours')->count(),
-            'terminees'    => DemandeService::where('statut', 'termine')->count(),
+            'demandes'     => $statsDemandes->total ?? 0,
+            'en_attente'   => $statsDemandes->en_attente ?? 0,
+            'en_cours'     => $statsDemandes->en_cours ?? 0,
+            'terminees'    => $statsDemandes->terminees ?? 0,
             'inscriptions' => InscriptionFormation::count(),
-            'revenus'      => DemandeService::where('statut', 'termine')
-                                ->join('services', 'demandes_service.service_id', '=', 'services.id')
-                                ->sum('services.prix'),
+            'revenus'      => Paiement::sum('montant_paye'),
         ];
 
         // ===== INSCRIPTIONS PAR MOIS (6 derniers mois) =====
@@ -44,8 +58,10 @@ class AdminController extends Controller
 
         $labelsMois = [];
         $dataMois   = [];
-        $moisFr = ['', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
-                       'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        $moisFr = [
+            '', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+            'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
+        ];
 
         foreach ($inscriptionsMois as $item) {
             $labelsMois[] = $moisFr[$item->mois] . ' ' . $item->annee;
@@ -61,8 +77,8 @@ class AdminController extends Controller
         ->groupBy('services.categorie')
         ->get();
 
-        $labelsServices = [];
-        $dataServices   = [];
+        $labelsServices   = [];
+        $dataServices     = [];
         $categoriesLabels = [
             'bureautique' => 'Bureautique',
             'design'      => 'Design',
@@ -74,19 +90,24 @@ class AdminController extends Controller
             $dataServices[]   = $item->total;
         }
 
-        // ===== INSCRIPTIONS RÉCENTES =====
-        $inscriptionsRecentes = InscriptionFormation::with(['user', 'formation'])
-            ->latest()->take(5)->get();
+        // ===== INSCRIPTIONS RÉCENTES (eager loading optimisé) =====
+        $inscriptionsRecentes = InscriptionFormation::with([
+            'user:id,nom,prenom',
+            'formation:id,titre'
+        ])->latest()->take(5)->get();
 
-        // ===== DEMANDES EN ATTENTE =====
-        $demandesEnAttente = DemandeService::with(['service', 'user'])
-            ->where('statut', 'en_attente')
-            ->latest()->take(5)->get();
+        // ===== DEMANDES EN ATTENTE (eager loading optimisé) =====
+        $demandesEnAttente = DemandeService::with([
+            'service:id,titre,icone',
+            'user:id,nom,prenom'
+        ])
+        ->where('statut', 'en_attente')
+        ->latest()->take(5)->get();
 
         // ===== ALERTES =====
         $alertes = [];
 
-        if ($stats['en_attente'] > 10) {
+        if (($stats['en_attente'] ?? 0) > 10) {
             $alertes[] = [
                 'type'    => 'warning',
                 'message' => "{$stats['en_attente']} demandes en attente de traitement.",
@@ -94,7 +115,8 @@ class AdminController extends Controller
         }
 
         $clientsSansVerif = User::role('client')
-            ->whereNull('email_verified_at')->count();
+            ->whereNull('email_verified_at')
+            ->count();
 
         if ($clientsSansVerif > 0) {
             $alertes[] = [

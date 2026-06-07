@@ -11,6 +11,7 @@ use App\Models\Ressource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\StoreFormationRequest;
 
 class FormationController extends Controller
 {
@@ -41,18 +42,11 @@ class FormationController extends Controller
     }
 
     // ===== ENREGISTRER =====
-    public function store(Request $request)
+    //Validation automatique
+    public function store(StoreFormationRequest $request)
     {
-        $request->validate([
-            'titre'       => 'required|string|max:200',
-            'description' => 'required|string',
-            'niveau'      => 'required|in:debutant,intermediaire,avance',
-            'duree'       => 'nullable|string|max:50',
-            'statut'      => 'required|in:publie,brouillon',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         $imagePath = null;
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('formations', 'public');
         }
@@ -75,7 +69,8 @@ class FormationController extends Controller
 
         foreach ($niveauxDefaut as $n) {
             NiveauFormation::create(array_merge(
-                $n, ['formation_id' => $formation->id]
+                $n,
+                ['formation_id' => $formation->id]
             ));
         }
 
@@ -114,17 +109,9 @@ class FormationController extends Controller
     }
 
     // ===== METTRE À JOUR =====
-    public function update(Request $request, Formation $formation)
+    public function update(StoreFormationRequest $request, Formation $formation)
     {
-        $request->validate([
-            'titre'       => 'required|string|max:200',
-            'description' => 'required|string',
-            'niveau'      => 'required|in:debutant,intermediaire,avance',
-            'duree'       => 'nullable|string|max:50',
-            'statut'      => 'required|in:publie,brouillon',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
+        
         if ($request->hasFile('image')) {
             if ($formation->image) Storage::disk('public')->delete($formation->image);
             $formation->image = $request->file('image')->store('formations', 'public');

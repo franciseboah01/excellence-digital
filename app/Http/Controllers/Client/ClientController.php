@@ -12,6 +12,7 @@ use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\UpdateProfilRequest;
 
 class ClientController extends Controller
 {
@@ -136,17 +137,13 @@ class ClientController extends Controller
         return view('client.profil', compact('formations_disponibles'));
     }
 
-    public function profilUpdate(Request $request)
+    
+    public function profilUpdate(UpdateProfilRequest $request)
     {
+    // Validation automatique
         $user = auth()->user();
 
-        $request->validate([
-            'nom'       => 'required|string|max:100',
-            'prenom'    => 'required|string|max:100',
-            'telephone' => 'nullable|string|max:20',
-            'avatar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
-
+       
         // Upload avatar
         if ($request->hasFile('avatar')) {
             if ($user->avatar) Storage::delete($user->avatar);

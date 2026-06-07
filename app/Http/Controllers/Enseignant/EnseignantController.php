@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Services\MailService;
 use App\Services\FichierService;
+use App\Http\Requests\UpdateProfilRequest;
 
 
 class EnseignantController extends Controller
@@ -322,16 +323,10 @@ class EnseignantController extends Controller
         return view('enseignant.profil');
     }
 
-    public function profilUpdate(Request $request)
+   public function profilUpdate(UpdateProfilRequest $request)
     {
+    // Validation automatique
         $user = auth()->user();
-
-        $request->validate([
-            'nom'       => 'required|string|max:100',
-            'prenom'    => 'required|string|max:100',
-            'telephone' => 'nullable|string|max:20',
-            'avatar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
 
         if ($request->hasFile('avatar')) {
             if ($user->avatar) Storage::disk('public')->delete($user->avatar);

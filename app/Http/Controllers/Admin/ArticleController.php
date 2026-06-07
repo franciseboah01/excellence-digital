@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\StoreArticleRequest;
 
 class ArticleController extends Controller
 {
@@ -26,17 +27,8 @@ class ArticleController extends Controller
         return view('admin.articles.create');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'titre'     => 'required|string|max:200',
-            'extrait'   => 'nullable|string|max:300',
-            'contenu'   => 'required|string',
-            'categorie' => 'required|string|max:50',
-            'statut'    => 'required|in:publie,brouillon',
-            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
+   public function store(StoreArticleRequest $request)
+   {
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('articles', 'public');
@@ -63,17 +55,8 @@ class ArticleController extends Controller
         return view('admin.articles.edit', compact('article'));
     }
 
-    public function update(Request $request, Article $article)
+    public function update(StoreArticleRequest $request, Article $article)
     {
-        $request->validate([
-            'titre'     => 'required|string|max:200',
-            'extrait'   => 'nullable|string|max:300',
-            'contenu'   => 'required|string',
-            'categorie' => 'required|string|max:50',
-            'statut'    => 'required|in:publie,brouillon',
-            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         if ($request->hasFile('image')) {
             if ($article->image) Storage::disk('public')->delete($article->image);
             $article->image = $request->file('image')->store('articles', 'public');

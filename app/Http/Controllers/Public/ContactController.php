@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Mail\DemandeServiceMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Requests\StoreDemandeServiceRequest;
 
 class ContactController extends Controller
 {
@@ -56,17 +57,11 @@ class ContactController extends Controller
     }
 
     // Traitement demande de service
-    public function demandeStore(Request $request)
-{
-    $request->validate([
-        'nom_visiteur'       => 'required|string|max:100',
-        'email_visiteur'     => 'required|email',
-        'telephone_visiteur' => 'nullable|string|max:20',
-        'service_id'         => 'required|exists:services,id',
-        'message'            => 'nullable|string|max:1000',
-    ]);
 
-    // ✅ CORRECTION 3 : user_id renseigné (null pour visiteurs)
+public function demandeStore(StoreDemandeServiceRequest $request)
+{
+    // validation automatique (FormRequest)
+
     $demande = DemandeService::create([
         'user_id'            => auth()->id() ?? null,
         'nom_visiteur'       => $request->nom_visiteur,

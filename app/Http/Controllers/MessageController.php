@@ -2,46 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMessageRequest;
 use App\Mail\NouveauMessageMail;
 use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class MessageController extends Controller
 {
-    // ===== LISTE DES CONVERSATIONS =====
-    public function index()
+    // ===== HELPER : construire les données de conversations =====
+    private function construireConversations(int $userId): \Illuminate\Support\Collection
     {
-        $userId = auth()->id();
-
-        // Récupérer tous les interlocuteurs distincts
-        $conversations = Message::where('expediteur_id', $userId)
+        // Récupérer les IDs des interlocuteurs distincts
+        $interlocuteursIds = Message::where('expediteur_id', $userId)
             ->orWhere('destinataire_id', $userId)
-            ->with(['expediteur', 'destinataire'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($message) use ($userId) {
-                // L'interlocuteur est l'autre personne
-                return $message->expediteur_id === $userId
-                    ? $message->destinataire
-                    : $message->expediteur;
-            })
-            ->unique('id')
+            ->get(['expediteur_id', 'destinataire_id'])
+            ->flatMap(fn($m) => [$m->expediteur_id, $m->destinataire_id])
+            ->unique()
+            ->filter(fn($id) => $id !== $userId)
             ->values();
 
-        // Pour chaque conversation, récupérer le dernier message et nb non lus
-        $conversationsData = $conversations->map(function ($interlocuteur) use ($userId) {
+        // Charger tous les interlocuteurs en une seule requête
+        $interlocuteurs = User::whereIn('id', $interlocuteursIds)
+            ->get(['id', 'nom', 'prenom', 'avatar']);
+
+        // Construire les données de chaque conversation
+        return $interlocuteurs->map(function ($interlocuteur) use ($userId) {
             $dernierMessage = Message::where(function ($q) use ($userId, $interlocuteur) {
-                    $q->where('expediteur_id', $userId)
-                      ->where('destinataire_id', $interlocuteur->id);
-                })->orWhere(function ($q) use ($userId, $interlocuteur) {
-                    $q->where('expediteur_id', $interlocuteur->id)
-                      ->where('destinataire_id', $userId);
-                })
-                ->latest()
-                ->first();
+                $q->where('expediteur_id', $userId)
+                  ->where('destinataire_id', $interlocuteur->id);
+            })->orWhere(function ($q) use ($userId, $interlocuteur) {
+                $q->where('expediteur_id', $interlocuteur->id)
+                  ->where('destinataire_id', $userId);
+            })->latest()->first();
 
             $nonLus = Message::where('expediteur_id', $interlocuteur->id)
                 ->where('destinataire_id', $userId)
@@ -49,29 +44,37 @@ class MessageController extends Controller
                 ->count();
 
             return [
-                'interlocuteur'  => $interlocuteur,
-                'dernier_message'=> $dernierMessage,
-                'non_lus'        => $nonLus,
+                'interlocuteur'   => $interlocuteur,
+                'dernier_message' => $dernierMessage,
+                'non_lus'         => $nonLus,
             ];
-        })->sortByDesc(fn($c) => $c['dernier_message']?->created_at)->values();
+        })
+        ->sortByDesc(fn($c) => $c['dernier_message']?->created_at)
+        ->values();
+    }
 
-        // Interlocuteurs disponibles selon le rôle
+    // ===== HELPER : contacts disponibles selon le rôle =====
+    private function getContacts(): \Illuminate\Database\Eloquent\Collection
+    {
         $user = auth()->user();
-        if ($user->hasRole('admin')) {
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['client', 'enseignant'])
-            )->where('statut', 'actif')->get();
-        } elseif ($user->hasRole('enseignant')) {
-            // Enseignant peut écrire aux apprenants de ses formations + admin
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['client', 'admin'])
-            )->where('statut', 'actif')->get();
-        } else {
-            // Client peut écrire à l'admin et ses enseignants
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['admin', 'enseignant'])
-            )->where('statut', 'actif')->get();
-        }
+
+        $roles = match(true) {
+            $user->hasRole('admin')      => ['client', 'enseignant'],
+            $user->hasRole('enseignant') => ['client', 'admin'],
+            default                      => ['admin', 'enseignant'],
+        };
+
+        return User::whereHas('roles', fn($q) => $q->whereIn('name', $roles))
+            ->where('statut', 'actif')
+            ->get(['id', 'nom', 'prenom', 'avatar']);
+    }
+
+    // ===== LISTE DES CONVERSATIONS =====
+    public function index()
+    {
+        $userId           = auth()->id();
+        $conversationsData = $this->construireConversations($userId);
+        $contacts          = $this->getContacts();
 
         return view('messages.index', compact('conversationsData', 'contacts'));
     }
@@ -87,69 +90,21 @@ class MessageController extends Controller
             ->where('lu', false)
             ->update(['lu' => true, 'lu_le' => now()]);
 
-        // Charger la conversation
+        // Charger la conversation (eager loading)
         $messages = Message::where(function ($q) use ($moi, $user) {
                 $q->where('expediteur_id', $moi)
                   ->where('destinataire_id', $user->id);
-            })->orWhere(function ($q) use ($moi, $user) {
+            })
+            ->orWhere(function ($q) use ($moi, $user) {
                 $q->where('expediteur_id', $user->id)
                   ->where('destinataire_id', $moi);
             })
-            ->with(['expediteur', 'destinataire'])
+            ->with(['expediteur:id,nom,prenom,avatar', 'destinataire:id,nom,prenom'])
             ->orderBy('created_at')
             ->get();
 
-        // Contacts disponibles
-        $authUser = auth()->user();
-        if ($authUser->hasRole('admin')) {
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['client', 'enseignant'])
-            )->where('statut', 'actif')->get();
-        } elseif ($authUser->hasRole('enseignant')) {
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['client', 'admin'])
-            )->where('statut', 'actif')->get();
-        } else {
-            $contacts = User::whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['admin', 'enseignant'])
-            )->where('statut', 'actif')->get();
-        }
-
-        // Toutes les conversations
-        $userId = $moi;
-        $conversations = Message::where('expediteur_id', $userId)
-            ->orWhere('destinataire_id', $userId)
-            ->with(['expediteur', 'destinataire'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($message) use ($userId) {
-                return $message->expediteur_id === $userId
-                    ? $message->destinataire
-                    : $message->expediteur;
-            })
-            ->unique('id')
-            ->values();
-
-        $conversationsData = $conversations->map(function ($interlocuteur) use ($userId) {
-            $dernierMessage = Message::where(function ($q) use ($userId, $interlocuteur) {
-                    $q->where('expediteur_id', $userId)
-                      ->where('destinataire_id', $interlocuteur->id);
-                })->orWhere(function ($q) use ($userId, $interlocuteur) {
-                    $q->where('expediteur_id', $interlocuteur->id)
-                      ->where('destinataire_id', $userId);
-                })->latest()->first();
-
-            $nonLus = Message::where('expediteur_id', $interlocuteur->id)
-                ->where('destinataire_id', $userId)
-                ->where('lu', false)
-                ->count();
-
-            return [
-                'interlocuteur'   => $interlocuteur,
-                'dernier_message' => $dernierMessage,
-                'non_lus'         => $nonLus,
-            ];
-        })->sortByDesc(fn($c) => $c['dernier_message']?->created_at)->values();
+        $conversationsData = $this->construireConversations($moi);
+        $contacts          = $this->getContacts();
 
         return view('messages.conversation', compact(
             'messages', 'user', 'contacts', 'conversationsData'
@@ -157,28 +112,22 @@ class MessageController extends Controller
     }
 
     // ===== ENVOYER UN MESSAGE =====
-    public function envoyer(Request $request)
+    public function envoyer(StoreMessageRequest $request)
     {
-        $request->validate([
-            'destinataire_id' => 'required|exists:users,id|different:' . auth()->id(),
-            'contenu'         => 'required|string|max:1000',
-        ]);
-
         $destinataire = User::findOrFail($request->destinataire_id);
+        $expediteur   = auth()->user();
 
         $message = Message::create([
-            'expediteur_id'   => auth()->id(),
+            'expediteur_id'   => $expediteur->id,
             'destinataire_id' => $destinataire->id,
             'contenu'         => e($request->contenu),
         ]);
-
-        $expediteur = auth()->user();
 
         // Notification interne
         Notification::create([
             'user_id' => $destinataire->id,
             'titre'   => "💬 Nouveau message de {$expediteur->prenom} {$expediteur->nom}",
-            'message' => \Str::limit($request->contenu, 80),
+            'message' => Str::limit($request->contenu, 80),
             'type'    => 'info',
             'data'    => [
                 'message_id'     => $message->id,
@@ -187,19 +136,19 @@ class MessageController extends Controller
             ],
         ]);
 
-        // Email de notification
+        // Email de notification (silencieux si échec)
         try {
             Mail::to($destinataire->email)
                 ->send(new NouveauMessageMail($expediteur, $destinataire, $request->contenu));
         } catch (\Throwable $e) {
-            // Silencieux — le message est quand même envoyé
+            \Log::warning("Email message non envoyé : {$e->getMessage()}");
         }
 
-        // Si requête AJAX
+        // Réponse AJAX
         if ($request->ajax()) {
             return response()->json([
-                'success'  => true,
-                'message'  => [
+                'success' => true,
+                'message' => [
                     'id'         => $message->id,
                     'contenu'    => $message->contenu,
                     'created_at' => $message->created_at->format('H:i'),
