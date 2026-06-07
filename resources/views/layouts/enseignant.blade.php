@@ -116,6 +116,10 @@
                 <a href="{{ route('enseignant.notifications.form') }}" class="text-gray-600 hover:text-blue-700 text-sm">
                     🔔 Notifications
                 </a>
+                <a href="{{ route('enseignant.qcms.index') }}"
+                    class="text-gray-600 hover:text-blue-700 font-medium text-sm transition">
+                    📝 QCMs
+                </a>
             </div>
 
             <div class="flex items-center space-x-4" x-data="{ open: false }">

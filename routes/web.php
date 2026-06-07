@@ -26,6 +26,9 @@ use App\Http\Controllers\Public\BlogController;
 use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\FichierController;
 use App\Http\Controllers\Admin\ConfigurationController;
+use App\Http\Controllers\Enseignant\QcmController as EnseignantQcmController;
+use App\Http\Controllers\Client\QcmController as ClientQcmController;
+use App\Http\Controllers\CertificatController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -40,7 +43,6 @@ Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name(
 Route::post('/demande-service', [ContactController::class, 'demandeStore'])->name('demande.store');
 Route::get('/recherche', [SearchController::class, 'search'])->name('recherche');
 Route::get('/recherche/autocomplete', [SearchController::class, 'autocomplete'])->name('recherche.autocomplete');
-
 
 // ===== ROUTE DASHBOARD UNIFIÉE =====
 Route::middleware('auth')->get('/dashboard', function () {
@@ -66,9 +68,9 @@ Route::middleware('auth')->get('/dashboard', function () {
 
 })->name('dashboard');
 
-    Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-    Route::get('/blog/{article:slug}', [BlogController::class, 'show'])->name('blog.show');
-    Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{article:slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
 
 
 // ===== ROUTES AUTH (Breeze) =====
@@ -82,6 +84,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
     Route::get('/messages/non-lus/count', [MessageController::class, 'compterNonLus'])->name('messages.non-lus');
     Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+    Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('certificats.telecharger');
+    Route::get('/certificats/{certificat}/apercu', [CertificatController::class, 'apercu'])->name('certificats.apercu');
+
+
 });
 
 
@@ -102,8 +108,10 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/temoignages', [ClientTemoignageController::class, 'index'])->name('temoignages.index');
         Route::post('/temoignages', [ClientTemoignageController::class, 'store'])->name('temoignages.store');
         Route::delete('/temoignages/{temoignage}', [ClientTemoignageController::class, 'destroy'])->name('temoignages.destroy');
-
-    
+        Route::get('/qcms', [ClientQcmController::class, 'index'])->name('qcms.index');
+        Route::get('/qcms/{qcm}/demarrer', [ClientQcmController::class, 'demarrer'])->name('qcms.demarrer');
+        Route::post('/qcms/{qcm}/soumettre', [ClientQcmController::class, 'soumettre'])->name('qcms.soumettre');
+        Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
     });
 
 // ===== ENSEIGNANT =====
@@ -135,6 +143,18 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
 
         // AJAX
         Route::get('/formations/{formation}/niveaux', [EnseignantController::class, 'getNiveaux'])->name('formations.niveaux');
+
+        // QCM
+        Route::get('/qcms', [EnseignantQcmController::class, 'index'])->name('qcms.index');
+        Route::get('/qcms/creer', [EnseignantQcmController::class, 'create'])->name('qcms.create');
+        Route::post('/qcms', [EnseignantQcmController::class, 'store'])->name('qcms.store');
+        Route::get('/qcms/{qcm}/questions', [EnseignantQcmController::class, 'questions'])->name('qcms.questions');
+        Route::post('/qcms/{qcm}/questions', [EnseignantQcmController::class, 'storeQuestion'])->name('qcms.questions.store');
+        Route::delete('/qcms/{qcm}/questions/{question}', [EnseignantQcmController::class, 'destroyQuestion'])->name('qcms.questions.destroy');
+        Route::post('/qcms/{qcm}/toggle', [EnseignantQcmController::class, 'toggleActif'])->name('qcms.toggle');
+        Route::delete('/qcms/{qcm}', [EnseignantQcmController::class, 'destroy'])->name('qcms.destroy');
+        Route::get('/qcms/{qcm}/resultats', [EnseignantQcmController::class, 'resultats'])->name('qcms.resultats');
+
     });
 
 // ===== ADMIN =====

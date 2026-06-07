@@ -178,6 +178,10 @@
                         class="text-gray-600 hover:text-blue-700 font-medium transition text-sm">
                         🎓 Mes formations
                     </a>
+                    <a href="{{ route('client.qcms.index') }}"
+                        class="text-gray-600 hover:text-blue-700 font-medium text-sm transition">
+                        🎓 QCMs & Certifs
+                    </a>
                     <a href="{{ route('client.notifications') }}"
                         class="text-gray-600 hover:text-blue-700 font-medium transition text-sm">
                         🔔 Notifications
