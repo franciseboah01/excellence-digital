@@ -271,19 +271,21 @@
 
     {{-- CONTENU --}}
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{-- Message flash --}}
-        @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-800 rounded-xl p-4 mb-6 font-medium">
-            ✅ {{ session('success') }}
+        {{-- MESSAGES FLASH --}}
+        <div class="space-y-3">
+            @if(session('success'))
+            <x-alert type="success" :message="session('success')" />
+            @endif
+            @if(session('error'))
+            <x-alert type="error" :message="session('error')" />
+            @endif
+            @if(session('info'))
+            <x-alert type="info" :message="session('info')" />
+            @endif
+            @if(session('warning'))
+            <x-alert type="warning" :message="session('warning')" />
+            @endif
         </div>
-        @endif
-        @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-800 rounded-xl p-4 mb-6 font-medium">
-            ❌ {{ session('error') }}
-        </div>
-        @endif
-
-        @yield('content')
     </main>
 
     @stack('scripts')

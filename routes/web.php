@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\ConfigurationController;
 use App\Http\Controllers\Enseignant\QcmController as EnseignantQcmController;
 use App\Http\Controllers\Client\QcmController as ClientQcmController;
 use App\Http\Controllers\CertificatController;
+use App\Http\Controllers\Admin\QcmController as AdminQcmController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -257,6 +258,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         //Configuration
         Route::get('/configurations', [ConfigurationController::class, 'index'])->name('configurations.index');
         Route::put('/configurations', [ConfigurationController::class, 'update'])->name('configurations.update');
+
+        //CQCM
+        Route::get('/qcms', [AdminQcmController::class, 'index'])->name('qcms.index');
+        Route::get('/qcms/{qcm}', [AdminQcmController::class, 'show'])->name('qcms.show');
+        Route::post('/qcms/{qcm}/toggle', [AdminQcmController::class, 'toggleActif'])->name('qcms.toggle');
+        Route::delete('/qcms/{qcm}', [AdminQcmController::class, 'destroy'])->name('qcms.destroy');
+        Route::get('/certificats', [AdminQcmController::class, 'certificats'])->name('certificats.index');
     });        
 
 // ===== PROFIL =====

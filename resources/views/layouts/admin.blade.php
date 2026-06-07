@@ -160,6 +160,18 @@
                     transition text-sm font-medium">
                     <span>⚙️</span><span>Configurations</span>
                 </a>
+                <a href="{{ route('admin.qcms.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.qcms.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>📝</span><span>QCMs</span>
+                </a>
+                <a href="{{ route('admin.certificats.index') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                    {{ request()->routeIs('admin.certificats.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}
+                    transition text-sm font-medium">
+                    <span>🏆</span><span>Certificats</span>
+                </a>
             </nav>
         
             {{-- Profil Admin --}}
