@@ -93,7 +93,7 @@
 
 {{-- TABLEAU --}}
 <div class="bg-white rounded-xl shadow mt-4 overflow-hidden">
-    <div class="overflow-x-auto">
+    <div class="table-responsive">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
