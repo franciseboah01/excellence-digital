@@ -4,8 +4,15 @@
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-12">
 
-    <a href="{{ route('blog.index') }}" class="text-blue-600 hover:underline text-sm">
-        ← Retour au blog
+    {{-- Retour --}}
+    <a href="{{ route('blog.index') }}" class="inline-flex items-center space-x-1 text-sm font-medium transition"
+        style="color: var(--edc-primary-light);"
+        onmouseover="this.style.color='#93C5FD'"
+        onmouseout="this.style.color='#60A5FA'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Retour au blog</span>
     </a>
 
     <article class="mt-6">
@@ -18,13 +25,13 @@
 
         {{-- HEADER --}}
         <div class="mb-6">
-            <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+            <span class="badge badge-blue">
                 {{ ucfirst($article->categorie) }}
             </span>
-            <h1 class="text-3xl font-bold text-blue-900 mt-4 leading-tight">
+            <h1 class="text-3xl font-extrabold mt-4 leading-tight" style="color: var(--edc-text-primary);">
                 {{ $article->titre }}
             </h1>
-            <div class="flex items-center space-x-4 mt-3 text-sm text-gray-400">
+            <div class="flex items-center space-x-4 mt-3 text-sm" style="color: var(--edc-text-muted);">
                 <span>✍️ {{ $article->auteur->prenom }} {{ $article->auteur->nom }}</span>
                 <span>📅 {{ $article->publie_le?->format('d/m/Y') }}</span>
                 <span>👁 {{ $article->vues }} vue(s)</span>
@@ -32,27 +39,28 @@
         </div>
 
         {{-- PARTAGE RÉSEAUX SOCIAUX --}}
-        <div class="flex items-center space-x-3 mb-6 p-4 bg-gray-50 rounded-xl">
-            <span class="text-sm text-gray-600 font-semibold">Partager :</span>
+        <div class="flex items-center space-x-3 mb-8 p-4 rounded-xl"
+            style="background-color: var(--edc-bg-base); border: 1px solid var(--edc-border);">
+            <span class="text-sm font-semibold" style="color: var(--edc-text-secondary);">Partager :</span>
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
                 target="_blank"
-                class="bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-blue-800 transition">
+                class="btn-primary btn-xs" style="background: #1877F2;">
                 📘 Facebook
             </a>
             <a href="https://wa.me/?text={{ urlencode($article->titre . ' — ' . url()->current()) }}"
                 target="_blank"
-                class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-green-700 transition">
+                class="btn-success btn-xs">
                 💬 WhatsApp
             </a>
             <a href="https://twitter.com/intent/tweet?text={{ urlencode($article->titre) }}&url={{ urlencode(url()->current()) }}"
                 target="_blank"
-                class="bg-sky-500 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-sky-600 transition">
+                class="btn-xs rounded-lg px-4 py-2 text-white font-bold text-xs" style="background: #1DA1F2;">
                 🐦 Twitter
             </a>
         </div>
 
         {{-- CONTENU --}}
-        <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+        <div class="prose max-w-none leading-relaxed" style="color: var(--edc-text-secondary);">
             {!! nl2br(e($article->contenu)) !!}
         </div>
     </article>
@@ -60,13 +68,12 @@
     {{-- ARTICLES LIÉS --}}
     @if($articlesLies->count())
     <div class="mt-16">
-        <h2 class="text-2xl font-bold text-blue-900 mb-6">📰 Articles similaires</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <h2 class="text-section mb-6">📰 Articles similaires</h2>
+        <div class="grid-responsive-3">
             @foreach($articlesLies as $lie)
-            <a href="{{ route('blog.show', $lie->slug) }}"
-                class="bg-white rounded-xl shadow hover:shadow-lg transition p-5 block">
-                <h3 class="font-bold text-blue-900 mb-2">{{ Str::limit($lie->titre, 60) }}</h3>
-                <p class="text-xs text-gray-400">{{ $lie->publie_le?->format('d/m/Y') }}</p>
+            <a href="{{ route('blog.show', $lie->slug) }}" class="edc-card p-5 block">
+                <h3 class="font-bold mb-2" style="color: var(--edc-text-primary);">{{ Str::limit($lie->titre, 60) }}</h3>
+                <p class="text-xs" style="color: var(--edc-text-muted);">{{ $lie->publie_le?->format('d/m/Y') }}</p>
             </a>
             @endforeach
         </div>

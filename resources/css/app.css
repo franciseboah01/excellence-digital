@@ -1,164 +1,612 @@
+/* ============================================================
+   EXCELLENCE DIGITAL CENTER — DESIGN SYSTEM V2 (SOMBRE)
+   ============================================================
+   Thème : "Tech Crépusculaire" — profondeur, modernité, premium.
+   Philosophie : zero blanc pur, surfaces en profondeur, accents
+   lumineux sur fond sombre pour guider l'œil.
+   ============================================================ */
+
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* ===== DESIGN SYSTEM EDC ===== */
+
+/* ============================================================
+   SECTION 0 — VARIABLES CSS (TOKENS DU DESIGN SYSTEM)
+   Toutes les couleurs et paramètres globaux centralisés ici
+   pour un thème cohérent et facilement maintenable.
+   ============================================================ */
 :root {
-    --edc-primary: #1e3a8a;
-    --edc-primary-light: #2563eb;
-    --edc-secondary: #fbbf24;
-    --edc-success: #059669;
-    --edc-danger: #dc2626;
-    --edc-warning: #d97706;
-    --edc-gray: #64748b;
-    --edc-light: #f0f7ff;
-    --edc-radius: 12px;
-    --edc-shadow: 0 4px 20px rgba(30, 58, 138, 0.08);
-    --edc-transition: all 0.2s ease;
+
+    /* --- FONDS (du plus profond au plus élevé) --- */
+    --edc-bg-deep: #0B0F1A;
+    /* Fond racine : presque noir bleuté */
+    --edc-bg-base: #111827;
+    /* Surface principale */
+    --edc-bg-card: #1A2235;
+    /* Cartes, panneaux */
+    --edc-bg-elevated: #232D45;
+    /* Éléments en surélévation (hover) */
+    --edc-bg-input: #151B2B;
+    /* Champs de formulaire */
+
+    /* --- BORDURES --- */
+    --edc-border: #2A3552;
+    /* Bordure subtile */
+    --edc-border-hover: #3B82F6;
+    /* Bordure au focus/hover */
+    --edc-border-glow: rgba(59, 130, 246, 0.25);
+
+    /* --- COULEURS D'ACCENT --- */
+    --edc-primary: #3B82F6;
+    /* Bleu électrique : actions principales */
+    --edc-primary-light: #60A5FA;
+    /* Bleu clair : hover, liens */
+    --edc-primary-dark: #1D4ED8;
+    /* Bleu profond : états pressés */
+    --edc-secondary: #10B981;
+    /* Vert menthe : succès, formations */
+    --edc-accent-warm: #F43F5E;
+    /* Rose corail : promotions, alertes douces */
+    --edc-accent-gold: #FBBF24;
+    /* Or : badges premium, étoiles */
+
+    /* --- ÉTATS SÉMANTIQUES --- */
+    --edc-success: #10B981;
+    --edc-danger: #EF4444;
+    --edc-warning: #F59E0B;
+    --edc-info: #3B82F6;
+
+    /* --- TEXTES --- */
+    --edc-text-primary: #F1F5F9;
+    /* Titres : blanc cassé */
+    --edc-text-secondary: #94A3B8;
+    /* Corps : gris clair */
+    --edc-text-muted: #64748B;
+    /* Légendes : gris atténué */
+    --edc-text-inverse: #0F172A;
+    /* Texte sur fond clair (rare) */
+
+    /* --- PARAMÈTRES GLOBAUX --- */
+    --edc-radius: 14px;
+    --edc-radius-sm: 10px;
+    --edc-radius-lg: 20px;
+    --edc-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    --edc-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.50);
+    --edc-shadow-glow: 0 0 24px rgba(59, 130, 246, 0.20);
+    --edc-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 
+/* ============================================================
+   SECTION 1 — RESET & STYLES DE BASE
+   Overrides Tailwind pour forcer le thème sombre partout.
+   ============================================================ */
 
-/* ===== COMPOSANTS RÉUTILISABLES ===== */
+/* Fond global : on écrase le bg-white de Tailwind */
+body {
+    background-color: var(--edc-bg-deep) !important;
+    color: var(--edc-text-primary) !important;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
-/* CARTES */
+/* Scrollbar sombre personnalisée */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--edc-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--edc-primary);
+}
+
+
+/* ============================================================
+   SECTION 2 — CARTES (composant central du design)
+   Surfaces surélevées avec bordure subtile et glow au hover.
+   ============================================================ */
+
 .edc-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100;
-    border-radius: var(--edc-radius);
+    @apply rounded-2xl;
+    background-color: var(--edc-bg-card);
+    border: 1px solid var(--edc-border);
     box-shadow: var(--edc-shadow);
     transition: var(--edc-transition);
 }
 
+/* Effet hover : léger lift + bordure lumineuse */
 .edc-card:hover {
-    box-shadow: 0 8px 30px rgba(30, 58, 138, 0.12);
-    transform: translateY(-2px);
+    border-color: var(--edc-border-hover);
+    box-shadow: var(--edc-shadow-hover), var(--edc-shadow-glow);
+    transform: translateY(-3px);
 }
 
-/* BOUTONS */
+/* Variante compacte pour mobile */
+.edc-card-mobile {
+    @apply rounded-2xl p-4;
+    background-color: var(--edc-bg-card);
+    border: 1px solid var(--edc-border);
+    box-shadow: var(--edc-shadow);
+}
+
+
+/* ============================================================
+   SECTION 3 — BOUTONS
+   3 variantes : Primaire (glow), Secondaire (outline), 
+   Tertiaire (discret) + tailles.
+   ============================================================ */
+
+/* --- Bouton Primaire : fond bleu avec glow --- */
 .btn-primary {
-    @apply bg-blue-800 text-white font-semibold px-6 py-3 rounded-xl hover:bg-blue-900 transition-all duration-200 inline-flex items-center justify-center space-x-2;
-}
-
-.btn-secondary {
-    @apply bg-gray-100 text-gray-700 font-semibold px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 inline-flex items-center justify-center space-x-2;
-}
-
-.btn-success {
-    @apply bg-green-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200;
-}
-
-.btn-danger {
-    @apply bg-red-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-200;
-}
-
-.btn-sm {
-    @apply px-4 py-2 text-sm rounded-lg;
-}
-
-.btn-xs {
-    @apply px-3 py-1.5 text-xs rounded-lg;
-}
-
-/* BADGES */
-.badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
-}
-
-.badge-blue {
-    @apply bg-blue-100 text-blue-800;
-}
-
-.badge-green {
-    @apply bg-green-100 text-green-800;
-}
-
-.badge-yellow {
-    @apply bg-yellow-100 text-yellow-800;
-}
-
-.badge-red {
-    @apply bg-red-100 text-red-800;
-}
-
-.badge-purple {
-    @apply bg-purple-100 text-purple-800;
-}
-
-.badge-gray {
-    @apply bg-gray-100 text-gray-600;
-}
-
-/* ALERTES */
-.alert {
-    @apply flex items-start space-x-3 p-4 rounded-xl border text-sm font-medium;
-}
-
-.alert-success {
-    @apply bg-green-50 border-green-400 text-green-800;
-}
-
-.alert-error {
-    @apply bg-red-50 border-red-400 text-red-800;
-}
-
-.alert-warning {
-    @apply bg-yellow-50 border-yellow-400 text-yellow-800;
-}
-
-.alert-info {
-    @apply bg-blue-50 border-blue-400 text-blue-800;
-}
-
-/* INPUTS */
-.edc-input {
-    @apply w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
-}
-
-.edc-select {
-    @apply w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white;
-}
-
-.edc-label {
-    @apply block text-sm font-semibold text-gray-700 mb-1.5;
-}
-
-/* STAT CARD */
-.stat-card {
-    @apply bg-white rounded-2xl shadow-sm p-5 border-l-4;
+    @apply font-semibold inline-flex items-center justify-center space-x-2;
+    background: linear-gradient(135deg, var(--edc-primary), var(--edc-primary-dark));
+    color: #ffffff;
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.30);
     transition: var(--edc-transition);
 }
 
-.stat-card:hover {
+.btn-primary:hover {
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.45);
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+/* --- Bouton Secondaire : outline bleu sur fond sombre --- */
+.btn-secondary {
+    @apply font-semibold inline-flex items-center justify-center space-x-2;
+    background-color: transparent;
+    color: var(--edc-primary-light);
+    border: 1.5px solid var(--edc-primary);
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    transition: var(--edc-transition);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(59, 130, 246, 0.12);
+    border-color: var(--edc-primary-light);
+    color: #ffffff;
+}
+
+/* --- Bouton Tertiaire : discret, fond grisé --- */
+.btn-tertiary {
+    @apply font-semibold inline-flex items-center justify-center space-x-2;
+    background-color: var(--edc-bg-elevated);
+    color: var(--edc-text-secondary);
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    border: 1px solid var(--edc-border);
+    transition: var(--edc-transition);
+}
+
+.btn-tertiary:hover {
+    background-color: var(--edc-bg-card);
+    color: var(--edc-text-primary);
+    border-color: var(--edc-border-hover);
+}
+
+/* --- Bouton Succès (vert) --- */
+.btn-success {
+    @apply font-semibold inline-flex items-center justify-center;
+    background: linear-gradient(135deg, var(--edc-secondary), #059669);
+    color: #ffffff;
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    transition: var(--edc-transition);
+}
+
+.btn-success:hover {
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.40);
     transform: translateY(-2px);
 }
 
-.stat-card .stat-value {
-    @apply text-3xl font-extrabold;
+/* --- Bouton Danger (rouge) --- */
+.btn-danger {
+    @apply font-semibold inline-flex items-center justify-center;
+    background: linear-gradient(135deg, var(--edc-danger), #B91C1C);
+    color: #ffffff;
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    transition: var(--edc-transition);
 }
 
-.stat-card .stat-label {
-    @apply text-gray-500 text-sm mt-1;
+.btn-danger:hover {
+    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.35);
+    transform: translateY(-2px);
 }
 
-/* SECTION TITLE */
+/* --- Tailles de boutons --- */
+.btn-sm {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    border-radius: var(--edc-radius-sm);
+}
+
+.btn-xs {
+    padding: 7px 14px;
+    font-size: 0.75rem;
+    border-radius: var(--edc-radius-sm);
+}
+
+/* --- Accessibilité tactile --- */
+.btn-touch {
+    min-height: 48px;
+    min-width: 48px;
+}
+
+
+/* ============================================================
+   SECTION 4 — BADGES (pills colorés sur fond sombre)
+   Chaque variante a un fond très transparent teinté.
+   ============================================================ */
+
+.badge {
+    @apply inline-flex items-center font-semibold;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+/* Fond = couleur à 12% d'opacité, texte = couleur vive */
+.badge-blue {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: var(--edc-primary-light);
+}
+
+.badge-green {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--edc-secondary);
+}
+
+.badge-gold {
+    background-color: rgba(251, 191, 36, 0.12);
+    color: var(--edc-accent-gold);
+}
+
+.badge-red {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--edc-danger);
+}
+
+.badge-purple {
+    background-color: rgba(168, 85, 247, 0.12);
+    color: #C084FC;
+}
+
+.badge-gray {
+    background-color: rgba(148, 163, 184, 0.10);
+    color: var(--edc-text-muted);
+}
+
+
+/* ============================================================
+   SECTION 5 — ALERTES
+   Messages de feedback avec bordure colorée et fond teinté.
+   ============================================================ */
+
+.alert {
+    @apply flex items-start space-x-3 p-4 rounded-xl text-sm font-medium;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.30);
+    color: #34D399;
+}
+
+.alert-error {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.30);
+    color: #F87171;
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.30);
+    color: #FBBF24;
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.30);
+    color: var(--edc-primary-light);
+}
+
+
+/* ============================================================
+   SECTION 6 — INPUTS & FORMULAIRES
+   Champs sombres avec bordure et focus ring lumineux.
+   ============================================================ */
+
+.edc-input {
+    @apply w-full text-sm transition-all duration-200;
+    background-color: var(--edc-bg-input);
+    border: 1px solid var(--edc-border);
+    color: var(--edc-text-primary);
+    padding: 14px 18px;
+    border-radius: var(--edc-radius);
+}
+
+.edc-input::placeholder {
+    color: var(--edc-text-muted);
+}
+
+.edc-input:focus {
+    outline: none;
+    border-color: var(--edc-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.20);
+}
+
+.edc-select {
+    @apply w-full text-sm transition-all duration-200;
+    background-color: var(--edc-bg-input);
+    border: 1px solid var(--edc-border);
+    color: var(--edc-text-primary);
+    padding: 14px 18px;
+    border-radius: var(--edc-radius);
+    appearance: none;
+}
+
+.edc-select:focus {
+    outline: none;
+    border-color: var(--edc-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.20);
+}
+
+.edc-label {
+    @apply block text-sm font-semibold mb-2;
+    color: var(--edc-text-secondary);
+}
+
+
+/* ============================================================
+   SECTION 7 — TABLEAUX
+   Tables sombres avec lignes alternées et hover.
+   ============================================================ */
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--edc-radius);
+}
+
+.table-responsive table {
+    min-width: 600px;
+}
+
+.admin-table {
+    @apply w-full text-sm text-left;
+    color: var(--edc-text-secondary);
+}
+
+.admin-table thead {
+    background-color: var(--edc-bg-base);
+    color: var(--edc-text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.admin-table th {
+    @apply px-4 py-3 font-semibold;
+}
+
+.admin-table td {
+    @apply px-4 py-3;
+    border-bottom: 1px solid var(--edc-border);
+}
+
+.admin-table tbody tr {
+    transition: var(--edc-transition);
+}
+
+.admin-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+
+/* ============================================================
+   SECTION 8 — TYPOGRAPHIE
+   Hiérarchie de texte avec le nouveau thème sombre.
+   ============================================================ */
+
+/* Titre Hero (page d'accueil) */
+.text-hero {
+    @apply font-extrabold leading-tight;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    color: var(--edc-text-primary);
+    letter-spacing: -0.02em;
+}
+
+/* Titre de section */
+.text-section {
+    @apply font-extrabold;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    color: var(--edc-text-primary);
+    letter-spacing: -0.01em;
+}
+
+/* Titre section avec style EDC */
 .section-title {
-    @apply text-3xl font-extrabold text-blue-900 leading-tight;
+    @apply font-extrabold leading-tight;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    color: var(--edc-text-primary);
 }
 
+/* Sous-titre des sections */
 .section-subtitle {
-    @apply text-gray-500 mt-2 text-lg;
+    @apply mt-3 text-lg;
+    color: var(--edc-text-muted);
 }
 
-/* GRADIENT HERO */
+/* Texte gradient (effet premium pour titres) */
+.text-gradient {
+    background: linear-gradient(135deg, var(--edc-primary-light), #A78BFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+
+/* ============================================================
+   SECTION 9 — GRILLES RESPONSIVES
+   Utilitaires de grille réutilisables.
+   ============================================================ */
+
+.grid-responsive-2 {
+    @apply grid gap-5;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .grid-responsive-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.grid-responsive-3 {
+    @apply grid gap-5;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .grid-responsive-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .grid-responsive-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.grid-responsive-4 {
+    @apply grid gap-5;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+    .grid-responsive-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
+/* ============================================================
+   SECTION 10 — HERO & SECTIONS MARQUANTES
+   ============================================================ */
+
+/* --- Hero : gradient diagonal bleu profond --- */
 .hero-gradient {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0c1a3a 0%, #111827 40%, #1e1b4b 100%);
+    position: relative;
+    overflow: hidden;
 }
 
-/* ANIMATIONS */
+/* Effet de "mesh" subtil derrière le hero */
+.hero-gradient::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 80%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Variante CTA (section finale de conversion) */
+.cta-gradient {
+    background: linear-gradient(135deg, #0f2447 0%, #1a1642 50%, #1e1b4b 100%);
+    position: relative;
+}
+
+.cta-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.10) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   SECTION 11 — NAVIGATION
+   Header fixe avec effet glassmorphism au scroll.
+   ============================================================ */
+
+.edc-navbar {
+    background-color: rgba(11, 15, 26, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--edc-border);
+    transition: var(--edc-transition);
+}
+
+/* Liens de navigation */
+.nav-link {
+    @apply px-3 py-2 text-sm font-semibold rounded-lg transition;
+    color: var(--edc-text-secondary);
+}
+
+.nav-link:hover {
+    color: var(--edc-primary-light);
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
+.nav-link.active {
+    color: var(--edc-primary-light);
+    background-color: rgba(59, 130, 246, 0.12);
+}
+
+/* Sidebar admin */
+.admin-sidebar-link {
+    @apply flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition;
+    color: var(--edc-text-muted);
+}
+
+.admin-sidebar-link:hover {
+    background-color: rgba(59, 130, 246, 0.08);
+    color: var(--edc-text-secondary);
+}
+
+.admin-sidebar-link.active {
+    background-color: var(--edc-primary);
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   SECTION 12 — ANIMATIONS
+   ============================================================ */
+
+/* Fade up au scroll */
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(24px);
     }
 
     to {
@@ -168,9 +616,10 @@
 }
 
 .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease forwards;
+    animation: fadeInUp 0.6s ease forwards;
 }
 
+/* Pulse doux (indicateurs en ligne) */
 @keyframes pulse-soft {
 
     0%,
@@ -179,73 +628,282 @@
     }
 
     50% {
-        opacity: 0.7;
+        opacity: 0.5;
     }
 }
 
 .animate-pulse-soft {
-    animation: pulse-soft 2s infinite;
+    animation: pulse-soft 2.5s ease-in-out infinite;
 }
 
-/* SCROLLBAR CUSTOM */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* Bounce lent (WhatsApp flottant) */
+@keyframes bounce-slow {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
+.animate-bounce-slow {
+    animation: bounce-slow 2.5s ease-in-out infinite;
 }
 
-::-webkit-scrollbar-thumb {
-    background: #93c5fd;
-    border-radius: 3px;
+/* Glow pulse (boutons CTA importants) */
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.20);
+    }
+
+    50% {
+        box-shadow: 0 0 32px rgba(59, 130, 246, 0.40);
+    }
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #1e3a8a;
+.animate-glow {
+    animation: glow-pulse 2.5s ease-in-out infinite;
 }
 
-/* ===== TABLES RESPONSIVE ===== */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 0.75rem;
+
+/* ============================================================
+   SECTION 13 — MESSAGERIE
+   Bulles de chat adaptées au thème sombre.
+   ============================================================ */
+
+.message-bubble-sent {
+    @apply rounded-2xl rounded-br-md px-4 py-3 max-w-[78%];
+    background: linear-gradient(135deg, var(--edc-primary), var(--edc-primary-dark));
+    color: #ffffff;
+    margin-left: auto;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.20);
 }
 
-.table-responsive table {
-    min-width: 600px;
+.message-bubble-received {
+    @apply rounded-2xl rounded-bl-md px-4 py-3 max-w-[78%];
+    background-color: var(--edc-bg-elevated);
+    color: var(--edc-text-primary);
+    border: 1px solid var(--edc-border);
 }
 
-/* ===== GRILLES MOBILE-FIRST ===== */
-.grid-responsive-2 {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+
+/* ============================================================
+   SECTION 14 — FOOTER
+   Footer sombre avec séparation subtile.
+   ============================================================ */
+
+.edc-footer {
+    background-color: #080C14;
+    /* Encore plus profond que le fond racine */
+    border-top: 1px solid var(--edc-border);
+    color: var(--edc-text-secondary);
 }
 
-.grid-responsive-3 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+.edc-footer h3 {
+    @apply text-xs font-bold uppercase tracking-widest mb-5;
+    color: var(--edc-text-muted);
 }
 
-.grid-responsive-4 {
-    @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+.edc-footer a {
+    @apply transition;
+    color: var(--edc-text-muted);
 }
 
-/* ===== CARDS MOBILE ===== */
-.edc-card-mobile {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4;
+.edc-footer a:hover {
+    color: var(--edc-primary-light);
 }
 
-/* ===== TEXTE RESPONSIVE ===== */
-.text-hero {
-    @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold;
+
+/* ============================================================
+   SECTION 15 — UPLOAD ZONE (drag & drop)
+   ============================================================ */
+
+.upload-zone {
+    @apply rounded-2xl p-8 text-center cursor-pointer transition-all duration-300;
+    border: 2px dashed var(--edc-border);
+    background-color: var(--edc-bg-base);
+    color: var(--edc-text-muted);
 }
 
-.text-section {
-    @apply text-2xl sm:text-3xl font-extrabold;
+.upload-zone:hover {
+    border-color: var(--edc-primary);
+    background-color: rgba(59, 130, 246, 0.05);
+    color: var(--edc-text-secondary);
 }
 
-/* ===== BOUTONS TACTILE (min 44px) ===== */
-.btn-touch {
-    min-height: 44px;
-    min-width: 44px;
+.upload-zone.dragover {
+    border-color: var(--edc-primary-light);
+    background-color: rgba(59, 130, 246, 0.10);
 }
+
+
+/* ============================================================
+   SECTION 16 — TIMELINE (suivi de demandes)
+   ============================================================ */
+
+.timeline-item {
+    @apply relative pl-8 pb-7 last:pb-0;
+    border-left: 2px solid var(--edc-border);
+}
+
+.timeline-item::before {
+    content: '';
+    @apply absolute left-[-5px] top-1 w-3 h-3 rounded-full border-2;
+    background-color: var(--edc-primary);
+    border-color: var(--edc-bg-deep);
+}
+
+.timeline-item.completed {
+    border-left-color: rgba(16, 185, 129, 0.35);
+}
+
+.timeline-item.completed::before {
+    background-color: var(--edc-secondary);
+}
+
+.timeline-item.pending {
+    border-left-color: rgba(245, 158, 11, 0.35);
+}
+
+.timeline-item.pending::before {
+    background-color: var(--edc-warning);
+}
+
+.timeline-item.cancelled {
+    border-left-color: rgba(239, 68, 68, 0.35);
+}
+
+.timeline-item.cancelled::before {
+    background-color: var(--edc-danger);
+}
+
+
+/* ============================================================
+   SECTION 17 — CALENDRIER (espace enseignant)
+   ============================================================ */
+
+.calendar-day {
+    @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200;
+    color: var(--edc-text-secondary);
+}
+
+.calendar-day:hover {
+    background-color: var(--edc-bg-elevated);
+    color: var(--edc-text-primary);
+}
+
+.calendar-day.active {
+    background: linear-gradient(135deg, var(--edc-primary), var(--edc-primary-dark));
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.30);
+}
+
+.calendar-day.today {
+    border: 2px solid var(--edc-primary);
+    color: var(--edc-primary-light);
+}
+
+
+/* ============================================================
+   SECTION 18 — STAT CARDS (dashboard)
+   ============================================================ */
+
+.stat-card {
+    @apply rounded-2xl p-5 transition;
+    background-color: var(--edc-bg-card);
+    border: 1px solid var(--edc-border);
+    border-left: 4px solid var(--edc-primary);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--edc-shadow-hover);
+    border-color: var(--edc-border-hover);
+}
+
+.stat-card .stat-value {
+    @apply text-3xl font-extrabold;
+    color: var(--edc-text-primary);
+}
+
+.stat-card .stat-label {
+    @apply text-sm mt-1;
+    color: var(--edc-text-muted);
+}
+
+/* Variantes de couleur pour stat-card */
+.stat-card.stat-green {
+    border-left-color: var(--edc-secondary);
+}
+
+.stat-card.stat-gold {
+    border-left-color: var(--edc-accent-gold);
+}
+
+.stat-card.stat-red {
+    border-left-color: var(--edc-danger);
+}
+
+.stat-card.stat-purple {
+    border-left-color: #A78BFA;
+}
+
+
+/* ============================================================
+   SECTION 19 — UTILITAIRES RESPONSIVE
+   ============================================================ */
+
+/* Cacher sur mobile */
+@media (max-width: 640px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+/* Cacher sur desktop */
+@media (min-width: 1024px) {
+    .hide-desktop {
+        display: none !important;
+    }
+}
+
+/* Ajustements mobile globaux */
+@media (max-width: 640px) {
+    .text-hero {
+        font-size: 1.75rem;
+    }
+
+    .edc-card:hover,
+    .stat-card:hover {
+        transform: none;
+        /* Désactiver le lift sur tactile */
+    }
+}
+
+
+/* ============================================================
+   SECTION 20 — WHATSAPP FLOTTANT
+   ============================================================ */
+
+.whatsapp-float {
+    @apply fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center text-2xl;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: #ffffff;
+    box-shadow: 0 6px 24px rgba(37, 211, 102, 0.35);
+    transition: var(--edc-transition);
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.1) rotate(-5deg);
+    box-shadow: 0 8px 32px rgba(37, 211, 102, 0.50);
+}
+
+
+/* ============================================================
+   FIN DU FICHIER
+   ============================================================ */
