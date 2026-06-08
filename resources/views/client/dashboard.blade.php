@@ -13,18 +13,19 @@
             Bienvenue dans votre espace personnel
         </p>
     </div>
-    <a href="{{ route('demande.form') }}" class="btn-primary btn-touch">
+    <a href="{{ route('client.demande.form') }}" class="btn-primary btn-touch">
         <span>➕</span><span>Nouvelle demande</span>
     </a>
 </div>
 
 {{-- STATS --}}
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
     @foreach([
-        ['demandes',       '📋 Demandes',     'var(--edc-primary)'],
-        ['demandes_cours', '🔄 En cours',     'var(--edc-secondary)'],
-        ['formations',     '🎓 Formations',   '#A78BFA'],
-        ['notifications',  '🔔 Non lues',     'var(--edc-danger)'],
+        ['demandes_total',   '📋 Total',       'var(--edc-primary)'],
+        ['demandes_attente', '⏳ En attente',  'var(--edc-accent-gold)'],
+        ['demandes_cours',   '🔄 En cours',    'var(--edc-secondary)'],
+        ['demandes_termine', '✅ Terminé',     '#10B981'],
+        ['demandes_annule',  '❌ Annulé',      'var(--edc-danger)'],
     ] as $stat)
     <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
         <p class="stat-value">{{ $stats[$stat[0]] }}</p>
@@ -67,7 +68,7 @@
             </div>
             @endforelse
             <div class="mt-4">
-                <a href="{{ route('demande.form') }}" class="btn-primary btn-sm w-full text-center">
+                <a href="{{ route('client.demande.form') }}" class="btn-primary btn-touch w-full text-center">
                     + Nouvelle demande
                 </a>
             </div>
@@ -157,7 +158,7 @@
             <h3 class="font-bold text-sm mb-3" style="color: var(--edc-text-primary);">⚡ Actions rapides</h3>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-1">
                 @foreach([
-                    ['demande.form',              '💼', 'Service'],
+                    ['client.demande.form',              '💼', 'Service'],
                     ['client.formations',         '🎓', 'Formations'],
                     ['client.qcms.index',         '📝', 'QCMs'],
                     ['messages.index',            '💬', 'Messages'],

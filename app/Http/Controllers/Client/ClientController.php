@@ -22,11 +22,17 @@ class ClientController extends Controller
         $user = auth()->user();
 
         $stats = [
-            'demandes'        => DemandeService::where('user_id', $user->id)->count(),
-            'formations'      => InscriptionFormation::where('user_id', $user->id)->count(),
-            'notifications'   => Notification::where('user_id', $user->id)->where('lu', false)->count(),
-            'demandes_cours'  => DemandeService::where('user_id', $user->id)
+            'demandes_total'   => DemandeService::where('user_id', $user->id)->count(),
+            'demandes_attente' => DemandeService::where('user_id', $user->id)
+                                    ->where('statut', 'en_attente')->count(),
+            'demandes_cours'   => DemandeService::where('user_id', $user->id)
                                     ->where('statut', 'en_cours')->count(),
+            'demandes_termine' => DemandeService::where('user_id', $user->id)
+                                    ->where('statut', 'termine')->count(),
+            'demandes_annule'  => DemandeService::where('user_id', $user->id)
+                                    ->where('statut', 'annule')->count(),
+            'formations'       => InscriptionFormation::where('user_id', $user->id)->count(),
+            'notifications'    => Notification::where('user_id', $user->id)->where('lu', false)->count(),
         ];
 
         $dernieres_demandes = DemandeService::with('service')
@@ -45,6 +51,35 @@ class ClientController extends Controller
             'stats', 'dernieres_demandes',
             'mes_formations', 'notifications'
         ));
+    }
+
+    // ===== DEMANDE DE SERVICE (NOUVEAU) =====
+    public function demandeForm()
+    {
+        $services = Service::where('actif', true)->get();
+        return view('client.nouvelle-demande', compact('services'));
+    }
+
+    public function demandeStore(Request $request)
+    {
+        $validated = $request->validate([
+            'service_id'         => 'required|exists:services,id',
+            'telephone_visiteur' => 'nullable|string|max:20',
+            'message'            => 'nullable|string|max:2000',
+        ]);
+
+        DemandeService::create([
+            'user_id'            => auth()->id(),
+            'service_id'         => $validated['service_id'],
+            'nom_visiteur'       => auth()->user()->nom_complet,
+            'email_visiteur'     => auth()->user()->email,
+            'telephone_visiteur' => $validated['telephone_visiteur'] ?? auth()->user()->telephone,
+            'message'            => $validated['message'] ?? null,
+            'statut'             => 'en_attente',
+        ]);
+
+        return redirect()->route('client.demandes')
+            ->with('success', 'Votre demande a été envoyée avec succès !');
     }
 
     // ===== MES DEMANDES =====
@@ -70,7 +105,6 @@ class ClientController extends Controller
     // ===== RESSOURCES D'UNE FORMATION =====
     public function ressources(Formation $formation)
     {
-        // Vérifier que le client est bien inscrit
         $inscription = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $formation->id)
             ->where('statut', 'valide')
@@ -83,7 +117,6 @@ class ClientController extends Controller
             ->orderBy('ordre')
             ->get();
 
-        // Ressources sans niveau
         $ressources_generales = Ressource::where('formation_id', $formation->id)
             ->whereNull('niveau_id')
             ->where('actif', true)
@@ -95,13 +128,11 @@ class ClientController extends Controller
     // ===== VISUALISER UN PDF =====
     public function voirPdf(Ressource $ressource)
     {
-        // Vérifier accès inscription
         $inscription = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $ressource->formation_id)
             ->where('statut', 'valide')
             ->firstOrFail();
 
-        // ✅ CORRECTION 4 : message d'erreur explicite
         if (!$ressource->fichier_path) {
             return back()->with('error', 'Aucun fichier associé à cette ressource.');
         }
@@ -119,7 +150,6 @@ class ClientController extends Controller
     // ===== NOTIFICATIONS =====
     public function notifications()
     {
-        // Marquer toutes comme lues
         Notification::where('user_id', auth()->id())
             ->where('lu', false)
             ->update(['lu' => true]);
@@ -137,14 +167,10 @@ class ClientController extends Controller
         return view('client.profil', compact('formations_disponibles'));
     }
 
-    
     public function profilUpdate(UpdateProfilRequest $request)
     {
-    // Validation automatique
         $user = auth()->user();
 
-       
-        // Upload avatar
         if ($request->hasFile('avatar')) {
             if ($user->avatar) Storage::delete($user->avatar);
             $path = $request->file('avatar')->store('avatars', 'public');
@@ -164,8 +190,8 @@ class ClientController extends Controller
     public function passwordUpdate(Request $request)
     {
         $request->validate([
-            'current_password'      => 'required',
-            'password'              => 'required|min:8|confirmed',
+            'current_password' => 'required',
+            'password'         => 'required|min:8|confirmed',
         ]);
 
         if (!Hash::check($request->current_password, auth()->user()->password)) {

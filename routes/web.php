@@ -113,6 +113,8 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/qcms/{qcm}/demarrer', [ClientQcmController::class, 'demarrer'])->name('qcms.demarrer');
         Route::post('/qcms/{qcm}/soumettre', [ClientQcmController::class, 'soumettre'])->name('qcms.soumettre');
         Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
+        Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
+        Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
     });
 
 // ===== ENSEIGNANT =====
