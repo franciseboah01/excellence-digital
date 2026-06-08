@@ -6,10 +6,10 @@
 {{-- ============================================================
      SECTION 1 : HERO
      Section principale en pleine largeur avec un gradient
-     diagonal bleu profond, un effet de lumière subtil,
-     les stats clés et deux boutons d'appel à l'action.
+     identique à la section CTA final, un effet de lumière
+     subtil, les stats clés et deux boutons d'appel à l'action.
      ============================================================ --}}
-<section class="hero-gradient text-white py-20 sm:py-28 px-4 relative">
+<section class="cta-gradient text-white py-20 sm:py-28 px-4 relative">
     <div class="max-w-5xl mx-auto text-center relative z-10">
 
         {{-- Titre principal avec effet gradient --}}
