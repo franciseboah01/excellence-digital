@@ -518,9 +518,9 @@ body {
    SECTION 10 — HERO & SECTIONS MARQUANTES
    ============================================================ */
 
-/* --- Hero : gradient diagonal bleu profond --- */
+/* --- Hero : gradient diagonal profond (identique au CTA) --- */
 .hero-gradient {
-    background: linear-gradient(135deg, #0c1a3a 0%, #111827 40%, #1e1b4b 100%);
+    background: linear-gradient(135deg, #0f2447 0%, #1a1642 50%, #1e1b4b 100%);
     position: relative;
     overflow: hidden;
 }
@@ -537,7 +537,7 @@ body {
     pointer-events: none;
 }
 
-/* Variante CTA (section finale de conversion) */
+/* Variante CTA (section finale de conversion) — identique au hero */
 .cta-gradient {
     background: linear-gradient(135deg, #0f2447 0%, #1a1642 50%, #1e1b4b 100%);
     position: relative;
