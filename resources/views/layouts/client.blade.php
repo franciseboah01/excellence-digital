@@ -7,25 +7,23 @@
     <title>@yield('title', 'Mon Espace — EDC')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="font-sans antialiased" style="background-color: var(--edc-bg-deep); color: var(--edc-text-primary);">
 
-    {{-- NAVBAR CLIENT --}}
-    <nav class="bg-white shadow-sm sticky top-0 z-50" x-data="{ menuOpen: false }">
+    {{-- ========== NAVBAR CLIENT ========== --}}
+    <nav class="edc-navbar sticky top-0 z-50" x-data="{ menuOpen: false }">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-14">
 
                 {{-- Logo --}}
-                <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                    <div class="w-7 h-7 rounded-md flex items-center justify-center
-                                text-white font-black text-xs"
-                        style="background:linear-gradient(135deg,#1e3a8a,#2563eb)">
+                <a href="{{ route('client.dashboard') }}" class="flex items-center space-x-2.5 flex-shrink-0">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
+                        style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                         EDC
                     </div>
-                    <span class="font-bold text-blue-900 text-sm hidden sm:block">
-                        Excellence Digital
+                    <span class="font-extrabold text-sm" style="color: var(--edc-text-primary);">
+                        Mon Espace
                     </span>
                 </a>
-
                 {{-- Nav desktop --}}
                 <div class="hidden md:flex items-center space-x-1">
                     @foreach([
@@ -36,31 +34,35 @@
                         ['messages.index', '💬', 'Messages'],
                     ] as $item)
                     <a href="{{ route($item[0]) }}"
-                        class="flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition
-                        {{ request()->routeIs($item[0]) ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100' }}">
+                        class="nav-link {{ request()->routeIs($item[0]) ? 'active' : '' }}">
                         <span>{{ $item[1] }}</span>
-                        <span class="hidden lg:block">{{ $item[2] }}</span>
+                        <span class="ml-1.5">{{ $item[2] }}</span>
                     </a>
                     @endforeach
                 </div>
 
-                {{-- Droite --}}
+                {{-- Actions desktop --}}
                 <div class="flex items-center space-x-2">
+
+                    {{-- Bouton Voir le site --}}
+                    <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
+                        class="btn-tertiary btn-xs hidden sm:inline-flex">
+                        🌐 Voir le site
+                    </a>
 
                     {{-- Cloche notifications --}}
                     <div class="relative">
                         <button id="notifBtn" onclick="toggleNotifDropdown()"
-                            class="relative p-2 rounded-lg hover:bg-gray-100 transition">
-                            <svg class="w-5 h-5 text-gray-600" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
+                            class="relative p-2 rounded-lg transition hover:bg-white/5">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style="color: var(--edc-text-secondary);">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                             </svg>
                             @php $notifCount = auth()->user()->notifications()->where('lu', false)->count(); @endphp
                             @if($notifCount > 0)
-                            <span class="notif-badge absolute top-1 right-1 bg-red-500 text-white
-                                         text-xs rounded-full w-4 h-4 flex items-center justify-center
-                                         font-bold leading-none">
+                            <span class="notif-badge absolute top-1 right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"
+                                style="background-color: var(--edc-danger);">
                                 {{ $notifCount > 9 ? '9+' : $notifCount }}
                             </span>
                             @endif
@@ -68,34 +70,31 @@
 
                         {{-- Dropdown notifs --}}
                         <div id="notifDropdown"
-                            class="hidden absolute right-0 mt-1 w-72 bg-white rounded-xl
-                                   shadow-xl border border-gray-100 z-50">
-                            <div class="flex justify-between items-center px-4 py-2
-                                        border-b border-gray-100">
-                                <p class="font-semibold text-gray-800 text-xs">🔔 Notifications</p>
-                                <a href="{{ route('client.notifications') }}"
-                                    class="text-xs text-blue-600 hover:underline">
+                            class="hidden absolute right-0 mt-1 w-72 rounded-xl shadow-2xl z-50 overflow-hidden"
+                            style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
+                            <div class="flex justify-between items-center px-4 py-2.5" style="border-bottom: 1px solid var(--edc-border);">
+                                <p class="font-semibold text-xs" style="color: var(--edc-text-primary);">🔔 Notifications</p>
+                                <a href="{{ route('client.notifications') }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">
                                     Tout voir
                                 </a>
                             </div>
                             <div id="notifContainer" class="max-h-60 overflow-y-auto">
-                                <p class="text-center text-gray-400 text-xs py-3">
-                                    Chargement...
-                                </p>
+                                <p class="text-center text-xs py-3" style="color: var(--edc-text-muted);">Chargement...</p>
                             </div>
                         </div>
                     </div>
 
                     {{-- Messages badge --}}
-                    <a href="{{ route('messages.index') }}" class="relative p-2 rounded-lg hover:bg-gray-100 transition">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('messages.index') }}" class="relative p-2 rounded-lg transition hover:bg-white/5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            style="color: var(--edc-text-secondary);">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
                         </svg>
                         @php $msgCount = \App\Models\Message::where('destinataire_id', auth()->id())->where('lu', false)->count(); @endphp
                         @if($msgCount > 0)
-                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs
-                                     rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                        <span class="absolute top-1 right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"
+                            style="background-color: var(--edc-success);">
                             {{ $msgCount }}
                         </span>
                         @endif
@@ -104,44 +103,44 @@
                     {{-- Avatar dropdown --}}
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open"
-                            class="flex items-center space-x-1.5 p-1 rounded-lg hover:bg-gray-100 transition">
-                            <div class="w-7 h-7 rounded-full bg-blue-800 flex items-center
-                                        justify-center text-white text-xs font-bold overflow-hidden">
+                            class="flex items-center space-x-1.5 p-1 rounded-lg transition hover:bg-white/5">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                                style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                                 @if(auth()->user()->avatar)
-                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}"
-                                        class="w-full h-full object-cover">
+                                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-full h-full object-cover">
                                 @else
                                     {{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-700 hidden sm:block max-w-16 truncate">
+                            <span class="text-xs font-medium hidden sm:inline max-w-16 truncate" style="color: var(--edc-text-secondary);">
                                 {{ auth()->user()->prenom }}
                             </span>
-                            <svg class="w-3 h-3 text-gray-400 hidden sm:block" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
                         </button>
                         <div x-show="open" @click.away="open = false"
-                            class="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg
-                                   border border-gray-100 py-1 z-50">
+                            class="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl py-1 z-50"
+                            style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
                             <a href="{{ route('client.profil') }}"
-                                class="flex items-center space-x-2 px-4 py-2.5 text-xs
-                                       text-gray-700 hover:bg-blue-50 transition">
+                                class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                style="color: var(--edc-text-secondary);"
+                                onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
                                 <span>👤</span><span>Mon profil</span>
                             </a>
                             <a href="{{ route('client.notifications') }}"
-                                class="flex items-center space-x-2 px-4 py-2.5 text-xs
-                                       text-gray-700 hover:bg-blue-50 transition">
+                                class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                style="color: var(--edc-text-secondary);"
+                                onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
                                 <span>🔔</span><span>Notifications</span>
                             </a>
-                            <hr class="my-1">
+                            <hr style="border-color: var(--edc-border);">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full flex items-center space-x-2 px-4 py-2.5
-                                           text-xs text-red-600 hover:bg-red-50 transition">
+                                    class="w-full flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                    style="color: #EF4444;"
+                                    onmouseover="this.style.backgroundColor='rgba(239,68,68,0.08)'"
+                                    onmouseout="this.style.backgroundColor='transparent'">
                                     <span>🚪</span><span>Déconnexion</span>
                                 </button>
                             </form>
@@ -150,10 +149,10 @@
 
                     {{-- Burger mobile --}}
                     <button @click="menuOpen = !menuOpen"
-                        class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                        class="md:hidden p-2 rounded-lg transition"
+                        style="color: var(--edc-text-secondary);">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
                 </div>
@@ -161,7 +160,11 @@
 
             {{-- Menu mobile --}}
             <div x-show="menuOpen" @click.away="menuOpen = false"
-                class="md:hidden border-t border-gray-100 py-2">
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                class="md:hidden py-3 space-y-1" style="border-top: 1px solid var(--edc-border);">
                 @foreach([
                     ['client.dashboard', '🏠', 'Tableau de bord'],
                     ['client.demandes', '📋', 'Mes demandes'],
@@ -173,13 +176,25 @@
                 ] as $item)
                 <a href="{{ route($item[0]) }}"
                     @click="menuOpen = false"
-                    class="flex items-center space-x-3 px-4 py-3 text-sm
-                           font-medium text-gray-700 hover:bg-blue-50 transition
-                           {{ request()->routeIs($item[0]) ? 'text-blue-700 bg-blue-50' : '' }}">
+                    class="flex items-center space-x-3 px-4 py-3 text-sm font-semibold rounded-xl transition"
+                    style="{{ request()->routeIs($item[0])
+                        ? 'background-color: rgba(59,130,246,0.15); color: #60A5FA;'
+                        : 'color: #E2E8F0;' }}"
+                    onmouseover="if(this.style.color!='#60A5FA'){this.style.backgroundColor='rgba(255,255,255,0.05)';}"
+                    onmouseout="if(this.style.color!='#60A5FA'){this.style.backgroundColor='transparent';}">
                     <span>{{ $item[1] }}</span>
                     <span>{{ $item[2] }}</span>
                 </a>
                 @endforeach
+                <div class="px-4 pt-3 mt-2" style="border-top: 1px solid var(--edc-border);">
+                    <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
+                        class="block w-full text-center py-3 rounded-xl text-sm font-bold transition"
+                        style="background-color: var(--edc-bg-elevated); color: var(--edc-text-secondary); border: 1px solid var(--edc-border);"
+                        onmouseover="this.style.backgroundColor='var(--edc-bg-card)'; this.style.color='#F1F5F9'; this.style.borderColor='#3B82F6';"
+                        onmouseout="this.style.backgroundColor='var(--edc-bg-elevated)'; this.style.color='#94A3B8'; this.style.borderColor='var(--edc-border)';">
+                        🌐 Voir le site public
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -187,14 +202,13 @@
     {{-- CONTENU --}}
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-        {{-- Flash messages --}}
         @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-800 rounded-xl p-3 mb-4 text-sm font-medium flex items-center space-x-2">
+        <div class="alert alert-success mb-4">
             <span>✅</span><span>{{ session('success') }}</span>
         </div>
         @endif
         @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-800 rounded-xl p-3 mb-4 text-sm font-medium flex items-center space-x-2">
+        <div class="alert alert-error mb-4">
             <span>❌</span><span>{{ session('error') }}</span>
         </div>
         @endif
@@ -204,13 +218,17 @@
 
     {{-- Visionneuse PDF --}}
     <div id="pdfModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-2">
-        <div class="bg-white rounded-2xl w-full max-w-4xl h-5/6 flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center p-3 border-b">
-                <h3 class="font-bold text-blue-900 text-sm">📄 Document</h3>
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-2"
+        style="background-color: rgba(0,0,0,0.85);">
+        <div class="rounded-2xl w-full max-w-4xl h-5/6 flex flex-col shadow-2xl"
+            style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
+            <div class="flex justify-between items-center p-3" style="border-bottom: 1px solid var(--edc-border);">
+                <h3 class="font-bold text-sm" style="color: var(--edc-text-primary);">📄 Document</h3>
                 <button onclick="fermerPdf()"
-                    class="text-gray-400 hover:text-red-500 transition text-xl font-bold w-8 h-8
-                           flex items-center justify-center rounded-lg hover:bg-red-50">
+                    class="text-xl font-bold w-8 h-8 flex items-center justify-center rounded-lg transition"
+                    style="color: var(--edc-text-muted);"
+                    onmouseover="this.style.color='#EF4444'; this.style.backgroundColor='rgba(239,68,68,0.08)'"
+                    onmouseout="this.style.color='#64748B'; this.style.backgroundColor='transparent'">
                     ✕
                 </button>
             </div>
@@ -222,7 +240,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
-    // Notifications polling
     function mettreAJourCloche() {
         fetch('{{ route("notifications.non-lues") }}', {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -239,7 +256,6 @@
             });
         }).catch(() => {});
     }
-
     mettreAJourCloche();
     setInterval(mettreAJourCloche, 30000);
 
@@ -252,26 +268,25 @@
             d.classList.add('hidden');
         }
     }
-
     function chargerNotifs() {
         const c = document.getElementById('notifContainer');
-        c.innerHTML = '<p class="text-center text-gray-400 text-xs py-3">Chargement...</p>';
+        c.innerHTML = '<p class="text-center text-xs py-3" style="color: var(--edc-text-muted);">Chargement...</p>';
         fetch('{{ route("notifications.dernieres") }}', {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(r => r.json())
         .then(notifs => {
             if (!notifs.length) {
-                c.innerHTML = '<p class="text-center text-gray-400 text-xs py-4">Aucune notification</p>';
+                c.innerHTML = '<p class="text-center text-xs py-4" style="color: var(--edc-text-muted);">Aucune notification</p>';
                 return;
             }
             const icons = { info:'📢', success:'✅', warning:'⚠️', error:'❌' };
             c.innerHTML = notifs.map(n => `
-                <div class="flex items-start space-x-2 p-3 border-b border-gray-50 hover:bg-gray-50 last:border-0">
+                <div class="flex items-start space-x-2 p-3" style="border-bottom: 1px solid rgba(42,53,82,0.5);">
                     <span class="text-sm flex-shrink-0">${icons[n.type]||'📢'}</span>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-gray-800 truncate">${n.titre}</p>
-                        <p class="text-xs text-gray-400 mt-0.5 truncate">${n.message}</p>
+                        <p class="text-xs font-semibold truncate" style="color: #F1F5F9;">${n.titre}</p>
+                        <p class="text-xs mt-0.5 truncate" style="color: #64748B;">${n.message}</p>
                     </div>
                 </div>
             `).join('');
@@ -283,10 +298,9 @@
                 }
             }).then(() => mettreAJourCloche());
         }).catch(() => {
-            c.innerHTML = '<p class="text-center text-red-400 text-xs py-3">Erreur</p>';
+            c.innerHTML = '<p class="text-center text-xs py-3" style="color: #EF4444;">Erreur</p>';
         });
     }
-
     document.addEventListener('click', function(e) {
         const d = document.getElementById('notifDropdown');
         const b = document.getElementById('notifBtn');
@@ -294,7 +308,6 @@
             d.classList.add('hidden');
         }
     });
-
     function ouvrirPdf(url) {
         document.getElementById('pdfViewer').src = url;
         document.getElementById('pdfModal').classList.remove('hidden');

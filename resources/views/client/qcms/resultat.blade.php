@@ -5,9 +5,10 @@
 <div class="max-w-3xl mx-auto py-8">
 
     {{-- HEADER RÉSULTAT --}}
-    <div class="rounded-2xl shadow p-8 text-center mb-6
-        {{ $session->reussi ? 'bg-gradient-to-br from-green-700 to-green-500' : 'bg-gradient-to-br from-red-700 to-red-500' }}
-        text-white">
+    <div class="rounded-2xl p-8 text-center mb-6 text-white"
+        style="{{ $session->reussi
+            ? 'background: linear-gradient(135deg, #059669, #10B981);'
+            : 'background: linear-gradient(135deg, #B91C1C, #EF4444);' }}">
 
         <p class="text-6xl mb-4">{{ $session->reussi ? '🎓' : '😔' }}</p>
         <h1 class="text-3xl font-extrabold mb-2">
@@ -16,24 +17,24 @@
         <p class="text-xl font-bold mb-1">
             Note : {{ $session->note }}/20
         </p>
-        <p class="opacity-80 text-sm">
+        <p class="text-sm" style="opacity: 0.8;">
             Score : {{ $session->score }} / {{ $session->score_max }} points •
             Tentative {{ $session->tentative }}
         </p>
 
         {{-- Barre de score --}}
-        <div class="mt-5 bg-white bg-opacity-30 rounded-full h-4 max-w-sm mx-auto">
+        <div class="mt-5 rounded-full h-4 max-w-sm mx-auto" style="background-color: rgba(255,255,255,0.3);">
             <div class="h-4 rounded-full bg-white transition-all duration-1000"
                 style="width: {{ ($session->note / 20) * 100 }}%">
             </div>
         </div>
 
         @if($session->reussi)
-        <p class="mt-4 text-green-100 text-sm">
+        <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
             ✅ Note minimale requise : {{ $session->qcm->note_minimale }}/20 — Objectif atteint !
         </p>
         @else
-        <p class="mt-4 text-red-100 text-sm">
+        <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
             Note minimale requise : {{ $session->qcm->note_minimale }}/20
             @if($session->tentative < $session->qcm->tentatives_max)
             — Il vous reste {{ $session->qcm->tentatives_max - $session->tentative }} tentative(s).
@@ -44,19 +45,20 @@
 
     {{-- CERTIFICAT SI RÉUSSI --}}
     @if($session->reussi && $session->certificat)
-    <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-6 mb-6 text-center">
+    <div class="rounded-2xl p-6 mb-6 text-center"
+        style="background-color: rgba(251,191,36,0.08); border: 2px solid var(--edc-accent-gold);">
         <p class="text-4xl mb-3">🏆</p>
-        <h2 class="text-xl font-bold text-yellow-800 mb-2">Certificat disponible !</h2>
-        <p class="text-yellow-700 text-sm mb-4">
+        <h2 class="text-xl font-bold mb-2" style="color: var(--edc-accent-gold);">Certificat disponible !</h2>
+        <p class="text-sm mb-4" style="color: var(--edc-text-secondary);">
             N° {{ $session->certificat->numero_certificat }}
         </p>
-        <div class="flex justify-center space-x-3">
+        <div class="flex flex-col sm:flex-row justify-center gap-3">
             <a href="{{ route('certificats.telecharger', $session->certificat) }}"
-                class="bg-yellow-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-yellow-700 transition">
+                class="btn-primary btn-sm" style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;">
                 📄 Télécharger le certificat PDF
             </a>
             <a href="{{ route('certificats.apercu', $session->certificat) }}" target="_blank"
-                class="bg-white border-2 border-yellow-600 text-yellow-700 px-6 py-3 rounded-xl font-bold hover:bg-yellow-50 transition">
+                class="btn-secondary btn-sm" style="border-color: var(--edc-accent-gold); color: var(--edc-accent-gold);">
                 👁 Aperçu
             </a>
         </div>
@@ -64,8 +66,8 @@
     @endif
 
     {{-- CORRECTION DÉTAILLÉE --}}
-    <div class="bg-white rounded-2xl shadow p-6 mb-6">
-        <h2 class="text-lg font-bold text-blue-900 mb-5">📋 Correction détaillée</h2>
+    <div class="edc-card p-6 mb-6">
+        <h2 class="text-lg font-bold mb-5" style="color: var(--edc-text-primary);">📋 Correction détaillée</h2>
 
         @foreach($session->qcm->questions as $index => $question)
         @php
@@ -74,15 +76,17 @@
             $donnees  = collect($detail['donnees'] ?? []);
             $correctes= collect($detail['correctes'] ?? []);
         @endphp
-        <div class="border rounded-xl p-4 mb-4
-            {{ $correct ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50' }}">
+        <div class="rounded-xl p-4 mb-4"
+            style="{{ $correct
+                ? 'background-color: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25);'
+                : 'background-color: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.25);' }}">
 
             <div class="flex justify-between items-start mb-3">
-                <p class="font-semibold text-gray-800 text-sm">
+                <p class="font-semibold text-sm" style="color: var(--edc-text-primary);">
                     Q{{ $index + 1 }}. {{ $question->question }}
                 </p>
-                <span class="text-xs font-bold ml-3 flex-shrink-0
-                    {{ $correct ? 'text-green-700' : 'text-red-700' }}">
+                <span class="text-xs font-bold ml-3 flex-shrink-0"
+                    style="color: {{ $correct ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">
                     {{ $correct ? '✅ +' . $question->points . ' pts' : '❌ 0 pt' }}
                 </span>
             </div>
@@ -94,10 +98,19 @@
                     $estCorrecte = $reponse->est_correcte;
                 @endphp
                 <div class="flex items-center space-x-2 text-xs px-3 py-2 rounded-lg
-                    @if($estCorrecte && $estDonnee) bg-green-200 text-green-800
-                    @elseif($estCorrecte && !$estDonnee) bg-green-100 text-green-700 border border-green-300
-                    @elseif(!$estCorrecte && $estDonnee) bg-red-200 text-red-800
-                    @else bg-gray-100 text-gray-600
+                    @if($estCorrecte && $estDonnee) correct-answer
+                    @elseif($estCorrecte && !$estDonnee) missed-answer
+                    @elseif(!$estCorrecte && $estDonnee) wrong-answer
+                    @else neutral-answer
+                    @endif"
+                    style="@if($estCorrecte && $estDonnee)
+                        background-color: rgba(16,185,129,0.15); color: #34D399;
+                    @elseif($estCorrecte && !$estDonnee)
+                        background-color: rgba(16,185,129,0.08); color: #34D399; border: 1px solid rgba(16,185,129,0.3);
+                    @elseif(!$estCorrecte && $estDonnee)
+                        background-color: rgba(239,68,68,0.15); color: #F87171;
+                    @else
+                        background-color: var(--edc-bg-base); color: var(--edc-text-muted);
                     @endif">
                     <span>
                         @if($estCorrecte && $estDonnee) ✅
@@ -108,7 +121,7 @@
                     </span>
                     <span>{{ $reponse->contenu }}</span>
                     @if($estCorrecte && !$estDonnee)
-                    <span class="ml-auto italic">(Bonne réponse manquée)</span>
+                    <span class="ml-auto italic" style="color: var(--edc-text-muted);">(Bonne réponse manquée)</span>
                     @endif
                 </div>
                 @endforeach
@@ -119,13 +132,11 @@
 
     {{-- ACTIONS --}}
     <div class="flex flex-col sm:flex-row gap-4">
-        <a href="{{ route('client.qcms.index') }}"
-            class="flex-1 text-center bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition">
+        <a href="{{ route('client.qcms.index') }}" class="btn-tertiary flex-1 text-center">
             ← Retour aux QCMs
         </a>
         @if(!$session->reussi && $session->tentative < $session->qcm->tentatives_max)
-        <a href="{{ route('client.qcms.demarrer', $session->qcm) }}"
-            class="flex-1 text-center bg-blue-800 text-white py-3 rounded-xl font-semibold hover:bg-blue-900 transition">
+        <a href="{{ route('client.qcms.demarrer', $session->qcm) }}" class="btn-primary flex-1 text-center">
             🔄 Repasser le QCM
         </a>
         @endif

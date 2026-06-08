@@ -3,29 +3,33 @@
 
 @section('content')
 <div class="mb-6">
-    <h1 class="text-2xl font-bold text-blue-900">🎓 QCMs & Certificats</h1>
-    <p class="text-gray-500 mt-1 text-sm">
+    <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">🎓 QCMs & Certificats</h1>
+    <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">
         Testez vos connaissances et obtenez vos certificats
     </p>
 </div>
 
 {{-- CERTIFICATS OBTENUS --}}
 @if($certificats->count())
-<div class="bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-2xl p-6 mb-6">
-    <h2 class="text-lg font-bold text-white mb-4">🏆 Mes Certificats obtenus</h2>
+<div class="rounded-2xl p-6 mb-6" style="background: linear-gradient(135deg, #FBBF24, #F59E0B);">
+    <h2 class="text-lg font-bold mb-4" style="color: #1a1a1a;">🏆 Mes Certificats obtenus</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach($certificats as $certificat)
-        <div class="bg-white rounded-xl p-4 flex items-center justify-between">
-            <div>
-                <p class="font-bold text-gray-800">{{ $certificat->formation->titre }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">
+        <div class="rounded-xl p-4 flex items-center justify-between"
+            style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
+            <div class="min-w-0">
+                <p class="font-bold truncate" style="color: var(--edc-text-primary);">{{ $certificat->formation->titre }}</p>
+                <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
                     N° {{ $certificat->numero_certificat }} •
                     {{ $certificat->delivre_le->format('d/m/Y') }} •
                     Note : {{ $certificat->note_obtenue }}/20
                 </p>
             </div>
             <a href="{{ route('certificats.telecharger', $certificat) }}"
-                class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-600 transition flex-shrink-0 ml-3">
+                class="btn-xs rounded-lg text-xs font-bold flex-shrink-0 ml-3 transition"
+                style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
+                onmouseover="this.style.filter='brightness(1.1)'"
+                onmouseout="this.style.filter='brightness(1)'">
                 📄 PDF
             </a>
         </div>
@@ -37,77 +41,78 @@
 {{-- QCMS DISPONIBLES --}}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
     @forelse($qcms as $qcm)
-    <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+    <div class="edc-card overflow-hidden">
         <div class="p-5">
             <div class="flex justify-between items-start mb-3">
-                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                <span class="badge badge-blue">
                     🎓 {{ $qcm->formation->titre }}
                 </span>
                 @if($qcm->deja_reussi)
-                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">
+                <span class="badge badge-green font-bold">
                     🏆 Réussi !
                 </span>
                 @elseif($qcm->tentatives_faites > 0)
-                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                <span class="badge badge-gold">
                     🔄 {{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }} tentatives
                 </span>
                 @endif
             </div>
 
-            <h3 class="font-bold text-gray-800 mb-1">{{ $qcm->titre }}</h3>
+            <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $qcm->titre }}</h3>
             @if($qcm->niveau)
-            <p class="text-xs text-gray-400">📂 {{ $qcm->niveau->nom }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">📂 {{ $qcm->niveau->nom }}</p>
             @endif
 
             <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-                <div class="bg-blue-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-400">Questions</p>
-                    <p class="font-bold text-blue-800">{{ $qcm->questions_count }}</p>
+                <div class="rounded-lg p-2" style="background-color: rgba(59,130,246,0.06);">
+                    <p class="text-xs" style="color: var(--edc-text-muted);">Questions</p>
+                    <p class="font-bold" style="color: var(--edc-primary-light);">{{ $qcm->questions_count }}</p>
                 </div>
-                <div class="bg-green-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-400">Note min.</p>
-                    <p class="font-bold text-green-700">{{ $qcm->note_minimale }}/20</p>
+                <div class="rounded-lg p-2" style="background-color: rgba(16,185,129,0.06);">
+                    <p class="text-xs" style="color: var(--edc-text-muted);">Note min.</p>
+                    <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/20</p>
                 </div>
-                <div class="bg-yellow-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-400">Durée/Q</p>
-                    <p class="font-bold text-yellow-700">{{ $qcm->duree_par_question }}s</p>
+                <div class="rounded-lg p-2" style="background-color: rgba(245,158,11,0.06);">
+                    <p class="text-xs" style="color: var(--edc-text-muted);">Durée/Q</p>
+                    <p class="font-bold" style="color: var(--edc-accent-gold);">{{ $qcm->duree_par_question }}s</p>
                 </div>
             </div>
 
             @if($qcm->meilleure_note)
             <div class="mt-3">
-                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
                     <span>Meilleure note</span>
                     <span>{{ $qcm->meilleure_note }}/20</span>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                    <div class="h-2 rounded-full {{ $qcm->deja_reussi ? 'bg-green-500' : 'bg-blue-500' }}"
-                        style="width: {{ ($qcm->meilleure_note / 20) * 100 }}%">
+                <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
+                    <div class="h-2 rounded-full transition-all"
+                        style="width: {{ ($qcm->meilleure_note / 20) * 100 }}%;
+                        {{ $qcm->deja_reussi ? 'background: linear-gradient(135deg, #10B981, #059669);' : 'background: linear-gradient(135deg, #3B82F6, #1D4ED8);' }}">
                     </div>
                 </div>
             </div>
             @endif
         </div>
 
-        <div class="border-t border-gray-100 px-5 py-3 bg-gray-50">
+        <div class="px-5 py-3" style="border-top: 1px solid var(--edc-border); background-color: var(--edc-bg-base);">
             @if($qcm->deja_reussi)
-            <p class="text-center text-green-600 text-sm font-semibold">
+            <p class="text-center text-sm font-semibold" style="color: var(--edc-secondary);">
                 🎓 Certificat obtenu !
             </p>
             @elseif($qcm->peut_repasser)
             <a href="{{ route('client.qcms.demarrer', $qcm) }}"
-                class="block w-full text-center bg-blue-800 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-900 transition">
+                class="btn-primary btn-sm w-full text-center">
                 {{ $qcm->tentatives_faites > 0 ? '🔄 Repasser le QCM' : '▶️ Commencer le QCM' }}
             </a>
             @else
-            <p class="text-center text-red-500 text-sm">
+            <p class="text-center text-sm" style="color: var(--edc-danger);">
                 ❌ Tentatives épuisées ({{ $qcm->tentatives_max }}/{{ $qcm->tentatives_max }})
             </p>
             @endif
         </div>
     </div>
     @empty
-    <div class="col-span-2 bg-white rounded-xl shadow text-center py-12 text-gray-400">
+    <div class="col-span-2 edc-card text-center py-12" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">📝</p>
         <p>Aucun QCM disponible pour vos formations.</p>
         <p class="text-sm mt-1">Les enseignants ajouteront des QCMs prochainement.</p>

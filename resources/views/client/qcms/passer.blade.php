@@ -7,49 +7,50 @@
     data-duree="{{ $qcm->duree_par_question }}">
 
     {{-- HEADER QCM --}}
-    <div class="bg-white rounded-2xl shadow p-6 mb-6">
-        <div class="flex justify-between items-start">
+    <div class="edc-card p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div>
-                <h1 class="text-2xl font-bold text-blue-900">📝 {{ $qcm->titre }}</h1>
-                <p class="text-gray-500 text-sm mt-1">{{ $qcm->formation->titre }}
+                <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">📝 {{ $qcm->titre }}</h1>
+                <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">{{ $qcm->formation->titre }}
                     @if($qcm->niveau) — {{ $qcm->niveau->nom }} @endif
                 </p>
             </div>
-            <div class="text-right">
-                <p class="text-xs text-gray-400">Tentative {{ $tentativesFaites + 1 }} / {{ $qcm->tentatives_max }}</p>
-                <p class="text-xs text-gray-400 mt-1">Note minimale : <strong class="text-blue-800">{{ $qcm->note_minimale }}/20</strong></p>
+            <div class="text-right flex-shrink-0">
+                <p class="text-xs" style="color: var(--edc-text-muted);">Tentative {{ $tentativesFaites + 1 }} / {{ $qcm->tentatives_max }}</p>
+                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Note minimale : <strong style="color: var(--edc-primary-light);">{{ $qcm->note_minimale }}/20</strong></p>
             </div>
         </div>
 
-        {{-- Barre de progression globale --}}
+        {{-- Barre de progression --}}
         <div class="mt-4">
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
                 <span>Progression</span>
                 <span id="progressLabel">Question 1 / {{ $qcm->questions->count() }}</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
                 <div id="progressBar"
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                    style="width: {{ (1 / $qcm->questions->count()) * 100 }}%">
+                    class="h-2 rounded-full transition-all duration-500"
+                    style="width: {{ (1 / $qcm->questions->count()) * 100 }}%; background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                 </div>
             </div>
         </div>
     </div>
 
     {{-- TIMER GLOBAL --}}
-    <div class="bg-blue-900 text-white rounded-2xl p-4 mb-6 flex items-center justify-between">
+    <div class="rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3"
+        style="background: linear-gradient(135deg, #1e3a8a, #1d4ed8);">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⏱</span>
             <div>
-                <p class="text-xs text-blue-300">Temps pour cette question</p>
-                <p id="timerDisplay" class="text-3xl font-mono font-bold">
+                <p class="text-xs" style="color: rgba(255,255,255,0.6);">Temps pour cette question</p>
+                <p id="timerDisplay" class="text-3xl font-mono font-bold" style="color: #fff;">
                     {{ floor($qcm->duree_par_question / 60) }}:{{ str_pad($qcm->duree_par_question % 60, 2, '0', STR_PAD_LEFT) }}
                 </p>
             </div>
         </div>
         <div class="text-right">
-            <p class="text-xs text-blue-300">Score actuel</p>
-            <p id="scoreActuel" class="text-2xl font-bold">0 pts</p>
+            <p class="text-xs" style="color: rgba(255,255,255,0.6);">Score actuel</p>
+            <p id="scoreActuel" class="text-2xl font-bold" style="color: #FBBF24;">0 pts</p>
         </div>
     </div>
 
@@ -63,40 +64,44 @@
             data-index="{{ $index }}"
             data-points="{{ $question->points }}">
 
-            <div class="bg-white rounded-2xl shadow p-6 mb-4">
+            <div class="edc-card p-6 mb-4">
                 {{-- Numéro et points --}}
                 <div class="flex justify-between items-center mb-4">
-                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+                    <span class="badge badge-blue">
                         Question {{ $index + 1 }} / {{ $qcm->questions->count() }}
                     </span>
-                    <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                    <span class="badge badge-green">
                         🏆 {{ $question->points }} point{{ $question->points > 1 ? 's' : '' }}
                     </span>
                 </div>
 
                 {{-- Texte de la question --}}
-                <p class="text-lg font-semibold text-gray-800 mb-6 leading-relaxed">
+                <p class="text-lg font-semibold mb-6 leading-relaxed" style="color: var(--edc-text-primary);">
                     {{ $question->question }}
                 </p>
 
                 {{-- Réponses --}}
                 <div class="space-y-3">
                     @foreach($question->reponses as $reponse)
-                    <label class="reponse-label flex items-start space-x-3 p-4 rounded-xl border-2 border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
-                        data-question="{{ $question->id }}">
+                    <label class="reponse-label flex items-start space-x-3 p-4 rounded-xl cursor-pointer transition"
+                        style="border: 2px solid var(--edc-border);"
+                        data-question="{{ $question->id }}"
+                        onmouseover="if(!this.querySelector('input').checked){this.style.borderColor='var(--edc-primary)';this.style.backgroundColor='rgba(59,130,246,0.05)';}"
+                        onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--edc-border)';this.style.backgroundColor='transparent';}">
                         <input type="checkbox"
                             name="reponses[{{ $question->id }}][]"
                             value="{{ $reponse->id }}"
-                            class="reponse-checkbox mt-0.5 w-5 h-5 text-blue-600 rounded flex-shrink-0"
+                            class="reponse-checkbox mt-0.5 w-5 h-5 rounded flex-shrink-0"
+                            style="accent-color: #3B82F6;"
                             onchange="updateReponseStyle(this)">
-                        <span class="text-gray-700 leading-relaxed">{{ $reponse->contenu }}</span>
+                        <span class="leading-relaxed" style="color: var(--edc-text-secondary);">{{ $reponse->contenu }}</span>
                     </label>
                     @endforeach
                 </div>
 
-                {{-- Indication nombre de bonnes réponses --}}
+                {{-- Indication --}}
                 @php $nbCorrectes = $question->reponsesCorrectes->count(); @endphp
-                <p class="text-xs text-gray-400 mt-3">
+                <p class="text-xs mt-3" style="color: var(--edc-text-muted);">
                     💡 {{ $nbCorrectes > 1 ? "{$nbCorrectes} bonnes réponses possibles" : "1 seule bonne réponse" }}
                 </p>
             </div>
@@ -104,8 +109,7 @@
             {{-- Navigation --}}
             <div class="flex justify-between items-center">
                 @if($index > 0)
-                <button type="button" onclick="allerQuestion({{ $index - 1 }})"
-                    class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition">
+                <button type="button" onclick="allerQuestion({{ $index - 1 }})" class="btn-tertiary">
                     ← Précédent
                 </button>
                 @else
@@ -113,13 +117,11 @@
                 @endif
 
                 @if($index < $qcm->questions->count() - 1)
-                <button type="button" onclick="allerQuestion({{ $index + 1 }})"
-                    class="bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-900 transition">
+                <button type="button" onclick="allerQuestion({{ $index + 1 }})" class="btn-primary">
                     Suivant →
                 </button>
                 @else
-                <button type="button" onclick="soumettreQcm()"
-                    class="bg-green-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-800 transition">
+                <button type="button" onclick="soumettreQcm()" class="btn-success">
                     ✅ Terminer le QCM
                 </button>
                 @endif
@@ -129,22 +131,21 @@
     </form>
 </div>
 
-{{-- MODAL CONFIRMATION SOUMISSION --}}
+{{-- MODAL CONFIRMATION --}}
 <div id="modalSoumission"
-    class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+    style="background-color: rgba(0,0,0,0.75);">
+    <div class="edc-card p-8 max-w-md w-full text-center">
         <p class="text-5xl mb-4">📤</p>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">Soumettre le QCM ?</h3>
-        <p class="text-gray-500 mb-6 text-sm">
+        <h3 class="text-xl font-bold mb-2" style="color: var(--edc-text-primary);">Soumettre le QCM ?</h3>
+        <p class="text-sm mb-6" style="color: var(--edc-text-secondary);">
             Vous ne pourrez plus modifier vos réponses après la soumission.
         </p>
         <div class="flex space-x-3 justify-center">
-            <button onclick="document.getElementById('modalSoumission').classList.add('hidden')"
-                class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition">
+            <button onclick="document.getElementById('modalSoumission').classList.add('hidden')" class="btn-tertiary">
                 Continuer
             </button>
-            <button onclick="document.getElementById('qcmForm').submit()"
-                class="bg-green-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-800 transition">
+            <button onclick="document.getElementById('qcmForm').submit()" class="btn-success">
                 ✅ Confirmer
             </button>
         </div>
@@ -153,11 +154,12 @@
 
 {{-- MODAL TEMPS ÉCOULÉ --}}
 <div id="modalTemps"
-    class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+    style="background-color: rgba(0,0,0,0.75);">
+    <div class="edc-card p-8 max-w-md w-full text-center">
         <p class="text-5xl mb-4">⏰</p>
-        <h3 class="text-xl font-bold text-red-700 mb-2">Temps écoulé !</h3>
-        <p class="text-gray-500 mb-6 text-sm">
+        <h3 class="text-xl font-bold mb-2" style="color: var(--edc-danger);">Temps écoulé !</h3>
+        <p class="text-sm" style="color: var(--edc-text-secondary);">
             Le temps pour cette question est écoulé. Passage à la question suivante...
         </p>
     </div>
@@ -172,12 +174,9 @@ let questionActuelle = 0;
 let tempsRestant     = DUREE_PAR_QUESTION;
 let intervalTimer    = null;
 let dureeTotale      = 0;
-let scoreActuel      = 0;
 
-// Démarrer le timer dès le chargement
 demarrerTimer();
 
-// Empêcher de quitter la page
 window.addEventListener('beforeunload', function(e) {
     e.preventDefault();
     e.returnValue = 'Attention ! Quitter la page mettra fin à votre QCM.';
@@ -199,12 +198,11 @@ function demarrerTimer() {
             tempsEcoule();
         }
 
-        // Alerte rouge quand < 10 secondes
         const timerEl = document.getElementById('timerDisplay');
         if (tempsRestant <= 10) {
-            timerEl.classList.add('text-red-400');
+            timerEl.style.color = '#EF4444';
         } else {
-            timerEl.classList.remove('text-red-400');
+            timerEl.style.color = '#ffffff';
         }
     }, 1000);
 }
@@ -218,7 +216,6 @@ function mettreAJourAffichageTimer() {
 function tempsEcoule() {
     const modal = document.getElementById('modalTemps');
     modal.classList.remove('hidden');
-
     setTimeout(() => {
         modal.classList.add('hidden');
         if (questionActuelle < TOTAL_QUESTIONS - 1) {
@@ -230,36 +227,27 @@ function tempsEcoule() {
 }
 
 function allerQuestion(index) {
-    // Cacher question actuelle
-    document.querySelectorAll('.question-slide')[questionActuelle]
-        .classList.add('hidden');
-
-    // Afficher nouvelle question
+    document.querySelectorAll('.question-slide')[questionActuelle].classList.add('hidden');
     questionActuelle = index;
-    document.querySelectorAll('.question-slide')[questionActuelle]
-        .classList.remove('hidden');
+    document.querySelectorAll('.question-slide')[questionActuelle].classList.remove('hidden');
 
-    // Mettre à jour la barre de progression
     const pct = ((questionActuelle + 1) / TOTAL_QUESTIONS) * 100;
     document.getElementById('progressBar').style.width = pct + '%';
     document.getElementById('progressLabel').textContent =
         `Question ${questionActuelle + 1} / ${TOTAL_QUESTIONS}`;
 
-    // Redémarrer le timer
     demarrerTimer();
-
-    // Scroll en haut
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateReponseStyle(checkbox) {
     const label = checkbox.closest('.reponse-label');
     if (checkbox.checked) {
-        label.classList.add('border-blue-600', 'bg-blue-50');
-        label.classList.remove('border-gray-200');
+        label.style.borderColor = '#3B82F6';
+        label.style.backgroundColor = 'rgba(59,130,246,0.08)';
     } else {
-        label.classList.remove('border-blue-600', 'bg-blue-50');
-        label.classList.add('border-gray-200');
+        label.style.borderColor = 'var(--edc-border)';
+        label.style.backgroundColor = 'transparent';
     }
 }
 

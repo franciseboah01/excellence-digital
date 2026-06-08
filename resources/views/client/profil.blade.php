@@ -3,102 +3,94 @@
 
 @section('content')
 <div class="mb-6">
-    <h1 class="text-2xl font-bold text-blue-900">👤 Mon Profil</h1>
+    <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">👤 Mon Profil</h1>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     {{-- Infos personnelles --}}
-    <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-lg font-bold text-blue-900 mb-5">Informations personnelles</h2>
+    <div class="edc-card p-6">
+        <h2 class="text-lg font-bold mb-5" style="color: var(--edc-text-primary);">Informations personnelles</h2>
 
         <form method="POST" action="{{ route('client.profil.update') }}" enctype="multipart/form-data">
             @csrf
 
             {{-- Avatar --}}
             <div class="flex items-center space-x-4 mb-6">
-                <div class="w-16 h-16 rounded-full bg-blue-800 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden"
+                    style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                     @if(auth()->user()->avatar)
-                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}"
-                            alt="Avatar" class="w-full h-full object-cover">
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
                     @else
                         {{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
                     @endif
                 </div>
                 <div>
-                    <label class="cursor-pointer text-sm text-blue-700 font-medium hover:underline">
+                    <label class="cursor-pointer text-sm font-medium hover:underline" style="color: var(--edc-primary-light);">
                         Changer la photo
                         <input type="file" name="avatar" accept="image/*" class="hidden">
                     </label>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG — max 2MB</p>
+                    <p class="text-xs mt-1" style="color: var(--edc-text-muted);">JPG, PNG — max 2MB</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Prénom</label>
-                    <input type="text" name="prenom" value="{{ auth()->user()->prenom }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    @error('prenom') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label class="edc-label">Prénom</label>
+                    <input type="text" name="prenom" value="{{ auth()->user()->prenom }}" class="edc-input">
+                    @error('prenom') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nom</label>
-                    <input type="text" name="nom" value="{{ auth()->user()->nom }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    @error('nom') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label class="edc-label">Nom</label>
+                    <input type="text" name="nom" value="{{ auth()->user()->nom }}" class="edc-input">
+                    @error('nom') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                <label class="edc-label">Email</label>
                 <input type="email" value="{{ auth()->user()->email }}"
-                    class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
-                    disabled>
+                    class="edc-input cursor-not-allowed"
+                    style="opacity: 0.5;" disabled>
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Téléphone / WhatsApp</label>
+                <label class="edc-label">Téléphone / WhatsApp</label>
                 <input type="text" name="telephone" value="{{ auth()->user()->telephone }}"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="+225 07 00 00 00 00">
+                    class="edc-input" placeholder="+225 07 00 00 00 00">
             </div>
 
-            <button type="submit"
-                class="w-full bg-blue-800 text-white py-3 rounded-xl font-semibold hover:bg-blue-900 transition">
+            <button type="submit" class="btn-primary w-full">
                 💾 Enregistrer les modifications
             </button>
         </form>
     </div>
 
     {{-- Changer mot de passe --}}
-    <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-lg font-bold text-blue-900 mb-5">🔒 Changer le mot de passe</h2>
+    <div class="edc-card p-6">
+        <h2 class="text-lg font-bold mb-5" style="color: var(--edc-text-primary);">🔒 Changer le mot de passe</h2>
 
         <form method="POST" action="{{ route('client.password.update') }}">
             @csrf
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Mot de passe actuel</label>
-                <input type="password" name="current_password"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                @error('current_password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="edc-label">Mot de passe actuel</label>
+                <input type="password" name="current_password" class="edc-input">
+                @error('current_password') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Nouveau mot de passe</label>
-                <input type="password" name="password"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="edc-label">Nouveau mot de passe</label>
+                <input type="password" name="password" class="edc-input">
+                @error('password') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Confirmer le mot de passe</label>
-                <input type="password" name="password_confirmation"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <label class="edc-label">Confirmer le mot de passe</label>
+                <input type="password" name="password_confirmation" class="edc-input">
             </div>
 
-            <button type="submit"
-                class="w-full bg-gray-800 text-white py-3 rounded-xl font-semibold hover:bg-gray-900 transition">
+            <button type="submit" class="btn-tertiary w-full">
                 🔑 Changer le mot de passe
             </button>
         </form>

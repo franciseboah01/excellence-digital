@@ -9,7 +9,19 @@
      identique à la section CTA final, un effet de lumière
      subtil, les stats clés et deux boutons d'appel à l'action.
      ============================================================ --}}
-<section class="cta-gradient text-white py-20 sm:py-28 px-4 relative">
+
+<section class="relative text-white py-20 sm:py-28 px-4 overflow-hidden">
+
+    {{-- Image 16:9 en arrière-plan --}}
+    <div class="absolute inset-0 z-0">
+        <img src="{{ asset('images/edc-banner.png') }}"
+             alt="Excellence Digital Center"
+             class="w-full h-full object-cover"
+             onerror="this.style.display='none'">
+        {{-- Overlay sombre pour lisibilité du texte --}}
+        <div class="absolute inset-0" style="background: rgba(11, 15, 26, 0.80);"></div>
+    </div>
+
     <div class="max-w-5xl mx-auto text-center relative z-10">
 
         {{-- Titre principal avec effet gradient --}}
@@ -50,7 +62,7 @@
                 ['3 ans', "D'expertise"],
             ] as $s)
             <div class="rounded-xl py-5 px-3"
-                 style="background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                 style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);">
                 <p class="text-2xl sm:text-3xl font-black" style="color: #F1F5F9;">
                     {{ $s[0] }}
                 </p>
@@ -63,22 +75,6 @@
     </div>
 </section>
 
-{{-- ============================================================
-     SECTION 1A : IMAGE 16:9 SOUS LE HERO
-     Grande image d'illustration en ratio 16:9 avec bordure
-     subtile pour faire la transition avec la suite.
-     ============================================================ --}}
-<section class="px-4 -mt-8 relative z-10">
-    <div class="max-w-5xl mx-auto">
-        <div class="rounded-2xl overflow-hidden shadow-2xl"
-             style="border: 1px solid var(--edc-border);">
-            <img src="{{ asset('images/edc-banner.jpg') }}"
-                 alt="Excellence Digital Center"
-                 class="w-full aspect-video object-cover"
-                 onerror="this.style.display='none'">
-        </div>
-    </div>
-</section>
 
 {{-- ============================================================
      SECTION 1B : CARROUSEL D'IMAGES 9:16
@@ -87,7 +83,7 @@
      comme sur mobile. Utilise un scroll horizontal natif
      avec snap CSS pour un rendu fluide.
      ============================================================ --}}
-<section class="py-12 px-4" style="background-color: var(--edc-bg-deep);">
+<section class="py-12 sm:py-16 px-4" style="background-color: var(--edc-bg-deep);">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-8">
             <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: #3B82F6;">
@@ -96,58 +92,68 @@
             <h2 class="text-section">Découvrez notre univers</h2>
         </div>
 
-        {{-- Carrousel CSS natif — défilement horizontal avec snap --}}
-        <div class="relative overflow-hidden rounded-2xl"
+        {{-- Carrousel avec effet "coverflow" : 3 visibles, celui du centre plus grand --}}
+        <div class="relative"
              x-data="{
+                images: ['galerie-1.png','galerie-2.png','galerie-3.png','galerie-4.png'],
                 current: 0,
-                total: {{ count($galerieImages ?? ['img1','img2','img3','img4','img5']) }},
+                total: 4,
                 init() {
                     setInterval(() => {
-                        this.current = (this.current + 1) % this.total;
-                        this.$refs.track.scrollTo({
-                            left: this.$refs.track.children[this.current].offsetLeft,
-                            behavior: 'smooth'
-                        });
-                    }, 2000);
+                        this.next();
+                    }, 2500);
+                },
+                next() {
+                    this.current = (this.current + 1) % this.total;
+                },
+                prev() {
+                    this.current = (this.current - 1 + this.total) % this.total;
+                },
+                getClass(index) {
+                    const diff = (index - this.current + this.total) % this.total;
+                    if (diff === 0) return 'z-20 scale-100 opacity-100';
+                    if (diff === 1 || diff === this.total - 1) return 'z-10 scale-90 opacity-60';
+                    return 'z-0 scale-75 opacity-0 hidden';
                 }
              }">
-            <div x-ref="track"
-                 class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth"
-                 style="-webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
 
-                @php
-                    // Images de démonstration — remplace par tes propres images dans public/images/
-                    $galerieImages = $galerieImages ?? [
-                        'galerie-1.jpg',
-                        'galerie-2.jpg',
-                        'galerie-3.jpg',
-                        'galerie-4.jpg',
-                        'galerie-5.jpg',
-                    ];
-                @endphp
-
-                @foreach($galerieImages as $image)
-                <div class="flex-shrink-0 w-[45%] sm:w-[30%] lg:w-[22%] snap-center px-1.5">
-                    <div class="rounded-xl overflow-hidden shadow-lg"
-                         style="border: 1px solid var(--edc-border); aspect-ratio: 9/16;">
-                        <img src="{{ asset('images/' . $image) }}"
-                             alt="Galerie EDC"
+            {{-- Images --}}
+            <div class="flex items-center justify-center gap-2 sm:gap-4 min-h-[380px] sm:min-h-[450px]">
+                <template x-for="(img, index) in images" :key="index">
+                    <div class="flex-shrink-0 transition-all duration-500 ease-in-out rounded-2xl overflow-hidden shadow-2xl"
+                         :class="getClass(index)"
+                         style="width: clamp(180px, 25vw, 280px); aspect-ratio: 9/16; border: 1px solid var(--edc-border);">
+                        <img :src="'{{ asset('images') }}/' + img"
+                             :alt="'Galerie EDC ' + (index + 1)"
                              class="w-full h-full object-cover"
                              loading="lazy"
                              onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\' style=\'background:linear-gradient(135deg,#1e3a8a,#2563eb);\'><span class=\'text-4xl\'>🖼️</span></div>'">
                     </div>
-                </div>
-                @endforeach
+                </template>
             </div>
 
-            {{-- Indicateurs (dots) --}}
-            <div class="flex justify-center space-x-2 mt-4">
+            {{-- Flèches --}}
+            <button @click="prev()"
+                class="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
+                style="background: rgba(59,130,246,0.7); backdrop-filter: blur(8px);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <button @click="next()"
+                class="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
+                style="background: rgba(59,130,246,0.7); backdrop-filter: blur(8px);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+
+            {{-- Dots --}}
+            <div class="flex justify-center space-x-2 mt-6">
                 <template x-for="i in total" :key="i">
-                    <button @click="current = i - 1; $refs.track.children[i-1].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})"
+                    <button @click="current = i - 1"
                         class="w-2.5 h-2.5 rounded-full transition-all duration-300"
-                        :class="current === i - 1
-                            ? 'bg-blue-500 w-6'
-                            : 'bg-gray-600 hover:bg-gray-500'">
+                        :class="current === i - 1 ? 'bg-blue-500 w-8' : 'bg-gray-600 hover:bg-gray-400'">
                     </button>
                 </template>
             </div>

@@ -2,23 +2,22 @@
 @section('title', 'Mes Demandes')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-blue-900">📋 Mes Demandes de Service</h1>
-    <a href="{{ route('demande.form') }}"
-        class="bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-900 transition">
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">📋 Mes Demandes de Service</h1>
+    <a href="{{ route('demande.form') }}" class="btn-primary btn-sm">
         + Nouvelle demande
     </a>
 </div>
 
-<div class="bg-white rounded-xl shadow overflow-hidden">
+<div class="edc-card overflow-hidden">
     @forelse($demandes as $demande)
-    <div class="p-6 border-b border-gray-100 last:border-0">
+    <div class="p-5 sm:p-6" style="border-bottom: 1px solid var(--edc-border);">
 
         {{-- En-tête demande --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
-                <h3 class="font-bold text-blue-900">{{ $demande->service->titre }}</h3>
-                <p class="text-xs text-gray-400 mt-1">
+                <h3 class="font-bold" style="color: var(--edc-text-primary);">{{ $demande->service->titre }}</h3>
+                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">
                     Demande #{{ $demande->id }} — {{ $demande->created_at->format('d/m/Y à H:i') }}
                 </p>
             </div>
@@ -41,19 +40,22 @@
             @php $index = array_search($key, $statuts); @endphp
             <div class="flex items-center">
                 <div class="flex flex-col items-center">
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition
                         {{ $index <= $indexActuel
-                            ? 'bg-blue-800 text-white'
-                            : 'bg-gray-200 text-gray-400' }}">
+                            ? 'active'
+                            : '' }}"
+                        style="{{ $index <= $indexActuel
+                            ? 'background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #fff;'
+                            : 'background-color: var(--edc-bg-elevated); color: var(--edc-text-muted);' }}">
                         {{ $etape[0] }}
                     </div>
-                    <p class="text-xs mt-1 {{ $index <= $indexActuel ? 'text-blue-800 font-semibold' : 'text-gray-400' }}">
+                    <p class="text-xs mt-1 font-semibold" style="{{ $index <= $indexActuel ? 'color: var(--edc-primary-light);' : 'color: var(--edc-text-muted);' }}">
                         {{ $etape[1] }}
                     </p>
                 </div>
                 @if(!$loop->last)
-                <div class="w-16 h-1 mx-1 rounded
-                    {{ $index < $indexActuel ? 'bg-blue-800' : 'bg-gray-200' }}">
+                <div class="w-12 sm:w-16 h-1 mx-1 rounded transition"
+                    style="{{ $index < $indexActuel ? 'background: linear-gradient(135deg, #3B82F6, #1D4ED8);' : 'background-color: var(--edc-bg-elevated);' }}">
                 </div>
                 @endif
             </div>
@@ -61,17 +63,17 @@
         </div>
 
         @if($demande->message)
-        <p class="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+        <div class="mt-3 text-sm rounded-lg p-3"
+            style="background-color: var(--edc-bg-base); color: var(--edc-text-secondary);">
             💬 {{ $demande->message }}
-        </p>
+        </div>
         @endif
     </div>
     @empty
-    <div class="text-center py-16 text-gray-400">
+    <div class="text-center py-16" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">📋</p>
         <p class="font-medium">Aucune demande pour le moment.</p>
-        <a href="{{ route('demande.form') }}"
-            class="inline-block mt-4 bg-blue-800 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-900 transition">
+        <a href="{{ route('demande.form') }}" class="btn-primary btn-sm mt-4 inline-block">
             Faire une demande
         </a>
     </div>

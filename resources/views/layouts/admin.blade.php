@@ -139,7 +139,7 @@
                 <a href="{{ route('home') }}" target="_blank"
                     class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg
                            hover:bg-blue-200 transition font-medium">
-                    🌐 Site
+                    🌐 Voir le site
                 </a>
             </div>
         </header>

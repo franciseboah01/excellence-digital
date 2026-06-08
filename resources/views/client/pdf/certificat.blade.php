@@ -3,229 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: DejaVu Sans, sans-serif;
-            background: white;
+            font-family: 'DejaVu Sans', 'Inter', sans-serif;
+            background: #0B0F1A;
             width: 297mm;
             height: 210mm;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* FOND ET BORDURE */
         .certificat {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #fefce8 100%);
+            width: 277mm;
+            height: 190mm;
+            background: linear-gradient(145deg, #0f172a 0%, #1a2332 50%, #0d1520 100%);
             position: relative;
-            padding: 20px 30px;
+            border-radius: 16px;
+            overflow: hidden;
         }
 
-        /* BORDURE DÉCORATIVE */
-        .bordure-ext {
+        /* ---- GLOW CORNER ---- */
+        .glow-tl {
             position: absolute;
-            top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border: 3px solid #1e3a8a;
-            border-radius: 8px;
+            top: -80px; left: -80px;
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
         }
-        .bordure-int {
+        .glow-br {
             position: absolute;
-            top: 16px; left: 16px; right: 16px; bottom: 16px;
-            border: 1px solid #93c5fd;
-            border-radius: 6px;
+            bottom: -80px; right: -80px;
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(251,191,36,0.10) 0%, transparent 70%);
         }
 
-        /* COINS DÉCORATIFS */
-        .coin {
+        /* ---- BORDURE SUBTILE ---- */
+        .border-ext {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            border-color: #1e3a8a;
-            border-style: solid;
+            top: 12px; left: 12px; right: 12px; bottom: 12px;
+            border: 1px solid rgba(59,130,246,0.20);
+            border-radius: 12px;
         }
-        .coin-tl { top: 22px; left: 22px; border-width: 3px 0 0 3px; }
-        .coin-tr { top: 22px; right: 22px; border-width: 3px 3px 0 0; }
-        .coin-bl { bottom: 22px; left: 22px; border-width: 0 0 3px 3px; }
-        .coin-br { bottom: 22px; right: 22px; border-width: 0 3px 3px 0; }
+        .border-int {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 1px solid rgba(148,163,184,0.10);
+            border-radius: 10px;
+        }
 
-        /* CONTENU */
+        /* ---- LIGNE DÉCO HAUT ---- */
+        .line-top {
+            position: absolute;
+            top: 28px; left: 60px; right: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(251,191,36,0.3), rgba(59,130,246,0.4), transparent);
+        }
+        .line-bottom {
+            position: absolute;
+            bottom: 28px; left: 60px; right: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(251,191,36,0.3), rgba(59,130,246,0.4), rgba(251,191,36,0.3), transparent);
+        }
+
+        /* ---- CONTENU ---- */
         .contenu {
             position: relative;
             z-index: 10;
             text-align: center;
-            padding: 15px 50px;
+            padding: 30px 60px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        /* HEADER */
+        /* ---- HEADER ---- */
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+            align-items: flex-start;
+            margin-bottom: 12px;
         }
         .logo-edc {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 900;
-            color: #1e3a8a;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #3B82F6, #60A5FA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .logo-sub {
             font-size: 9px;
-            color: #64748b;
-            letter-spacing: 1px;
+            color: #64748B;
+            letter-spacing: 2px;
             text-transform: uppercase;
         }
         .numero-cert {
             font-size: 9px;
-            color: #94a3b8;
+            color: #64748B;
             text-align: right;
+            line-height: 1.6;
+        }
+        .numero-cert .cert-number {
+            font-size: 12px;
+            font-weight: bold;
+            color: #60A5FA;
         }
 
-        /* TITRE */
-        .titre-certificat {
-            font-size: 11px;
-            letter-spacing: 6px;
+        /* ---- TITRE ---- */
+        .badge-cert {
+            display: inline-block;
+            font-size: 9px;
+            letter-spacing: 5px;
             text-transform: uppercase;
-            color: #64748b;
-            margin: 8px 0 4px;
+            color: #FBBF24;
+            border: 1px solid rgba(251,191,36,0.25);
+            border-radius: 20px;
+            padding: 4px 20px;
+            margin-bottom: 10px;
         }
         .titre-principal {
-            font-size: 38px;
+            font-size: 42px;
             font-weight: 900;
-            color: #1e3a8a;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
+            background: linear-gradient(135deg, #F1F5F9, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
         }
         .sous-titre {
             font-size: 12px;
-            color: #64748b;
-            letter-spacing: 3px;
+            color: #64748B;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            margin-top: 2px;
         }
 
-        /* SÉPARATEUR */
+        /* ---- SÉPARATEUR ---- */
         .separateur {
             display: flex;
             align-items: center;
-            margin: 10px auto;
-            max-width: 500px;
+            margin: 14px auto;
+            max-width: 450px;
         }
-        .sep-ligne { flex: 1; height: 1px; background: #93c5fd; }
-        .sep-etoile { margin: 0 12px; color: #fbbf24; font-size: 14px; }
+        .sep-ligne {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent);
+        }
+        .sep-diamant {
+            margin: 0 16px;
+            color: #FBBF24;
+            font-size: 10px;
+            letter-spacing: 6px;
+        }
 
-        /* CORPS */
+        /* ---- CORPS ---- */
         .atteste {
             font-size: 11px;
-            color: #475569;
+            color: #94A3B8;
             letter-spacing: 2px;
             text-transform: uppercase;
             margin: 6px 0 4px;
         }
         .nom-apprenant {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 900;
-            color: #0f172a;
+            color: #F1F5F9;
             font-style: italic;
             margin: 4px 0;
-            border-bottom: 2px solid #fbbf24;
             display: inline-block;
-            padding: 0 30px 4px;
+            padding: 0 30px 6px;
+            border-bottom: 2px solid #FBBF24;
         }
         .texte-formation {
             font-size: 11px;
-            color: #475569;
-            margin: 8px 0 4px;
+            color: #94A3B8;
+            margin: 10px 0 4px;
         }
         .nom-formation {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-            color: #1e3a8a;
+            color: #60A5FA;
             margin: 4px 0;
         }
         .niveau-badge {
             display: inline-block;
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #93c5fd;
+            background: rgba(59,130,246,0.12);
+            color: #60A5FA;
+            border: 1px solid rgba(59,130,246,0.25);
             border-radius: 20px;
-            padding: 2px 16px;
+            padding: 3px 18px;
             font-size: 10px;
             font-weight: bold;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            margin: 6px 0;
+        }
+
+        /* ---- NOTE ---- */
+        .note-section {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3a8a, #3B82F6);
+            color: #F1F5F9;
+            border-radius: 50%;
+            width: 76px;
+            height: 76px;
+            padding-top: 14px;
+            margin: 10px 0;
+            box-shadow: 0 0 30px rgba(59,130,246,0.30);
+        }
+        .note-valeur { font-size: 24px; font-weight: 900; display: block; }
+        .note-sur { font-size: 10px; color: #93C5FD; }
+
+        .etoiles-deco {
+            color: #FBBF24;
+            font-size: 12px;
+            letter-spacing: 6px;
             margin: 4px 0;
         }
 
-        /* NOTE */
-        .note-section {
-            display: inline-block;
-            background: linear-gradient(135deg, #1e3a8a, #2563eb);
-            color: white;
-            border-radius: 50%;
-            width: 70px;
-            height: 70px;
-            line-height: 1;
-            padding-top: 12px;
-            margin: 8px 0;
-        }
-        .note-valeur { font-size: 22px; font-weight: 900; display: block; }
-        .note-sur { font-size: 10px; color: #bfdbfe; }
-
-        /* FOOTER */
+        /* ---- FOOTER ---- */
         .footer {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #e2e8f0;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(42,53,82,0.5);
         }
         .footer-gauche { text-align: left; }
         .footer-centre { text-align: center; }
         .footer-droite { text-align: right; }
-        .footer-label { font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .footer-valeur { font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 2px; }
-        .signature-ligne { width: 120px; height: 1px; background: #1e3a8a; margin: 20px auto 4px; }
+        .footer-label {
+            font-size: 8px;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .footer-valeur {
+            font-size: 11px;
+            font-weight: bold;
+            color: #F1F5F9;
+            margin-top: 2px;
+        }
+        .signature-ligne {
+            width: 140px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+            margin: 24px auto 4px;
+        }
 
-        /* FILIGRANE */
+        /* ---- FILIGRANE ---- */
         .filigrane {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 80px;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            font-size: 120px;
             font-weight: 900;
-            color: rgba(30, 58, 138, 0.04);
+            color: rgba(59,130,246,0.03);
             white-space: nowrap;
             z-index: 1;
-            letter-spacing: 10px;
-        }
-
-        /* ÉTOILES DÉCORATIVES */
-        .etoiles-deco {
-            color: #fbbf24;
-            font-size: 14px;
-            letter-spacing: 4px;
-            margin: 4px 0;
+            letter-spacing: 20px;
         }
     </style>
 </head>
 <body>
 <div class="certificat">
 
-    {{-- Bordures décoratives --}}
-    <div class="bordure-ext"></div>
-    <div class="bordure-int"></div>
-    <div class="coin coin-tl"></div>
-    <div class="coin coin-tr"></div>
-    <div class="coin coin-bl"></div>
-    <div class="coin coin-br"></div>
+    {{-- Glows --}}
+    <div class="glow-tl"></div>
+    <div class="glow-br"></div>
+
+    {{-- Bordures --}}
+    <div class="border-ext"></div>
+    <div class="border-int"></div>
+
+    {{-- Lignes décoratives --}}
+    <div class="line-top"></div>
+    <div class="line-bottom"></div>
 
     {{-- Filigrane --}}
     <div class="filigrane">EDC</div>
 
-    {{-- CONTENU PRINCIPAL --}}
+    {{-- CONTENU --}}
     <div class="contenu">
 
         {{-- Header --}}
@@ -233,26 +298,26 @@
             <div>
                 <div class="logo-edc">EDC</div>
                 <div class="logo-sub">Excellence Digital Center</div>
-                <div style="font-size:8px; color:#94a3b8; margin-top:2px;">Korhogo / Sirasso</div>
+                <div style="font-size:8px; color:#64748B; margin-top:2px;">Korhogo / Sirasso</div>
             </div>
             <div class="numero-cert">
                 <div>Certificat N°</div>
-                <div style="font-size:11px; font-weight:bold; color:#1e3a8a; margin-top:2px;">
-                    {{ $certificat->numero_certificat }}
-                </div>
+                <div class="cert-number">{{ $certificat->numero_certificat }}</div>
                 <div style="margin-top:4px;">Délivré le {{ $certificat->delivre_le->format('d/m/Y') }}</div>
             </div>
         </div>
 
+        {{-- Badge --}}
+        <div class="badge-cert">Attestation de</div>
+
         {{-- Titre --}}
-        <div class="titre-certificat">Attestation de</div>
         <div class="titre-principal">Réussite</div>
         <div class="sous-titre">Formation Professionnelle</div>
 
         {{-- Séparateur --}}
         <div class="separateur">
             <div class="sep-ligne"></div>
-            <div class="sep-etoile">✦ ✦ ✦</div>
+            <div class="sep-diamant">✦ ✦ ✦</div>
             <div class="sep-ligne"></div>
         </div>
 
@@ -263,7 +328,7 @@
             {{ $certificat->user->prenom }} {{ strtoupper($certificat->user->nom) }}
         </div>
 
-        <div class="texte-formation" style="margin-top:8px;">
+        <div class="texte-formation">
             Pour avoir complété avec succès la formation
         </div>
 
@@ -274,7 +339,7 @@
         @endif
 
         {{-- Note --}}
-        <div style="margin: 6px 0;">
+        <div>
             <div class="note-section">
                 <span class="note-valeur">{{ $certificat->note_obtenue }}</span>
                 <span class="note-sur">/20</span>
@@ -293,7 +358,7 @@
             <div class="footer-centre">
                 <div class="signature-ligne"></div>
                 <div class="footer-label">Directeur — Excellence Digital Center</div>
-                <div class="footer-valeur" style="margin-top:2px;">Korhogo / Sirasso</div>
+                <div class="footer-valeur">Korhogo / Sirasso</div>
             </div>
 
             <div class="footer-droite">
