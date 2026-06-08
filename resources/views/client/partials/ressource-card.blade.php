@@ -16,14 +16,13 @@
 <div class="rounded-xl p-4 transition hover:scale-[1.01]"
     style="background-color: {{ $config[0] }}; border: 1px solid {{ $config[1] }};">
     <div class="flex items-start space-x-3">
-        <span class="text-2xl flex-shrink-0">{{ $config[3] }}</span>
+        <span class="text-2xl flex-shrink-0">{{ $config[2] }}</span>
         <div class="flex-1 min-w-0">
             <p class="font-semibold text-sm truncate" style="color: var(--edc-text-primary);">{{ $ressource->titre }}</p>
             @if($ressource->description)
             <p class="text-xs mt-1" style="color: var(--edc-text-secondary);">{{ Str::limit($ressource->description, 60) }}</p>
             @endif
 
-            {{-- Infos fichier --}}
             @if(!empty($infos))
             <p class="text-xs mt-1" style="color: var(--edc-text-muted);">
                 📦 {{ $infos['taille_mb'] }} MB •
@@ -35,14 +34,14 @@
                 @if(in_array($ressource->type, ['lien', 'video']))
                     <a href="{{ $ressource->lien_url }}" target="_blank"
                         class="inline-flex items-center text-xs font-medium hover:underline"
-                        style="color: {{ $config[4] }};">
+                        style="color: {{ $config[3] }};">
                         Ouvrir le lien →
                     </a>
                 @elseif($ressource->fichier_path)
                     <button
                         onclick="ouvrirFichierSecurise({{ $ressource->id }}, '{{ $ressource->type }}')"
                         class="inline-flex items-center text-xs font-medium hover:underline"
-                        style="color: {{ $config[4] }};">
+                        style="color: {{ $config[3] }};">
                         @if($ressource->type === 'pdf') 📖 Lire le PDF
                         @else 📥 Télécharger
                         @endif
