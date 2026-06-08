@@ -63,6 +63,97 @@
     </div>
 </section>
 
+{{-- ============================================================
+     SECTION 1A : IMAGE 16:9 SOUS LE HERO
+     Grande image d'illustration en ratio 16:9 avec bordure
+     subtile pour faire la transition avec la suite.
+     ============================================================ --}}
+<section class="px-4 -mt-8 relative z-10">
+    <div class="max-w-5xl mx-auto">
+        <div class="rounded-2xl overflow-hidden shadow-2xl"
+             style="border: 1px solid var(--edc-border);">
+            <img src="{{ asset('images/edc-banner.jpg') }}"
+                 alt="Excellence Digital Center"
+                 class="w-full aspect-video object-cover"
+                 onerror="this.style.display='none'">
+        </div>
+    </div>
+</section>
+
+{{-- ============================================================
+     SECTION 1B : CARROUSEL D'IMAGES 9:16
+     Défilement automatique toutes les 2 secondes.
+     Affiche des images au format portrait (9:16) sur desktop
+     comme sur mobile. Utilise un scroll horizontal natif
+     avec snap CSS pour un rendu fluide.
+     ============================================================ --}}
+<section class="py-12 px-4" style="background-color: var(--edc-bg-deep);">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: #3B82F6;">
+                Galerie
+            </p>
+            <h2 class="text-section">Découvrez notre univers</h2>
+        </div>
+
+        {{-- Carrousel CSS natif — défilement horizontal avec snap --}}
+        <div class="relative overflow-hidden rounded-2xl"
+             x-data="{
+                current: 0,
+                total: {{ count($galerieImages ?? ['img1','img2','img3','img4','img5']) }},
+                init() {
+                    setInterval(() => {
+                        this.current = (this.current + 1) % this.total;
+                        this.$refs.track.scrollTo({
+                            left: this.$refs.track.children[this.current].offsetLeft,
+                            behavior: 'smooth'
+                        });
+                    }, 2000);
+                }
+             }">
+            <div x-ref="track"
+                 class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth"
+                 style="-webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
+
+                @php
+                    // Images de démonstration — remplace par tes propres images dans public/images/
+                    $galerieImages = $galerieImages ?? [
+                        'galerie-1.jpg',
+                        'galerie-2.jpg',
+                        'galerie-3.jpg',
+                        'galerie-4.jpg',
+                        'galerie-5.jpg',
+                    ];
+                @endphp
+
+                @foreach($galerieImages as $image)
+                <div class="flex-shrink-0 w-[45%] sm:w-[30%] lg:w-[22%] snap-center px-1.5">
+                    <div class="rounded-xl overflow-hidden shadow-lg"
+                         style="border: 1px solid var(--edc-border); aspect-ratio: 9/16;">
+                        <img src="{{ asset('images/' . $image) }}"
+                             alt="Galerie EDC"
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\' style=\'background:linear-gradient(135deg,#1e3a8a,#2563eb);\'><span class=\'text-4xl\'>🖼️</span></div>'">
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Indicateurs (dots) --}}
+            <div class="flex justify-center space-x-2 mt-4">
+                <template x-for="i in total" :key="i">
+                    <button @click="current = i - 1; $refs.track.children[i-1].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})"
+                        class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                        :class="current === i - 1
+                            ? 'bg-blue-500 w-6'
+                            : 'bg-gray-600 hover:bg-gray-500'">
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+</section>
 
 {{-- ============================================================
      SECTION 2 : NOS SERVICES
