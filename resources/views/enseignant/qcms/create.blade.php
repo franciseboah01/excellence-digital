@@ -4,17 +4,22 @@
 @section('content')
 <div class="max-w-2xl">
     <a href="{{ route('enseignant.qcms.index') }}"
-        class="text-blue-600 hover:underline text-sm">← Retour</a>
-    <h1 class="text-2xl font-bold text-blue-900 mt-2 mb-6">➕ Créer un QCM</h1>
+        class="inline-flex items-center space-x-1 text-sm font-medium hover:underline"
+        style="color: var(--edc-primary-light);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Retour</span>
+    </a>
+    <h1 class="text-xl sm:text-2xl font-extrabold mt-2 mb-6" style="color: var(--edc-text-primary);">➕ Créer un QCM</h1>
 
-    <div class="bg-white rounded-xl shadow p-8">
-        <form method="POST" action="{{ route('enseignant.qcms.store') }}">
+    <div class="edc-card p-6 sm:p-8">
+        <form method="POST" action="{{ route('enseignant.qcms.store') }}" class="space-y-5">
             @csrf
 
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Formation *</label>
-                <select name="formation_id" id="formation_id" required
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div>
+                <label class="edc-label">Formation *</label>
+                <select name="formation_id" id="formation_id" required class="edc-select">
                     <option value="">-- Choisir --</option>
                     @foreach($formations as $formation)
                     <option value="{{ $formation->id }}">{{ $formation->titre }}</option>
@@ -22,59 +27,46 @@
                 </select>
             </div>
 
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Niveau (optionnel)</label>
-                <select name="niveau_id" id="niveau_id"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div>
+                <label class="edc-label">Niveau (optionnel)</label>
+                <select name="niveau_id" id="niveau_id" class="edc-select">
                     <option value="">-- Général --</option>
                 </select>
             </div>
 
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Titre du QCM *</label>
-                <input type="text" name="titre" required
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div>
+                <label class="edc-label">Titre du QCM *</label>
+                <input type="text" name="titre" required class="edc-input"
                     placeholder="Ex : QCM Excel — Niveau Débutant">
             </div>
 
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea name="description" rows="2"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div>
+                <label class="edc-label">Description</label>
+                <textarea name="description" rows="2" class="edc-input"
                     placeholder="Description du QCM..."></textarea>
             </div>
 
-            <div class="grid grid-cols-3 gap-4 mb-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">
-                        Durée/question (sec) *
-                    </label>
+                    <label class="edc-label">Durée/question (sec) *</label>
                     <input type="number" name="duree_par_question" value="120"
-                        min="30" max="600" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-gray-400 mt-1">30s à 10min</p>
+                        min="30" max="600" required class="edc-input">
+                    <p class="text-xs mt-1" style="color: var(--edc-text-muted);">30s à 10min</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">
-                        Note minimale /20 *
-                    </label>
+                    <label class="edc-label">Note minimale /20 *</label>
                     <input type="number" name="note_minimale" value="14"
-                        min="1" max="20" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-gray-400 mt-1">Pour obtenir le cert.</p>
+                        min="1" max="20" required class="edc-input">
+                    <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Pour obtenir le cert.</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">
-                        Tentatives max *
-                    </label>
+                    <label class="edc-label">Tentatives max *</label>
                     <input type="number" name="tentatives_max" value="3"
-                        min="1" max="5" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        min="1" max="5" required class="edc-input">
                 </div>
             </div>
 
-            <button type="submit"
-                class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold hover:bg-blue-900 transition">
+            <button type="submit" class="btn-primary w-full">
                 ➕ Créer et ajouter les questions →
             </button>
         </form>

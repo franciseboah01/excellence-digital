@@ -4,19 +4,24 @@
 @section('content')
 <div class="mb-6">
     <a href="{{ route('enseignant.ressources.index') }}"
-        class="text-blue-600 hover:underline text-sm">← Retour</a>
-    <h1 class="text-2xl font-bold text-blue-900 mt-2">➕ Ajouter une ressource</h1>
+        class="inline-flex items-center space-x-1 text-sm font-medium hover:underline"
+        style="color: var(--edc-primary-light);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Retour</span>
+    </a>
+    <h1 class="text-xl sm:text-2xl font-extrabold mt-2" style="color: var(--edc-text-primary);">➕ Ajouter une ressource</h1>
 </div>
 
-<div class="bg-white rounded-xl shadow p-8 max-w-2xl">
-    <form method="POST" action="{{ route('enseignant.ressources.store') }}" enctype="multipart/form-data">
+<div class="edc-card p-6 sm:p-8 max-w-2xl">
+    <form method="POST" action="{{ route('enseignant.ressources.store') }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
 
         {{-- Formation --}}
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Formation *</label>
-            <select name="formation_id" id="formation_id" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Formation *</label>
+            <select name="formation_id" id="formation_id" required class="edc-select">
                 <option value="">-- Choisir une formation --</option>
                 @foreach($formations as $formation)
                 <option value="{{ $formation->id }}"
@@ -25,23 +30,21 @@
                 </option>
                 @endforeach
             </select>
-            @error('formation_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('formation_id') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Niveau (chargé dynamiquement) --}}
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Niveau (optionnel)</label>
-            <select name="niveau_id" id="niveau_id"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {{-- Niveau --}}
+        <div>
+            <label class="edc-label">Niveau (optionnel)</label>
+            <select name="niveau_id" id="niveau_id" class="edc-select">
                 <option value="">-- Général (tous niveaux) --</option>
             </select>
         </div>
 
         {{-- Type --}}
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Type de ressource *</label>
-            <select name="type" id="type_ressource" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Type de ressource *</label>
+            <select name="type" id="type_ressource" required class="edc-select">
                 <option value="">-- Choisir un type --</option>
                 <option value="pdf"      {{ old('type') == 'pdf' ? 'selected' : '' }}>📄 PDF</option>
                 <option value="ebook"    {{ old('type') == 'ebook' ? 'selected' : '' }}>📖 Ebook</option>
@@ -49,47 +52,40 @@
                 <option value="lien"     {{ old('type') == 'lien' ? 'selected' : '' }}>🔗 Lien externe</option>
                 <option value="video"    {{ old('type') == 'video' ? 'selected' : '' }}>🎬 Vidéo YouTube/Drive</option>
             </select>
-            @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('type') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
         {{-- Titre --}}
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Titre *</label>
-            <input type="text" name="titre" value="{{ old('titre') }}" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div>
+            <label class="edc-label">Titre *</label>
+            <input type="text" name="titre" value="{{ old('titre') }}" required class="edc-input"
                 placeholder="Ex : Cours Excel Chapitre 1">
-            @error('titre') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('titre') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
         {{-- Description --}}
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Description (optionnel)</label>
-            <textarea name="description" rows="3"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div>
+            <label class="edc-label">Description (optionnel)</label>
+            <textarea name="description" rows="3" class="edc-input"
                 placeholder="Décrivez le contenu de cette ressource...">{{ old('description') }}</textarea>
         </div>
 
-        {{-- Fichier (PDF/Ebook/Document) --}}
-        <div id="champ_fichier" class="mb-5 hidden">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">
-                Fichier (PDF, DOC, EPUB — max 20MB) *
-            </label>
-            <input type="file" name="fichier" accept=".pdf,.doc,.docx,.epub"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            @error('fichier') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        {{-- Fichier --}}
+        <div id="champ_fichier" class="hidden">
+            <label class="edc-label">Fichier (PDF, DOC, EPUB — max 20MB) *</label>
+            <input type="file" name="fichier" accept=".pdf,.doc,.docx,.epub" class="edc-input">
+            @error('fichier') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Lien URL (lien/vidéo) --}}
-        <div id="champ_lien" class="mb-5 hidden">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">URL du lien / vidéo *</label>
-            <input type="url" name="lien_url" value="{{ old('lien_url') }}"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {{-- Lien --}}
+        <div id="champ_lien" class="hidden">
+            <label class="edc-label">URL du lien / vidéo *</label>
+            <input type="url" name="lien_url" value="{{ old('lien_url') }}" class="edc-input"
                 placeholder="https://youtube.com/...">
-            @error('lien_url') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('lien_url') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
-        <button type="submit"
-            class="w-full bg-blue-800 text-white py-4 rounded-xl font-bold hover:bg-blue-900 transition">
+        <button type="submit" class="btn-primary w-full">
             📤 Publier la ressource
         </button>
     </form>
@@ -98,31 +94,21 @@
 
 @push('scripts')
 <script>
-    // Afficher champ fichier ou lien selon le type
     document.getElementById('type_ressource').addEventListener('change', function () {
         const type = this.value;
         const champFichier = document.getElementById('champ_fichier');
         const champLien    = document.getElementById('champ_lien');
-
         champFichier.classList.add('hidden');
         champLien.classList.add('hidden');
-
-        if (['pdf', 'ebook', 'document'].includes(type)) {
-            champFichier.classList.remove('hidden');
-        } else if (['lien', 'video'].includes(type)) {
-            champLien.classList.remove('hidden');
-        }
+        if (['pdf', 'ebook', 'document'].includes(type)) champFichier.classList.remove('hidden');
+        else if (['lien', 'video'].includes(type)) champLien.classList.remove('hidden');
     });
 
-    // Charger les niveaux selon la formation choisie
     document.getElementById('formation_id').addEventListener('change', function () {
         const formationId = this.value;
         const niveauSelect = document.getElementById('niveau_id');
-
         niveauSelect.innerHTML = '<option value="">-- Général (tous niveaux) --</option>';
-
         if (!formationId) return;
-
         fetch(`/enseignant/formations/${formationId}/niveaux`)
             .then(res => res.json())
             .then(niveaux => {
@@ -135,7 +121,6 @@
             });
     });
 
-    // Déclencher si une formation est pré-sélectionnée
     window.addEventListener('DOMContentLoaded', function () {
         const sel = document.getElementById('formation_id');
         if (sel.value) sel.dispatchEvent(new Event('change'));

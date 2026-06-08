@@ -2,10 +2,9 @@
 @section('title', 'Mes Ressources')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-blue-900">📚 Mes Ressources</h1>
-    <a href="{{ route('enseignant.ressources.create') }}"
-        class="bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-900 transition">
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">📚 Mes Ressources</h1>
+    <a href="{{ route('enseignant.ressources.create') }}" class="btn-primary btn-sm">
         + Ajouter une ressource
     </a>
 </div>
@@ -14,51 +13,46 @@
     @forelse($ressources as $ressource)
     @php
         $config = match($ressource->type) {
-            'pdf'      => ['border-red-200 bg-red-50',    '📄', 'text-red-700'],
-            'ebook'    => ['border-purple-200 bg-purple-50','📖','text-purple-700'],
-            'lien'     => ['border-green-200 bg-green-50', '🔗', 'text-green-700'],
-            'video'    => ['border-yellow-200 bg-yellow-50','🎬','text-yellow-700'],
-            'document' => ['border-blue-200 bg-blue-50',  '📝', 'text-blue-700'],
-            default    => ['border-gray-200 bg-gray-50',  '📎', 'text-gray-700'],
+            'pdf'      => ['rgba(239,68,68,0.06)', 'rgba(239,68,68,0.20)',  '📄', '#F87171'],
+            'ebook'    => ['rgba(168,85,247,0.06)', 'rgba(168,85,247,0.20)', '📖', '#C084FC'],
+            'lien'     => ['rgba(16,185,129,0.06)', 'rgba(16,185,129,0.20)', '🔗', '#34D399'],
+            'video'    => ['rgba(245,158,11,0.06)', 'rgba(245,158,11,0.20)', '🎬', '#FBBF24'],
+            'document' => ['rgba(59,130,246,0.06)', 'rgba(59,130,246,0.20)', '📝', '#60A5FA'],
+            default    => ['rgba(148,163,184,0.06)', 'rgba(148,163,184,0.20)', '📎', '#94A3B8'],
         };
     @endphp
-    <div class="bg-white rounded-xl shadow border {{ $config[0] }} overflow-hidden hover:shadow-lg transition">
+    <div class="edc-card overflow-hidden">
         <div class="p-5">
             <div class="flex items-start justify-between mb-3">
-                <span class="text-3xl">{{ $config[1] }}</span>
-                <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-medium uppercase">
-                    {{ $ressource->type }}
-                </span>
+                <span class="text-3xl">{{ $config[2] }}</span>
+                <span class="badge badge-gray uppercase">{{ $ressource->type }}</span>
             </div>
-            <h3 class="font-bold text-gray-800 mb-1">{{ $ressource->titre }}</h3>
-            <p class="text-xs text-blue-700 font-medium mb-1">{{ $ressource->formation->titre }}</p>
+            <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $ressource->titre }}</h3>
+            <p class="text-xs font-medium mb-1" style="color: var(--edc-primary-light);">{{ $ressource->formation->titre }}</p>
             @if($ressource->niveau)
-            <p class="text-xs text-gray-400">📂 {{ $ressource->niveau->nom }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">📂 {{ $ressource->niveau->nom }}</p>
             @endif
             @if($ressource->description)
-            <p class="text-xs text-gray-500 mt-2">{{ Str::limit($ressource->description, 70) }}</p>
+            <p class="text-xs mt-2" style="color: var(--edc-text-secondary);">{{ Str::limit($ressource->description, 70) }}</p>
             @endif
         </div>
-        <div class="border-t border-gray-100 px-5 py-3 flex justify-between items-center bg-gray-50">
-            <span class="text-xs text-gray-400">{{ $ressource->created_at->format('d/m/Y') }}</span>
-            <div class="flex space-x-2">
-                <a href="{{ route('enseignant.ressources.edit', $ressource) }}"
-                    class="text-xs text-blue-600 hover:underline font-medium">✏️ Modifier</a>
+        <div class="px-5 py-3 flex justify-between items-center" style="border-top: 1px solid var(--edc-border); background-color: var(--edc-bg-base);">
+            <span class="text-xs" style="color: var(--edc-text-muted);">{{ $ressource->created_at->format('d/m/Y') }}</span>
+            <div class="flex space-x-3">
+                <a href="{{ route('enseignant.ressources.edit', $ressource) }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">✏️ Modifier</a>
                 <form method="POST" action="{{ route('enseignant.ressources.destroy', $ressource) }}"
                     onsubmit="return confirm('Supprimer cette ressource ?')">
                     @csrf @method('DELETE')
-                    <button type="submit"
-                        class="text-xs text-red-600 hover:underline font-medium">🗑️ Supprimer</button>
+                    <button type="submit" class="text-xs font-medium hover:underline" style="color: var(--edc-danger);">🗑️ Supprimer</button>
                 </form>
             </div>
         </div>
     </div>
     @empty
-    <div class="col-span-3 bg-white rounded-xl shadow text-center py-16 text-gray-400">
+    <div class="col-span-3 edc-card text-center py-16" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">📭</p>
         <p class="font-medium">Aucune ressource ajoutée pour le moment.</p>
-        <a href="{{ route('enseignant.ressources.create') }}"
-            class="inline-block mt-4 bg-blue-800 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-900 transition">
+        <a href="{{ route('enseignant.ressources.create') }}" class="btn-primary btn-sm mt-4 inline-block">
             Ajouter ma première ressource
         </a>
     </div>

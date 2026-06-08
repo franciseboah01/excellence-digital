@@ -4,40 +4,41 @@
 @section('content')
 <div class="mb-6">
     <a href="{{ route('enseignant.ressources.index') }}"
-        class="text-blue-600 hover:underline text-sm">← Retour</a>
-    <h1 class="text-2xl font-bold text-blue-900 mt-2">✏️ Modifier la ressource</h1>
+        class="inline-flex items-center space-x-1 text-sm font-medium hover:underline"
+        style="color: var(--edc-primary-light);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Retour</span>
+    </a>
+    <h1 class="text-xl sm:text-2xl font-extrabold mt-2" style="color: var(--edc-text-primary);">✏️ Modifier la ressource</h1>
 </div>
 
-<div class="bg-white rounded-xl shadow p-8 max-w-2xl">
-    <form method="POST" action="{{ route('enseignant.ressources.update', $ressource) }}"
-        enctype="multipart/form-data">
+<div class="edc-card p-6 sm:p-8 max-w-2xl">
+    <form method="POST" action="{{ route('enseignant.ressources.update', $ressource) }}" enctype="multipart/form-data" class="space-y-5">
         @csrf @method('PUT')
 
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Formation *</label>
-            <select name="formation_id" id="formation_id" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Formation *</label>
+            <select name="formation_id" id="formation_id" required class="edc-select">
                 @foreach($formations as $formation)
-                <option value="{{ $formation->id }}"
-                    {{ $ressource->formation_id == $formation->id ? 'selected' : '' }}>
+                <option value="{{ $formation->id }}" {{ $ressource->formation_id == $formation->id ? 'selected' : '' }}>
                     {{ $formation->titre }}
                 </option>
                 @endforeach
             </select>
         </div>
 
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Niveau (optionnel)</label>
-            <select name="niveau_id" id="niveau_id"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Niveau (optionnel)</label>
+            <select name="niveau_id" id="niveau_id" class="edc-select">
                 <option value="">-- Général --</option>
             </select>
         </div>
 
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Type *</label>
-            <select name="type" id="type_ressource" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Type *</label>
+            <select name="type" id="type_ressource" required class="edc-select">
                 <option value="pdf"      {{ $ressource->type == 'pdf' ? 'selected' : '' }}>📄 PDF</option>
                 <option value="ebook"    {{ $ressource->type == 'ebook' ? 'selected' : '' }}>📖 Ebook</option>
                 <option value="document" {{ $ressource->type == 'document' ? 'selected' : '' }}>📝 Document</option>
@@ -46,37 +47,30 @@
             </select>
         </div>
 
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Titre *</label>
-            <input type="text" name="titre" value="{{ old('titre', $ressource->titre) }}" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+            <label class="edc-label">Titre *</label>
+            <input type="text" name="titre" value="{{ old('titre', $ressource->titre) }}" required class="edc-input">
         </div>
 
-        <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-            <textarea name="description" rows="3"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('description', $ressource->description) }}</textarea>
+        <div>
+            <label class="edc-label">Description</label>
+            <textarea name="description" rows="3" class="edc-input">{{ old('description', $ressource->description) }}</textarea>
         </div>
 
-        <div id="champ_fichier" class="mb-5 hidden">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">
-                Nouveau fichier (laisser vide pour conserver l'actuel)
-            </label>
+        <div id="champ_fichier" class="hidden">
+            <label class="edc-label">Nouveau fichier (laisser vide pour conserver l'actuel)</label>
             @if($ressource->fichier_path)
-            <p class="text-xs text-green-600 mb-2">✅ Fichier actuel : {{ basename($ressource->fichier_path) }}</p>
+            <p class="text-xs mb-2" style="color: var(--edc-secondary);">✅ Fichier actuel : {{ basename($ressource->fichier_path) }}</p>
             @endif
-            <input type="file" name="fichier" accept=".pdf,.doc,.docx,.epub"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3">
+            <input type="file" name="fichier" accept=".pdf,.doc,.docx,.epub" class="edc-input">
         </div>
 
-        <div id="champ_lien" class="mb-5 hidden">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">URL</label>
-            <input type="url" name="lien_url" value="{{ old('lien_url', $ressource->lien_url) }}"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div id="champ_lien" class="hidden">
+            <label class="edc-label">URL</label>
+            <input type="url" name="lien_url" value="{{ old('lien_url', $ressource->lien_url) }}" class="edc-input">
         </div>
 
-        <button type="submit"
-            class="w-full bg-blue-800 text-white py-4 rounded-xl font-bold hover:bg-blue-900 transition">
+        <button type="submit" class="btn-primary w-full">
             💾 Enregistrer les modifications
         </button>
     </form>
