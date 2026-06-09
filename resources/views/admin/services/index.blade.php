@@ -1,91 +1,75 @@
 @extends('layouts.admin')
 @section('title', 'Services')
-@section('page_title', 'Gestion des Services')
+@section('page_title', '💼 Gestion des Services')
 @section('page_subtitle', 'Créez et gérez les services proposés')
 
 @section('content')
 
 {{-- STATS --}}
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-blue-600">
-        <p class="text-2xl font-bold text-blue-700">{{ $stats['total'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">Total</p>
+    @foreach([
+        ['total',       'Total',         'var(--edc-primary)'],
+        ['actifs',      'Actifs',        'var(--edc-secondary)'],
+        ['bureautique', '💼 Bureautique', '#A78BFA'],
+        ['design',      '🌐 Design',     'var(--edc-accent-gold)'],
+        ['web_mobile',  '💻 Web & Mobile','var(--edc-danger)'],
+    ] as $stat)
+    <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
+        <p class="stat-value">{{ $stats[$stat[0]] }}</p>
+        <p class="stat-label">{{ $stat[1] }}</p>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-green-500">
-        <p class="text-2xl font-bold text-green-600">{{ $stats['actifs'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">Actifs</p>
-    </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-purple-500">
-        <p class="text-2xl font-bold text-purple-600">{{ $stats['bureautique'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">💼 Bureautique</p>
-    </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-yellow-500">
-        <p class="text-2xl font-bold text-yellow-600">{{ $stats['design'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">🌐 Design</p>
-    </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-red-500">
-        <p class="text-2xl font-bold text-red-600">{{ $stats['web_mobile'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">💻 Web & Mobile</p>
-    </div>
+    @endforeach
 </div>
 
 {{-- BOUTON AJOUTER --}}
 <div class="flex justify-end mt-5">
-    <a href="{{ route('admin.services.create') }}"
-        class="bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-900 transition">
-        ➕ Nouveau service
-    </a>
+    <a href="{{ route('admin.services.create') }}" class="btn-primary btn-sm">➕ Nouveau service</a>
 </div>
 
 {{-- GRILLE SERVICES --}}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
     @forelse($services as $service)
-    <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden
-        {{ !$service->actif ? 'opacity-60' : '' }}">
+    <div class="edc-card overflow-hidden {{ !$service->actif ? 'opacity-60' : '' }}">
         <div class="p-5">
             <div class="flex items-start justify-between mb-3">
                 <span class="text-3xl">{{ $service->icone }}</span>
                 <div class="flex items-center space-x-2">
-                    <span class="text-xs px-2 py-1 rounded-full font-medium
-                        {{ $service->actif ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                    <span class="badge text-xs" style="{{ $service->actif
+                        ? 'background-color: rgba(16,185,129,0.12); color: #34D399;'
+                        : 'background-color: rgba(148,163,184,0.10); color: #94A3B8;' }}">
                         {{ $service->actif ? '✅ Actif' : '⏸️ Inactif' }}
                     </span>
-                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                        {{ $service->demandes_count }} demande(s)
-                    </span>
+                    <span class="badge badge-blue text-xs">{{ $service->demandes_count }} demande(s)</span>
                 </div>
             </div>
 
-            <h3 class="font-bold text-gray-800 mb-1">{{ $service->titre }}</h3>
+            <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $service->titre }}</h3>
 
-            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+            <span class="badge badge-gray text-xs">
                 @if($service->categorie == 'bureautique') 💼 Bureautique
                 @elseif($service->categorie == 'design') 🌐 Design
                 @else 💻 Web & Mobile
                 @endif
             </span>
 
-            <p class="text-gray-500 text-sm mt-2 leading-relaxed">
+            <p class="text-sm mt-2 leading-relaxed" style="color: var(--edc-text-secondary);">
                 {{ Str::limit($service->description, 80) }}
             </p>
 
             @if($service->prix)
-            <p class="text-blue-700 font-semibold mt-2 text-sm">
+            <p class="font-semibold mt-2 text-sm" style="color: var(--edc-primary-light);">
                 {{ number_format($service->prix, 0, ',', ' ') }} FCFA
             </p>
             @endif
         </div>
 
-        <div class="border-t border-gray-100 px-5 py-3 bg-gray-50 flex justify-between items-center">
+        <div class="px-5 py-3 flex justify-between items-center" style="border-top: 1px solid var(--edc-border); background-color: var(--edc-bg-base);">
             <div class="flex space-x-3">
-                <a href="{{ route('admin.services.edit', $service) }}"
-                    class="text-xs text-blue-600 hover:underline font-medium">
-                    ✏️ Modifier
-                </a>
+                <a href="{{ route('admin.services.edit', $service) }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">✏️ Modifier</a>
                 <form method="POST" action="{{ route('admin.services.toggle', $service) }}">
                     @csrf
-                    <button type="submit" class="text-xs font-medium
-                        {{ $service->actif ? 'text-yellow-600 hover:underline' : 'text-green-600 hover:underline' }}">
+                    <button type="submit" class="text-xs font-medium hover:underline"
+                        style="color: {{ $service->actif ? 'var(--edc-accent-gold)' : 'var(--edc-secondary)' }};">
                         {{ $service->actif ? '⏸️ Désactiver' : '▶️ Activer' }}
                     </button>
                 </form>
@@ -93,20 +77,15 @@
             <form method="POST" action="{{ route('admin.services.destroy', $service) }}"
                 onsubmit="return confirm('Supprimer ce service ?')">
                 @csrf @method('DELETE')
-                <button type="submit" class="text-xs text-red-600 hover:underline font-medium">
-                    🗑️ Supprimer
-                </button>
+                <button type="submit" class="text-xs font-medium hover:underline" style="color: var(--edc-danger);">🗑️ Supprimer</button>
             </form>
         </div>
     </div>
     @empty
-    <div class="col-span-3 bg-white rounded-xl shadow text-center py-16 text-gray-400">
+    <div class="col-span-3 edc-card text-center py-16" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">💼</p>
         <p class="font-medium">Aucun service créé.</p>
-        <a href="{{ route('admin.services.create') }}"
-            class="inline-block mt-4 bg-blue-800 text-white px-6 py-2 rounded-lg text-sm">
-            Créer le premier service
-        </a>
+        <a href="{{ route('admin.services.create') }}" class="btn-primary btn-sm mt-4 inline-block">Créer le premier service</a>
     </div>
     @endforelse
 </div>

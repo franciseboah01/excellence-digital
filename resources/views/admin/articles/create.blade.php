@@ -1,21 +1,24 @@
 @extends('layouts.admin')
 @section('title', 'Nouvel Article')
-@section('page_title', 'Créer un Article')
+@section('page_title', '📰 Créer un Article')
 
 @section('content')
 <div class="mt-6 max-w-3xl">
     <a href="{{ route('admin.articles.index') }}"
-        class="text-blue-600 hover:underline text-sm">← Retour</a>
+        class="inline-flex items-center space-x-1 text-sm font-medium hover:underline"
+        style="color: var(--edc-primary-light);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Retour</span>
+    </a>
 
-    <div class="bg-white rounded-xl shadow p-8 mt-4">
+    <div class="edc-card p-6 sm:p-8 mt-4">
         <form method="POST" action="{{ route('admin.articles.store') }}"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data" class="space-y-5">
             @csrf
             @include('admin.articles.partials.form')
-            <button type="submit"
-                class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold hover:bg-blue-900 transition mt-6">
-                ➕ Publier l'article
-            </button>
+            <button type="submit" class="btn-primary w-full">➕ Publier l'article</button>
         </form>
     </div>
 </div>

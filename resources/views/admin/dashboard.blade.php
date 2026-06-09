@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Dashboard Admin')
-@section('page_title', 'Tableau de bord')
+@section('page_title', '🏠 Tableau de bord')
 @section('page_subtitle', 'Vue d\'ensemble d\'Excellence Digital Center')
 
 @section('content')
@@ -8,50 +8,46 @@
 {{-- ALERTES --}}
 @foreach($alertes as $alerte)
 <div class="mt-4 px-4 py-3 rounded-xl font-medium text-sm
-    {{ $alerte['type'] == 'warning' ? 'bg-yellow-100 border border-yellow-400 text-yellow-800' : 'bg-blue-100 border border-blue-400 text-blue-800' }}">
-    {{ $alerte['type'] == 'warning' ? '⚠️' : 'ℹ️' }} {{ $alerte['message'] }}
+    {{ $alerte['type'] == 'warning' ? 'alert alert-warning' : 'alert alert-info' }}">
+    <span>{{ $alerte['type'] == 'warning' ? '⚠️' : 'ℹ️' }}</span>
+    <span>{{ $alerte['message'] }}</span>
 </div>
 @endforeach
 
 {{-- STATS PRINCIPALES --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-    <div class="bg-white rounded-xl shadow p-5 border-l-4 border-blue-600">
-        <p class="text-3xl font-bold text-blue-700">{{ $stats['clients'] }}</p>
-        <p class="text-gray-500 text-sm mt-1">👥 Clients</p>
+    @foreach([
+        ['clients',     '👥 Clients',      'var(--edc-primary)'],
+        ['enseignants', '👨‍🏫 Enseignants', 'var(--edc-secondary)'],
+        ['formations',  '🎓 Formations',   '#A78BFA'],
+        ['services',    '💼 Services',     'var(--edc-accent-gold)'],
+    ] as $stat)
+    <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
+        <p class="stat-value">{{ $stats[$stat[0]] }}</p>
+        <p class="stat-label">{{ $stat[1] }}</p>
     </div>
-    <div class="bg-white rounded-xl shadow p-5 border-l-4 border-green-500">
-        <p class="text-3xl font-bold text-green-600">{{ $stats['enseignants'] }}</p>
-        <p class="text-gray-500 text-sm mt-1">👨‍🏫 Enseignants</p>
-    </div>
-    <div class="bg-white rounded-xl shadow p-5 border-l-4 border-purple-500">
-        <p class="text-3xl font-bold text-purple-600">{{ $stats['formations'] }}</p>
-        <p class="text-gray-500 text-sm mt-1">🎓 Formations</p>
-    </div>
-    <div class="bg-white rounded-xl shadow p-5 border-l-4 border-yellow-500">
-        <p class="text-3xl font-bold text-yellow-600">{{ $stats['services'] }}</p>
-        <p class="text-gray-500 text-sm mt-1">💼 Services</p>
-    </div>
+    @endforeach
 </div>
 
 {{-- STATS DEMANDES + REVENUS --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-    <div class="bg-white rounded-xl shadow p-5 text-center">
-        <p class="text-2xl font-bold text-gray-700">{{ $stats['demandes'] }}</p>
-        <p class="text-gray-400 text-xs mt-1">📋 Demandes totales</p>
+    @foreach([
+        ['demandes',    '📋 Demandes totales', 'var(--edc-bg-card)', 'var(--edc-text-primary)'],
+        ['en_attente',  '⏳ En attente',       'rgba(245,158,11,0.06)', '#FBBF24'],
+        ['en_cours',    '🔄 En cours',         'rgba(59,130,246,0.06)', '#60A5FA'],
+    ] as $stat)
+    <div class="rounded-xl p-5 text-center transition hover:-translate-y-1"
+        style="background-color: {{ $stat[2] }}; border: 1px solid var(--edc-border);">
+        <p class="text-2xl font-bold" style="color: {{ $stat[3] }};">{{ $stats[$stat[0]] }}</p>
+        <p class="text-xs mt-1" style="color: var(--edc-text-muted);">{{ $stat[1] }}</p>
     </div>
-    <div class="bg-yellow-50 rounded-xl shadow p-5 text-center border border-yellow-200">
-        <p class="text-2xl font-bold text-yellow-600">{{ $stats['en_attente'] }}</p>
-        <p class="text-gray-400 text-xs mt-1">⏳ En attente</p>
-    </div>
-    <div class="bg-blue-50 rounded-xl shadow p-5 text-center border border-blue-200">
-        <p class="text-2xl font-bold text-blue-600">{{ $stats['en_cours'] }}</p>
-        <p class="text-gray-400 text-xs mt-1">🔄 En cours</p>
-    </div>
-    <div class="bg-green-50 rounded-xl shadow p-5 text-center border border-green-200">
-        <p class="text-2xl font-bold text-green-600">
+    @endforeach
+    <div class="rounded-xl p-5 text-center transition hover:-translate-y-1"
+        style="background-color: rgba(16,185,129,0.06); border: 1px solid var(--edc-border);">
+        <p class="text-2xl font-bold" style="color: #34D399;">
             {{ number_format($stats['revenus'], 0, ',', ' ') }} FCFA
         </p>
-        <p class="text-gray-400 text-xs mt-1">💰 Revenus estimés</p>
+        <p class="text-xs mt-1" style="color: var(--edc-text-muted);">💰 Revenus estimés</p>
     </div>
 </div>
 
@@ -59,16 +55,16 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
     {{-- Inscriptions par mois --}}
-    <div class="bg-white rounded-xl shadow p-6">
-        <h3 class="text-lg font-bold text-blue-900 mb-4">
+    <div class="edc-card p-6">
+        <h3 class="text-lg font-bold mb-4" style="color: var(--edc-text-primary);">
             📈 Inscriptions (6 derniers mois)
         </h3>
         <canvas id="chartInscriptions" height="120"></canvas>
     </div>
 
     {{-- Répartition services --}}
-    <div class="bg-white rounded-xl shadow p-6">
-        <h3 class="text-lg font-bold text-blue-900 mb-4">
+    <div class="edc-card p-6">
+        <h3 class="text-lg font-bold mb-4" style="color: var(--edc-text-primary);">
             🥧 Répartition des demandes
         </h3>
         <canvas id="chartServices" height="120"></canvas>
@@ -79,67 +75,60 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
     {{-- Inscriptions récentes --}}
-    <div class="bg-white rounded-xl shadow p-6">
+    <div class="edc-card p-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-blue-900">🆕 Inscriptions récentes</h3>
-            <a href="{{ route('admin.formations.index') }}"
-                class="text-xs text-blue-600 hover:underline">Voir tout</a>
+            <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">🆕 Inscriptions récentes</h3>
+            <a href="{{ route('admin.formations.index') }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">Voir tout</a>
         </div>
         @forelse($inscriptionsRecentes as $inscription)
-        <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+        <div class="flex items-center justify-between py-3" style="border-bottom: 1px solid var(--edc-border);">
             <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white text-xs font-bold">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                     {{ strtoupper(substr($inscription->user->prenom, 0, 1)) }}
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-800">
-                        {{ $inscription->user->nom_complet }}
-                    </p>
-                    <p class="text-xs text-gray-400">{{ $inscription->formation->titre }}</p>
+                    <p class="text-sm font-medium" style="color: var(--edc-text-primary);">{{ $inscription->user->nom_complet }}</p>
+                    <p class="text-xs" style="color: var(--edc-text-muted);">{{ $inscription->formation->titre }}</p>
                 </div>
             </div>
             @php
-                $badge = match($inscription->statut) {
-                    'valide'     => 'bg-green-100 text-green-700',
-                    'en_attente' => 'bg-yellow-100 text-yellow-700',
-                    'refuse'     => 'bg-red-100 text-red-700',
-                    default      => 'bg-gray-100 text-gray-600',
+                $badgeStyle = match($inscription->statut) {
+                    'valide'     => 'background-color: rgba(16,185,129,0.12); color: #34D399;',
+                    'en_attente' => 'background-color: rgba(245,158,11,0.12); color: #FBBF24;',
+                    'refuse'     => 'background-color: rgba(239,68,68,0.12); color: #F87171;',
+                    default      => 'background-color: rgba(148,163,184,0.10); color: #94A3B8;',
                 };
             @endphp
-            <span class="text-xs px-2 py-1 rounded-full font-medium {{ $badge }}">
-                {{ ucfirst($inscription->statut) }}
-            </span>
+            <span class="badge text-xs" style="{{ $badgeStyle }}">{{ ucfirst($inscription->statut) }}</span>
         </div>
         @empty
-        <p class="text-gray-400 text-sm text-center py-4">Aucune inscription.</p>
+        <p class="text-sm text-center py-4" style="color: var(--edc-text-muted);">Aucune inscription.</p>
         @endforelse
     </div>
 
     {{-- Demandes en attente --}}
-    <div class="bg-white rounded-xl shadow p-6">
+    <div class="edc-card p-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-blue-900">⏳ Demandes en attente</h3>
-            <a href="{{ route('admin.demandes.index') }}"
-                class="text-xs text-blue-600 hover:underline">Voir tout</a>
+            <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">⏳ Demandes en attente</h3>
+            <a href="{{ route('admin.demandes.index') }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">Voir tout</a>
         </div>
         @forelse($demandesEnAttente as $demande)
-        <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+        <div class="flex items-center justify-between py-3" style="border-bottom: 1px solid var(--edc-border);">
             <div>
-                <p class="text-sm font-medium text-gray-800">
+                <p class="text-sm font-medium" style="color: var(--edc-text-primary);">
                     {{ $demande->user?->nom_complet ?? $demande->nom_visiteur }}
                 </p>
-                <p class="text-xs text-gray-400">{{ $demande->service->titre }}</p>
-                <p class="text-xs text-gray-300">{{ $demande->created_at->diffForHumans() }}</p>
+                <p class="text-xs" style="color: var(--edc-text-muted);">{{ $demande->service->titre }}</p>
+                <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">{{ $demande->created_at->diffForHumans() }}</p>
             </div>
             <a href="{{ route('admin.demandes.index') }}"
-                class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full hover:bg-yellow-200 transition font-medium">
+                class="badge badge-gold text-xs hover:scale-105 transition">
                 Traiter →
             </a>
         </div>
         @empty
-        <p class="text-gray-400 text-sm text-center py-4">
-            ✅ Aucune demande en attente.
-        </p>
+        <p class="text-sm text-center py-4" style="color: var(--edc-text-muted);">✅ Aucune demande en attente.</p>
         @endforelse
     </div>
 </div>
@@ -157,8 +146,8 @@
             datasets: [{
                 label: 'Inscriptions',
                 data: @json($dataMois),
-                backgroundColor: 'rgba(30, 58, 138, 0.7)',
-                borderColor: 'rgba(30, 58, 138, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
                 borderWidth: 2,
                 borderRadius: 6,
             }]
@@ -169,9 +158,14 @@
                 legend: { display: false }
             },
             scales: {
+                x: {
+                    ticks: { color: '#94A3B8' },
+                    grid: { display: false }
+                },
                 y: {
                     beginAtZero: true,
-                    ticks: { stepSize: 1 }
+                    ticks: { stepSize: 1, color: '#94A3B8' },
+                    grid: { color: 'rgba(42, 53, 82, 0.5)' }
                 }
             }
         }
@@ -186,10 +180,11 @@
             datasets: [{
                 data: @json($dataServices),
                 backgroundColor: [
-                    'rgba(30, 58, 138, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
                     'rgba(16, 185, 129, 0.8)',
                     'rgba(245, 158, 11, 0.8)',
                 ],
+                borderColor: '#0B0F1A',
                 borderWidth: 2,
             }]
         },
@@ -198,7 +193,11 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { font: { size: 12 } }
+                    labels: {
+                        color: '#94A3B8',
+                        font: { size: 12 },
+                        padding: 15
+                    }
                 }
             }
         }

@@ -1,92 +1,74 @@
 @extends('layouts.admin')
 @section('title', 'Articles')
-@section('page_title', 'Gestion du Blog')
+@section('page_title', '📰 Gestion du Blog')
 @section('page_subtitle', 'Articles et actualités')
 
 @section('content')
 
 {{-- STATS --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-    <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-gray-400">
-        <p class="text-2xl font-bold text-gray-700">{{ $stats['total'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">📰 Total</p>
+    @foreach([
+        ['total',    '📰 Total',        'var(--edc-text-muted)'],
+        ['publie',   '✅ Publiés',      'var(--edc-secondary)'],
+        ['brouillon','📝 Brouillons',   'var(--edc-accent-gold)'],
+        ['vues',     '👁 Vues totales', 'var(--edc-primary)'],
+    ] as $stat)
+    <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
+        <p class="stat-value">{{ $stats[$stat[0]] }}</p>
+        <p class="stat-label">{{ $stat[1] }}</p>
     </div>
-    <div class="bg-green-50 rounded-xl shadow p-4 text-center border-l-4 border-green-500">
-        <p class="text-2xl font-bold text-green-600">{{ $stats['publie'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">✅ Publiés</p>
-    </div>
-    <div class="bg-yellow-50 rounded-xl shadow p-4 text-center border-l-4 border-yellow-500">
-        <p class="text-2xl font-bold text-yellow-600">{{ $stats['brouillon'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">📝 Brouillons</p>
-    </div>
-    <div class="bg-blue-50 rounded-xl shadow p-4 text-center border-l-4 border-blue-500">
-        <p class="text-2xl font-bold text-blue-600">{{ $stats['vues'] }}</p>
-        <p class="text-gray-500 text-xs mt-1">👁 Vues totales</p>
-    </div>
+    @endforeach
 </div>
 
 <div class="flex justify-end mt-5">
-    <a href="{{ route('admin.articles.create') }}"
-        class="bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-900 transition">
-        ➕ Nouvel article
-    </a>
+    <a href="{{ route('admin.articles.create') }}" class="btn-primary btn-sm">➕ Nouvel article</a>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
     @forelse($articles as $article)
-    <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden
-        {{ $article->statut === 'brouillon' ? 'opacity-70' : '' }}">
+    <div class="edc-card overflow-hidden {{ $article->statut === 'brouillon' ? 'opacity-70' : '' }}">
         @if($article->image)
-        <img src="{{ asset('storage/' . $article->image) }}"
-            class="w-full h-36 object-cover">
+        <img src="{{ asset('storage/' . $article->image) }}" class="w-full h-36 object-cover">
         @else
-        <div class="w-full h-36 bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center">
+        <div class="w-full h-36 flex items-center justify-center" style="background: linear-gradient(135deg, #1e3a8a, #3B82F6);">
             <span class="text-4xl">📰</span>
         </div>
         @endif
 
         <div class="p-4">
             <div class="flex justify-between items-start mb-2">
-                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                    {{ $article->categorie }}
-                </span>
-                <span class="text-xs px-2 py-0.5 rounded-full font-medium
-                    {{ $article->statut === 'publie' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                <span class="badge badge-blue text-xs">{{ $article->categorie }}</span>
+                <span class="badge text-xs" style="{{ $article->statut === 'publie'
+                    ? 'background-color: rgba(16,185,129,0.12); color: #34D399;'
+                    : 'background-color: rgba(245,158,11,0.12); color: #FBBF24;' }}">
                     {{ $article->statut === 'publie' ? '✅' : '📝' }}
                 </span>
             </div>
-            <h3 class="font-bold text-gray-800 text-sm leading-tight mb-2">
-                {{ Str::limit($article->titre, 50) }}
-            </h3>
-            <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <h3 class="font-bold text-sm leading-tight mb-2" style="color: var(--edc-text-primary);">{{ Str::limit($article->titre, 50) }}</h3>
+            <div class="flex items-center justify-between text-xs mb-3" style="color: var(--edc-text-muted);">
                 <span>{{ $article->publie_le?->format('d/m/Y') ?? 'Non publié' }}</span>
                 <span>👁 {{ $article->vues }}</span>
             </div>
             <div class="flex justify-between items-center">
-                <a href="{{ route('admin.articles.edit', $article) }}"
-                    class="text-xs text-blue-600 hover:underline font-medium">✏️ Modifier</a>
+                <a href="{{ route('admin.articles.edit', $article) }}" class="text-xs font-medium hover:underline" style="color: var(--edc-primary-light);">✏️ Modifier</a>
                 <div class="flex space-x-2">
                     @if($article->statut === 'publie')
-                    <a href="{{ route('blog.show', $article->slug) }}" target="_blank"
-                        class="text-xs text-green-600 hover:underline">👁 Voir</a>
+                    <a href="{{ route('blog.show', $article->slug) }}" target="_blank" class="text-xs font-medium hover:underline" style="color: var(--edc-secondary);">👁 Voir</a>
                     @endif
                     <form method="POST" action="{{ route('admin.articles.destroy', $article) }}"
                         onsubmit="return confirm('Supprimer ?')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="text-xs text-red-600 hover:underline">🗑️</button>
+                        <button type="submit" class="text-xs font-medium hover:underline" style="color: var(--edc-danger);">🗑️</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
     @empty
-    <div class="col-span-3 bg-white rounded-xl shadow text-center py-16 text-gray-400">
+    <div class="col-span-3 edc-card text-center py-16" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">📰</p>
         <p>Aucun article créé.</p>
-        <a href="{{ route('admin.articles.create') }}"
-            class="inline-block mt-4 bg-blue-800 text-white px-5 py-2 rounded-lg text-sm">
-            Créer le premier article
-        </a>
+        <a href="{{ route('admin.articles.create') }}" class="btn-primary btn-sm mt-4 inline-block">Créer le premier article</a>
     </div>
     @endforelse
 </div>
