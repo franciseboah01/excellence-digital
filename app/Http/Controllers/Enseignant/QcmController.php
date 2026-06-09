@@ -69,7 +69,7 @@ class QcmController extends Controller
             ->with('success', 'QCM créé ! Ajoutez maintenant les questions.');
     }
 
-    // ===== GÉRER LES QUESTIONS =====
+// ===== GÉRER LES QUESTIONS =====
     public function questions(Qcm $qcm)
     {
         abort_if($qcm->cree_par !== auth()->id(), 403);
@@ -89,52 +89,39 @@ class QcmController extends Controller
             'points'      => 'required|integer|min:1|max:5',
             'reponses'    => 'required|array|min:2|max:4',
             'reponses.*'  => 'nullable|string|max:200',
-            // ✅ correctes peut être absent si aucune case cochée
             'correctes'   => 'nullable|array',
             'correctes.*' => 'integer',
         ]);
 
-        // Vérifier max 10 questions
         if ($qcm->questions()->count() >= 10) {
             return back()->with('error', '❌ Maximum 10 questions atteint.');
         }
 
-        // ✅ Filtrer les réponses vides
-        $reponses = array_filter(
-            $request->reponses ?? [],
-            fn($r) => !empty(trim($r))
-        );
-
-        // Vérifier qu'il y a au moins 2 réponses non vides
-        if (count($reponses) < 2) {
-            return back()
-                ->with('error', '❌ Ajoutez au moins 2 propositions de réponses.')
-                ->withInput();
-        }
-
-        // ✅ Vérifier qu'au moins une bonne réponse est cochée
+        // Récupérer les réponses brutes AVANT filtrage
+        $reponsesBrutes = $request->reponses ?? [];
         $correctes = $request->correctes ?? [];
 
+        // Vérifier qu'au moins une bonne réponse est cochée
         if (empty($correctes)) {
             return back()
                 ->with('error', '❌ Cochez au moins une bonne réponse.')
                 ->withInput();
         }
 
-        // Vérifier que les indices des correctes existent dans les réponses
-        $indicesReponses = array_keys(array_filter(
-            $request->reponses ?? [],
-            fn($r) => !empty(trim($r))
-        ));
+        // Vérifier que les propositions cochées ne sont PAS vides
+        foreach ($correctes as $index) {
+            if (empty(trim($reponsesBrutes[$index] ?? ''))) {
+                return back()
+                    ->with('error', '❌ La proposition ' . ((int)$index + 1) . ' est cochée comme bonne réponse mais elle est vide.')
+                    ->withInput();
+            }
+        }
 
-        $correctesValides = array_filter(
-            $correctes,
-            fn($c) => in_array((int)$c, $indicesReponses)
-        );
-
-        if (empty($correctesValides)) {
+        // Vérifier au moins 2 réponses non vides
+        $reponsesNonVides = array_filter($reponsesBrutes, fn($r) => !empty(trim($r)));
+        if (count($reponsesNonVides) < 2) {
             return back()
-                ->with('error', '❌ La bonne réponse cochée correspond à une proposition vide.')
+                ->with('error', '❌ Ajoutez au moins 2 propositions de réponses.')
                 ->withInput();
         }
 
@@ -148,8 +135,8 @@ class QcmController extends Controller
             'points'   => $request->points,
         ]);
 
-        // Créer les réponses (seulement les non vides)
-        foreach ($request->reponses as $index => $contenu) {
+        // Créer les réponses (toutes, même vides seront ignorées)
+        foreach ($reponsesBrutes as $index => $contenu) {
             if (empty(trim($contenu))) continue;
 
             ReponseQcm::create([
@@ -186,6 +173,58 @@ class QcmController extends Controller
         return back()->with('success',
             $qcm->actif ? '✅ QCM activé !' : '⏸️ QCM désactivé.'
         );
+    }
+
+    // ===== DONNÉES D'UNE QUESTION (AJAX) =====
+public function questionData(QuestionQcm $question)
+{
+    abort_if($question->qcm->cree_par !== auth()->id(), 403);
+
+    return response()->json([
+        'question' => $question->question,
+        'points'   => $question->points,
+        'reponses' => $question->reponses->map(fn($r) => [
+            'contenu'      => $r->contenu,
+            'est_correcte' => $r->est_correcte,
+        ]),
+    ]);
+}
+
+    // ===== MODIFIER UNE QUESTION =====
+    public function updateQuestion(Request $request, QuestionQcm $question)
+    {
+        abort_if($question->qcm->cree_par !== auth()->id(), 403);
+
+        $request->validate([
+            'question'  => 'required|string|max:500',
+            'points'    => 'required|integer|min:1|max:5',
+            'reponses'  => 'required|array|min:2|max:4',
+            'reponses.*'=> 'nullable|string|max:200',
+            'correctes' => 'nullable|array',
+        ]);
+
+        $question->update([
+            'question' => $request->question,
+            'points'   => $request->points,
+        ]);
+
+        // Supprimer anciennes réponses
+        $question->reponses()->delete();
+
+        $correctes = $request->correctes ?? [];
+
+        foreach ($request->reponses as $index => $contenu) {
+            if (empty(trim($contenu))) continue;
+
+            ReponseQcm::create([
+                'question_id' => $question->id,
+                'contenu'     => trim($contenu),
+                'est_correcte'=> in_array((int)$index, array_map('intval', $correctes)),
+                'ordre'       => $index,
+            ]);
+        }
+
+        return back()->with('success', '✅ Question modifiée !');
     }
 
     // ===== SUPPRIMER QCM =====

@@ -17,7 +17,7 @@ class CertificatController extends Controller
 
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
 
-        $pdf = Pdf::loadView('pdf.certificat', compact('certificat'))
+        $pdf = Pdf::loadView('client.pdf.certificat', compact('certificat'))
             ->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi'                => 150,
@@ -39,6 +39,6 @@ class CertificatController extends Controller
     {
         abort_if($certificat->user_id !== auth()->id(), 403);
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
-        return view('pdf.certificat', compact('certificat'));
+        return view('client.pdf.certificat', compact('certificat'));
     }
 }

@@ -158,6 +158,8 @@ Route::middleware(['auth', 'verified', 'role:enseignant'])
         Route::delete('/qcms/{qcm}', [EnseignantQcmController::class, 'destroy'])->name('qcms.destroy');
         Route::get('/qcms/{qcm}/resultats', [EnseignantQcmController::class, 'resultats'])->name('qcms.resultats');
 
+        Route::get('/qcms/question/{question}/data', [EnseignantQcmController::class, 'questionData'])->name('qcms.question.data');
+        Route::put('/qcms/question/{question}', [EnseignantQcmController::class, 'updateQuestion'])->name('qcms.question.update');
     });
 
 // ===== ADMIN =====

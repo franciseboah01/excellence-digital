@@ -84,7 +84,6 @@
                         id="proposition-{{ $i }}"
                         style="border: 1px solid var(--edc-border);">
 
-                        {{-- Checkbox bonne réponse --}}
                         <input type="checkbox"
                             name="correctes[]"
                             value="{{ $i }}"
@@ -95,7 +94,6 @@
                             title="Cocher si bonne réponse"
                             onchange="togglePropositionStyle({{ $i }}, this.checked)">
 
-                        {{-- Texte réponse --}}
                         <input type="text"
                             name="reponses[]"
                             value="{{ old('reponses.'.$i) }}"
@@ -104,7 +102,6 @@
                             placeholder="{{ $i < 2 ? 'Proposition '.($i+1).' *' : 'Proposition '.($i+1).' (optionnel)' }}"
                             id="reponse_{{ $i }}">
 
-                        {{-- Indicateur bonne réponse --}}
                         <span id="label_{{ $i }}"
                             class="text-xs font-medium hidden"
                             style="color: var(--edc-secondary);">
@@ -156,12 +153,16 @@
                     </span>
                     <p class="font-medium text-sm" style="color: var(--edc-text-primary);">{{ $question->question }}</p>
                 </div>
-                <div class="flex items-center space-x-2 ml-3 flex-shrink-0">
+                <div class="flex items-center space-x-3 ml-3 flex-shrink-0">
                     <span class="badge badge-blue">{{ $question->points }} pt{{ $question->points > 1 ? 's' : '' }}</span>
+                    <button type="button" onclick="ouvrirModaleModification({{ $question->id }})"
+                        class="text-xs hover:underline" style="color: var(--edc-primary-light);" title="Modifier">
+                        ✏️
+                    </button>
                     <form method="POST" action="{{ route('enseignant.qcms.questions.destroy', [$qcm, $question]) }}"
                         onsubmit="return confirm('Supprimer ?')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="text-xs hover:underline" style="color: var(--edc-danger);">🗑️</button>
+                        <button type="submit" class="text-xs hover:underline" style="color: var(--edc-danger);" title="Supprimer">🗑️</button>
                     </form>
                 </div>
             </div>
@@ -185,6 +186,43 @@
             <p class="text-sm">Aucune question ajoutée.</p>
         </div>
         @endforelse
+    </div>
+</div>
+
+{{-- MODALE MODIFICATION QUESTION --}}
+<div id="modaleModification" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+    style="background-color: rgba(0,0,0,0.7);">
+    <div class="edc-card w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="font-bold text-lg" style="color: var(--edc-text-primary);">✏️ Modifier la question</h3>
+            <button onclick="fermerModaleModification()" class="text-xl transition"
+                style="color: var(--edc-text-muted);"
+                onmouseover="this.style.color='#EF4444'"
+                onmouseout="this.style.color='#64748B'">✕</button>
+        </div>
+        <form id="formModification" method="POST" class="space-y-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="edc-label">Question *</label>
+                <textarea name="question" id="edit_question" rows="3" required class="edc-input"></textarea>
+            </div>
+            <div>
+                <label class="edc-label">Points *</label>
+                <select name="points" id="edit_points" class="edc-select">
+                    <option value="1">1 point</option>
+                    <option value="2">2 points</option>
+                    <option value="3">3 points</option>
+                </select>
+            </div>
+            <div>
+                <label class="edc-label">Propositions</label>
+                <div class="space-y-2" id="edit_propositions"></div>
+            </div>
+            <button type="submit" class="btn-primary w-full">
+                💾 Enregistrer
+            </button>
+        </form>
     </div>
 </div>
 @endsection
@@ -213,5 +251,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Modale modification question
+function ouvrirModaleModification(questionId) {
+    fetch(`/enseignant/qcms/question/${questionId}/data`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('edit_question').value = data.question;
+            document.getElementById('edit_points').value = data.points;
+
+            let html = '';
+            data.reponses.forEach((r, i) => {
+                html += `
+                <div class="flex items-center space-x-3 p-3 rounded-xl" style="border: 1px solid var(--edc-border);">
+                    <input type="checkbox" name="correctes[]" value="${i}" ${r.est_correcte ? 'checked' : ''}
+                        class="w-5 h-5 rounded flex-shrink-0 cursor-pointer" style="accent-color: #10B981;">
+                    <input type="text" name="reponses[]" value="${r.contenu.replace(/"/g, '&quot;')}"
+                        class="flex-1 text-sm bg-transparent" style="border: none; outline: none; color: var(--edc-text-primary);">
+                </div>`;
+            });
+            document.getElementById('edit_propositions').innerHTML = html;
+            document.getElementById('formModification').action = `/enseignant/qcms/question/${questionId}`;
+            document.getElementById('modaleModification').classList.remove('hidden');
+        });
+}
+
+function fermerModaleModification() {
+    document.getElementById('modaleModification').classList.add('hidden');
+}
 </script>
 @endpush

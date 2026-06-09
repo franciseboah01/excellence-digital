@@ -123,7 +123,8 @@ class QcmController extends Controller
             $reponsesCorrectes = $question->reponsesCorrectes->pluck('id')->sort()->values();
             $reponsesDonnees   = collect($request->reponses[$question->id] ?? [])->map(fn($id) => (int)$id)->sort()->values();
 
-            $estCorrect = $reponsesCorrectes->equals($reponsesDonnees);
+            $estCorrect = $reponsesCorrectes->count() === $reponsesDonnees->count() 
+            && $reponsesCorrectes->diff($reponsesDonnees)->isEmpty();
 
             if ($estCorrect) {
                 $score += $question->points;
