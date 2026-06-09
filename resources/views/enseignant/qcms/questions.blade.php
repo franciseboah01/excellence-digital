@@ -40,47 +40,83 @@
     @if($qcm->questions->count() < 10)
     <div class="edc-card p-6">
         <h2 class="text-lg font-bold mb-1" style="color: var(--edc-text-primary);">➕ Ajouter une question</h2>
-        <p class="text-xs mb-4" style="color: var(--edc-text-muted);">{{ $qcm->questions->count() }}/10 questions ajoutées</p>
+        <p class="text-xs mb-4" style="color: var(--edc-text-muted);">{{ $qcm->questions->count() }}/10 questions</p>
 
-        <form method="POST" action="{{ route('enseignant.qcms.questions.store', $qcm) }}" id="formQuestion" class="space-y-4">
+        @if(session('error'))
+        <div class="alert alert-error mb-4">
+            <span>❌</span><span>{{ session('error') }}</span>
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('enseignant.qcms.questions.store', $qcm) }}" class="space-y-4">
             @csrf
 
+            {{-- Question --}}
             <div>
                 <label class="edc-label">Question *</label>
                 <textarea name="question" rows="3" required class="edc-input"
-                    placeholder="Écrivez la question ici..."></textarea>
+                    placeholder="Écrivez la question ici...">{{ old('question') }}</textarea>
+                @error('question') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Points --}}
             <div>
                 <label class="edc-label">Points *</label>
                 <select name="points" class="edc-select">
-                    <option value="2" selected>2 points</option>
-                    <option value="1">1 point</option>
-                    <option value="3">3 points</option>
+                    <option value="2" {{ old('points', 2) == 2 ? 'selected' : '' }}>2 points</option>
+                    <option value="1" {{ old('points') == 1 ? 'selected' : '' }}>1 point</option>
+                    <option value="3" {{ old('points') == 3 ? 'selected' : '' }}>3 points</option>
                 </select>
             </div>
 
+            {{-- Propositions --}}
             <div>
                 <label class="edc-label">
-                    Propositions de réponses *
+                    Propositions *
                     <span style="color: var(--edc-text-muted); font-weight: normal; font-size: 0.7rem;">
-                        (2 à 4 propositions, cochez la ou les bonnes)
+                        (2 à 4 • ✅ = bonne réponse)
                     </span>
                 </label>
 
-                @for($i = 0; $i < 4; $i++)
-                <div class="flex items-center space-x-2 mb-2">
-                    <input type="checkbox" name="correctes[]" value="{{ $i }}"
-                        class="w-4 h-4 rounded flex-shrink-0" style="accent-color: #10B981;"
-                        title="Cocher si bonne réponse">
-                    <input type="text" name="reponses[]"
-                        class="edc-input flex-1" style="padding: 10px 14px;"
-                        placeholder="Proposition {{ $i + 1 }}{{ $i < 2 ? ' *' : ' (optionnel)' }}"
-                        {{ $i < 2 ? 'required' : '' }}>
-                </div>
-                @endfor
+                <div class="space-y-2">
+                    @for($i = 0; $i < 4; $i++)
+                    <div class="flex items-center space-x-3 p-3 rounded-xl transition"
+                        id="proposition-{{ $i }}"
+                        style="border: 1px solid var(--edc-border);">
 
-                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">✅ = bonne réponse | Cases vides = ignorées</p>
+                        {{-- Checkbox bonne réponse --}}
+                        <input type="checkbox"
+                            name="correctes[]"
+                            value="{{ $i }}"
+                            id="correct_{{ $i }}"
+                            {{ in_array($i, old('correctes', [])) ? 'checked' : '' }}
+                            class="w-5 h-5 rounded flex-shrink-0 cursor-pointer"
+                            style="accent-color: #10B981;"
+                            title="Cocher si bonne réponse"
+                            onchange="togglePropositionStyle({{ $i }}, this.checked)">
+
+                        {{-- Texte réponse --}}
+                        <input type="text"
+                            name="reponses[]"
+                            value="{{ old('reponses.'.$i) }}"
+                            class="flex-1 text-sm bg-transparent"
+                            style="border: none; outline: none; color: var(--edc-text-primary);"
+                            placeholder="{{ $i < 2 ? 'Proposition '.($i+1).' *' : 'Proposition '.($i+1).' (optionnel)' }}"
+                            id="reponse_{{ $i }}">
+
+                        {{-- Indicateur bonne réponse --}}
+                        <span id="label_{{ $i }}"
+                            class="text-xs font-medium hidden"
+                            style="color: var(--edc-secondary);">
+                            ✅ Bonne
+                        </span>
+                    </div>
+                    @endfor
+                </div>
+
+                <p class="text-xs mt-2" style="color: var(--edc-text-muted);">
+                    💡 Cochez la case ✅ à gauche pour marquer la/les bonne(s) réponse(s)
+                </p>
             </div>
 
             <button type="submit" class="btn-primary w-full">
@@ -152,3 +188,30 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function togglePropositionStyle(index, checked) {
+    const div   = document.getElementById('proposition-' + index);
+    const label = document.getElementById('label-' + index);
+
+    if (checked) {
+        div.style.borderColor = 'rgba(16,185,129,0.4)';
+        div.style.backgroundColor = 'rgba(16,185,129,0.06)';
+        if (label) label.classList.remove('hidden');
+    } else {
+        div.style.borderColor = 'var(--edc-border)';
+        div.style.backgroundColor = 'transparent';
+        if (label) label.classList.add('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="correctes[]"]').forEach(cb => {
+        if (cb.checked) {
+            togglePropositionStyle(parseInt(cb.value), true);
+        }
+    });
+});
+</script>
+@endpush

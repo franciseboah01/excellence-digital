@@ -85,34 +85,77 @@ class QcmController extends Controller
         abort_if($qcm->cree_par !== auth()->id(), 403);
 
         $request->validate([
-            'question'             => 'required|string|max:500',
-            'points'               => 'required|integer|min:1|max:5',
-            'reponses'             => 'required|array|min:2|max:4',
-            'reponses.*'           => 'required|string|max:200',
-            'correctes'            => 'required|array|min:1',
-            'correctes.*'          => 'integer',
+            'question'    => 'required|string|max:500',
+            'points'      => 'required|integer|min:1|max:5',
+            'reponses'    => 'required|array|min:2|max:4',
+            'reponses.*'  => 'nullable|string|max:200',
+            // ✅ correctes peut être absent si aucune case cochée
+            'correctes'   => 'nullable|array',
+            'correctes.*' => 'integer',
         ]);
 
         // Vérifier max 10 questions
         if ($qcm->questions()->count() >= 10) {
-            return back()->with('error', '❌ Un QCM ne peut pas avoir plus de 10 questions.');
+            return back()->with('error', '❌ Maximum 10 questions atteint.');
         }
 
+        // ✅ Filtrer les réponses vides
+        $reponses = array_filter(
+            $request->reponses ?? [],
+            fn($r) => !empty(trim($r))
+        );
+
+        // Vérifier qu'il y a au moins 2 réponses non vides
+        if (count($reponses) < 2) {
+            return back()
+                ->with('error', '❌ Ajoutez au moins 2 propositions de réponses.')
+                ->withInput();
+        }
+
+        // ✅ Vérifier qu'au moins une bonne réponse est cochée
+        $correctes = $request->correctes ?? [];
+
+        if (empty($correctes)) {
+            return back()
+                ->with('error', '❌ Cochez au moins une bonne réponse.')
+                ->withInput();
+        }
+
+        // Vérifier que les indices des correctes existent dans les réponses
+        $indicesReponses = array_keys(array_filter(
+            $request->reponses ?? [],
+            fn($r) => !empty(trim($r))
+        ));
+
+        $correctesValides = array_filter(
+            $correctes,
+            fn($c) => in_array((int)$c, $indicesReponses)
+        );
+
+        if (empty($correctesValides)) {
+            return back()
+                ->with('error', '❌ La bonne réponse cochée correspond à une proposition vide.')
+                ->withInput();
+        }
+
+        // Créer la question
         $ordre = $qcm->questions()->max('ordre') + 1;
 
         $question = QuestionQcm::create([
             'qcm_id'   => $qcm->id,
-            'question' => $request->question,
+            'question' => trim($request->question),
             'ordre'    => $ordre,
             'points'   => $request->points,
         ]);
 
-        foreach ($request->reponses as $index => $contenuReponse) {
-            if (empty(trim($contenuReponse))) continue;
+        // Créer les réponses (seulement les non vides)
+        foreach ($request->reponses as $index => $contenu) {
+            if (empty(trim($contenu))) continue;
+
             ReponseQcm::create([
                 'question_id' => $question->id,
-                'contenu'     => $contenuReponse,
-                'est_correcte'=> in_array($index, $request->correctes),
+                'contenu'     => trim($contenu),
+                'est_correcte'=> in_array((int)$index, array_map('intval', $correctes)),
                 'ordre'       => $index,
             ]);
         }

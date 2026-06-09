@@ -18,6 +18,7 @@ class HomeController extends Controller
             ->get();
 
         $temoignages = Temoignage::where('statut_validation', 'valide')
+            ->with('user')
             ->latest()
             ->take(4)
             ->get();
