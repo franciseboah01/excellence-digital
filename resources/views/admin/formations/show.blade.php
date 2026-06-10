@@ -47,12 +47,20 @@
             @endif
             <ul class="space-y-2 text-sm">
                 <li class="flex justify-between">
-                    <span style="color: var(--edc-text-muted);">Niveau</span>
-                    <span class="font-medium" style="color: var(--edc-text-primary);">{{ ucfirst($formation->niveau) }}</span>
+                    <span style="color: var(--edc-text-muted);">Module</span>
+                    <span class="font-medium" style="color: var(--edc-text-primary);">
+                        {{ $formation->module->icone ?? '📚' }} {{ $formation->module->nom ?? '—' }}
+                    </span>
                 </li>
                 <li class="flex justify-between">
                     <span style="color: var(--edc-text-muted);">Durée</span>
                     <span class="font-medium" style="color: var(--edc-text-primary);">{{ $formation->duree ?? '—' }}</span>
+                </li>
+                <li class="flex justify-between">
+                    <span style="color: var(--edc-text-muted);">Prix</span>
+                    <span class="font-medium" style="color: var(--edc-primary-light);">
+                        {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
+                    </span>
                 </li>
                 <li class="flex justify-between">
                     <span style="color: var(--edc-text-muted);">Statut</span>

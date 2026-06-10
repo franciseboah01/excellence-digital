@@ -7,6 +7,7 @@ use App\Models\DemandeService;
 use App\Models\Formation;
 use App\Models\InscriptionFormation;
 use App\Models\Notification;
+use App\Models\Paiement;
 use App\Models\Ressource;
 use App\Models\Service;
 use Illuminate\Http\Request;
@@ -205,6 +206,7 @@ class ClientController extends Controller
         return back()->with('success', 'Mot de passe modifié avec succès !');
     }
 
+    // ===== MES PAIEMENTS =====
     public function paiements()
     {
         $paiements = Paiement::where('user_id', auth()->id())
@@ -213,5 +215,55 @@ class ClientController extends Controller
             ->paginate(10);
 
         return view('client.paiements', compact('paiements'));
+    }
+
+    // ===== FORMULAIRE DE PAIEMENT =====
+    public function paiementForm(Request $request, $type, $id)
+    {
+        if ($type === 'formation') {
+            $item = Formation::findOrFail($id);
+            $montant = $item->prix ?? 0;
+            $description = $item->titre;
+        } elseif ($type === 'service') {
+            $item = Service::findOrFail($id);
+            $montant = $item->prix ?? 0;
+            $description = $item->titre;
+        } else {
+            abort(404);
+        }
+
+        return view('client.paiement-form', compact('type', 'id', 'montant', 'description'));
+    }
+
+    // ===== TRAITEMENT DU PAIEMENT (SIMULÉ) =====
+    public function paiementProcess(Request $request)
+    {
+        $request->validate([
+            'type'          => 'required|in:formation,service',
+            'id'            => 'required|integer',
+            'montant'       => 'required|numeric|min:100',
+            'mode_paiement' => 'required|in:orange_money,mtn_money,moov_money,visa,mastercard',
+            'telephone'     => 'nullable|string|max:20',
+        ]);
+
+        // Simulation de paiement réussi
+        $reference = 'EDC-PAY-' . strtoupper(uniqid());
+
+        $paiement = Paiement::create([
+            'user_id'        => auth()->id(),
+            'formation_id'   => $request->type === 'formation' ? $request->id : null,
+            'service_id'     => $request->type === 'service' ? $request->id : null,
+            'montant_total'  => $request->montant,
+            'montant_paye'   => $request->montant,
+            'statut'         => 'complete',
+            'mode_paiement'  => $request->mode_paiement,
+            'reference'      => $reference,
+            'enregistre_par' => auth()->id(),
+            'date_paiement'  => now(),
+            'notes'          => 'Paiement simulé — ' . $request->mode_paiement,
+        ]);
+
+        return redirect()->route('client.paiements')
+            ->with('success', '✅ Paiement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA effectué avec succès ! Réf : ' . $reference);
     }
 }

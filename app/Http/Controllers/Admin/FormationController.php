@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\InscriptionFormation;
+use App\Models\Module;
 use App\Models\NiveauFormation;
 use App\Models\Notification;
 use App\Models\Ressource;
@@ -18,7 +19,7 @@ class FormationController extends Controller
     // ===== LISTE =====
     public function index()
     {
-        $formations = Formation::withCount([
+        $formations = Formation::with('module')->withCount([
             'inscriptions',
             'inscriptions as inscrits_valides' => fn($q) => $q->where('statut', 'valide'),
             'ressources',
@@ -37,12 +38,12 @@ class FormationController extends Controller
     // ===== CRÉER =====
     public function create()
     {
+        $modules = Module::where('actif', true)->get();
         $enseignants = User::role('enseignant')->get();
-        return view('admin.formations.create', compact('enseignants'));
+        return view('admin.formations.create', compact('modules', 'enseignants'));
     }
 
     // ===== ENREGISTRER =====
-    //Validation automatique
     public function store(StoreFormationRequest $request)
     {
         $imagePath = null;
@@ -54,8 +55,9 @@ class FormationController extends Controller
         $formation = Formation::create([
             'titre'       => $request->titre,
             'description' => $request->description,
-            'niveau'      => $request->niveau,
+            'module_id'   => $request->module_id,
             'duree'       => $request->duree,
+            'prix'        => $request->prix,
             'statut'      => $request->statut,
             'image'       => $imagePath,
         ]);
@@ -68,10 +70,7 @@ class FormationController extends Controller
         ];
 
         foreach ($niveauxDefaut as $n) {
-            NiveauFormation::create(array_merge(
-                $n,
-                ['formation_id' => $formation->id]
-            ));
+            NiveauFormation::create(array_merge($n, ['formation_id' => $formation->id]));
         }
 
         return redirect()->route('admin.formations.show', $formation)
@@ -82,6 +81,7 @@ class FormationController extends Controller
     public function show(Formation $formation)
     {
         $formation->load([
+            'module',
             'niveaux.ressources',
             'inscriptions.user',
         ]);
@@ -105,13 +105,13 @@ class FormationController extends Controller
     // ===== MODIFIER =====
     public function edit(Formation $formation)
     {
-        return view('admin.formations.edit', compact('formation'));
+        $modules = Module::where('actif', true)->get();
+        return view('admin.formations.edit', compact('formation', 'modules'));
     }
 
     // ===== METTRE À JOUR =====
     public function update(StoreFormationRequest $request, Formation $formation)
     {
-        
         if ($request->hasFile('image')) {
             if ($formation->image) Storage::disk('public')->delete($formation->image);
             $formation->image = $request->file('image')->store('formations', 'public');
@@ -120,8 +120,9 @@ class FormationController extends Controller
         $formation->update([
             'titre'       => $request->titre,
             'description' => $request->description,
-            'niveau'      => $request->niveau,
+            'module_id'   => $request->module_id,
             'duree'       => $request->duree,
+            'prix'        => $request->prix,
             'statut'      => $request->statut,
             'image'       => $formation->image,
         ]);
@@ -205,48 +206,38 @@ class FormationController extends Controller
     }
 
     // ===== ASSIGNER ENSEIGNANT =====
-public function assignerEnseignant(Request $request, Formation $formation)
-{
-    $request->validate([
-        'enseignant_id' => 'required|exists:users,id',
-    ]);
+    public function assignerEnseignant(Request $request, Formation $formation)
+    {
+        $request->validate(['enseignant_id' => 'required|exists:users,id']);
 
-    $enseignant = User::findOrFail($request->enseignant_id);
-    abort_if(!$enseignant->hasRole('enseignant'), 403);
+        $enseignant = User::findOrFail($request->enseignant_id);
+        abort_if(!$enseignant->hasRole('enseignant'), 403);
 
-    // Vérifier si déjà assigné
-    $dejaAssigne = Ressource::where('formation_id', $formation->id)
-        ->where('enseignant_id', $enseignant->id)
-        ->exists();
+        $dejaAssigne = Ressource::where('formation_id', $formation->id)
+            ->where('enseignant_id', $enseignant->id)->exists();
 
-    if ($dejaAssigne) {
-        return back()->with('error',
-            "{$enseignant->prenom} {$enseignant->nom} est déjà assigné à cette formation."
-        );
+        if ($dejaAssigne) {
+            return back()->with('error', "{$enseignant->prenom} {$enseignant->nom} est déjà assigné.");
+        }
+
+        Ressource::create([
+            'formation_id'  => $formation->id,
+            'enseignant_id' => $enseignant->id,
+            'type'          => 'document',
+            'titre'         => 'Assignation — ' . $formation->titre,
+            'description'   => 'Assignation automatique par l\'administrateur.',
+            'actif'         => false,
+        ]);
+
+        Notification::create([
+            'user_id' => $enseignant->id,
+            'titre'   => '📚 Nouvelle formation assignée',
+            'message' => "Vous avez été assigné à la formation \"{$formation->titre}\".",
+            'type'    => 'info',
+        ]);
+
+        return back()->with('success', "{$enseignant->prenom} {$enseignant->nom} assigné !");
     }
-
-    // Créer une ressource d'assignation symbolique
-    Ressource::create([
-        'formation_id'  => $formation->id,
-        'enseignant_id' => $enseignant->id,
-        'type'          => 'document',
-        'titre'         => 'Assignation — ' . $formation->titre,
-        'description'   => 'Assignation automatique par l\'administrateur.',
-        'actif'         => false, // Invisible aux apprenants
-    ]);
-
-    // Notifier l'enseignant
-    Notification::create([
-        'user_id' => $enseignant->id,
-        'titre'   => '📚 Nouvelle formation assignée',
-        'message' => "Vous avez été assigné à la formation \"{$formation->titre}\". Vous pouvez maintenant y ajouter des ressources.",
-        'type'    => 'info',
-    ]);
-
-    return back()->with('success',
-        "{$enseignant->prenom} {$enseignant->nom} assigné à \"{$formation->titre}\" !"
-    );
-}
 
     // ===== RETIRER ENSEIGNANT =====
     public function retirerEnseignant(Formation $formation, User $enseignant)
@@ -254,28 +245,22 @@ public function assignerEnseignant(Request $request, Formation $formation)
         abort_if(!$enseignant->hasRole('enseignant'), 403);
 
         $nbRessources = Ressource::where('formation_id', $formation->id)
-            ->where('enseignant_id', $enseignant->id)
-            ->count();
+            ->where('enseignant_id', $enseignant->id)->count();
 
-        // Supprimer toutes ses ressources pour cette formation
         Ressource::where('formation_id', $formation->id)
             ->where('enseignant_id', $enseignant->id)
             ->each(function ($ressource) {
-                if ($ressource->fichier_path) {
-                    Storage::delete($ressource->fichier_path);
-                }
+                if ($ressource->fichier_path) Storage::delete($ressource->fichier_path);
                 $ressource->delete();
             });
 
         Notification::create([
             'user_id' => $enseignant->id,
             'titre'   => '⚠️ Assignation retirée',
-            'message' => "Vous avez été retiré de la formation \"{$formation->titre}\". {$nbRessources} ressource(s) supprimée(s).",
+            'message' => "Vous avez été retiré de la formation \"{$formation->titre}\".",
             'type'    => 'warning',
         ]);
 
-        return back()->with('success',
-            "{$enseignant->prenom} {$enseignant->nom} retiré de \"{$formation->titre}\"."
-        );
+        return back()->with('success', "{$enseignant->prenom} {$enseignant->nom} retiré.");
     }
 }

@@ -32,9 +32,10 @@
             <thead>
                 <tr>
                     <th>Formation</th>
-                    <th>Niveau</th>
+                    <th>Module</th>
                     <th>Inscrits</th>
                     <th>Ressources</th>
+                    <th>Prix</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
@@ -48,9 +49,7 @@
                             <img src="{{ asset('storage/' . $formation->image) }}" class="w-10 h-10 rounded-lg object-cover">
                             @else
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
-                                style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
-                                🎓
-                            </div>
+                                style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">🎓</div>
                             @endif
                             <div>
                                 <p class="font-semibold" style="color: var(--edc-text-primary);">{{ $formation->titre }}</p>
@@ -61,15 +60,9 @@
                         </div>
                     </td>
                     <td>
-                        @php
-                            $niveauStyle = match($formation->niveau) {
-                                'debutant'      => 'background-color: rgba(16,185,129,0.12); color: #34D399;',
-                                'intermediaire' => 'background-color: rgba(245,158,11,0.12); color: #FBBF24;',
-                                'avance'        => 'background-color: rgba(239,68,68,0.12); color: #F87171;',
-                                default         => 'background-color: rgba(148,163,184,0.10); color: #94A3B8;',
-                            };
-                        @endphp
-                        <span class="badge text-xs" style="{{ $niveauStyle }}">{{ ucfirst($formation->niveau) }}</span>
+                        <span class="badge text-xs" style="background-color: rgba(59,130,246,0.12); color: #60A5FA;">
+                            {{ $formation->module->icone ?? '📚' }} {{ $formation->module->nom ?? '—' }}
+                        </span>
                     </td>
                     <td>
                         <div class="text-center">
@@ -80,6 +73,11 @@
                     <td>
                         <span class="font-bold" style="color: #A78BFA;">{{ $formation->ressources_count }}</span>
                         <span class="text-xs" style="color: var(--edc-text-muted);"> fichier(s)</span>
+                    </td>
+                    <td>
+                        <span class="font-semibold text-xs" style="color: var(--edc-primary-light);">
+                            {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
+                        </span>
                     </td>
                     <td>
                         <span class="badge text-xs" style="{{ $formation->statut == 'publie'
@@ -102,7 +100,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-5 py-16 text-center" style="color: var(--edc-text-muted);">
+                    <td colspan="7" class="px-5 py-16 text-center" style="color: var(--edc-text-muted);">
                         <p class="text-5xl mb-4">🎓</p>
                         <p class="font-medium">Aucune formation créée.</p>
                         <a href="{{ route('admin.formations.create') }}" class="btn-primary btn-sm mt-4 inline-block">Créer la première formation</a>

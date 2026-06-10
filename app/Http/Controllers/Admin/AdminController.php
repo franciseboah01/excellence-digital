@@ -70,23 +70,19 @@ class AdminController extends Controller
 
         // ===== RÉPARTITION DES SERVICES =====
         $repartitionServices = DemandeService::select(
-            'services.categorie',
-            DB::raw('COUNT(*) as total')
-        )
-        ->join('services', 'demandes_service.service_id', '=', 'services.id')
-        ->groupBy('services.categorie')
-        ->get();
+                'categories.nom as categorie',
+                DB::raw('COUNT(*) as total')
+            )
+            ->join('services', 'demandes_service.service_id', '=', 'services.id')
+            ->join('categories', 'services.categorie_id', '=', 'categories.id')
+            ->groupBy('categories.nom')
+            ->get();
 
-        $labelsServices   = [];
-        $dataServices     = [];
-        $categoriesLabels = [
-            'bureautique' => 'Bureautique',
-            'design'      => 'Design',
-            'web_mobile'  => 'Web & Mobile',
-        ];
+        $labelsServices = [];
+        $dataServices   = [];
 
         foreach ($repartitionServices as $item) {
-            $labelsServices[] = $categoriesLabels[$item->categorie] ?? $item->categorie;
+            $labelsServices[] = $item->categorie;
             $dataServices[]   = $item->total;
         }
 

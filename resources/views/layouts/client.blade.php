@@ -33,7 +33,7 @@
                         ['client.qcms.index', '📝', 'QCMs'],
                         ['messages.index', '💬', 'Messages'],
                         ['client.paiements', '💰', 'Paiements'],
-                    ] as $item)
+                                            ] as $item)
                     <a href="{{ route($item[0]) }}"
                         class="nav-link {{ request()->routeIs($item[0]) ? 'active' : '' }}">
                         <span>{{ $item[1] }}</span>
@@ -174,6 +174,7 @@
                     ['messages.index', '💬', 'Messagerie'],
                     ['client.temoignages.index', '⭐', 'Mes avis'],
                     ['client.profil', '👤', 'Mon profil'],
+                    ['client.paiements', '💰', 'Paiements'],
                 ] as $item)
                 <a href="{{ route($item[0]) }}"
                     @click="menuOpen = false"
@@ -193,7 +194,7 @@
                         style="background-color: var(--edc-bg-elevated); color: var(--edc-text-secondary); border: 1px solid var(--edc-border);"
                         onmouseover="this.style.backgroundColor='var(--edc-bg-card)'; this.style.color='#F1F5F9'; this.style.borderColor='#3B82F6';"
                         onmouseout="this.style.backgroundColor='var(--edc-bg-elevated)'; this.style.color='#94A3B8'; this.style.borderColor='var(--edc-border)';">
-                        🌐 Voir le site public
+                        🌐 Voir le site
                     </a>
                 </div>
             </div>

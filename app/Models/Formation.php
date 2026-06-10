@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Formation extends Model
 {
     protected $fillable = [
-        'titre', 'description', 'niveau',
-        'duree', 'image', 'statut'
+        'titre', 'description', 'module_id',
+        'duree', 'prix', 'image', 'statut'
     ];
+
+    public function module()
+    {
+        return $this->belongsTo(Module::class);
+    }
 
     public function niveaux()
     {

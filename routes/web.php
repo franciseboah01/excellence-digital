@@ -31,6 +31,8 @@ use App\Http\Controllers\Client\QcmController as ClientQcmController;
 use App\Http\Controllers\CertificatController;
 use App\Http\Controllers\Admin\QcmController as AdminQcmController;
 use App\Http\Controllers\Admin\CategorieController;
+use App\Http\Controllers\Admin\ModuleController;
+
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -117,6 +119,8 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
         Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
         Route::get('/paiements', [ClientController::class, 'paiements'])->name('paiements');
+        Route::get('/paiement/{type}/{id}', [ClientController::class, 'paiementForm'])->name('paiement.form');
+        Route::post('/paiement/process', [ClientController::class, 'paiementProcess'])->name('paiement.process');
     });
 
 // ===== ENSEIGNANT =====
@@ -282,7 +286,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/categories', [CategorieController::class, 'store'])->name('categories.store');
         Route::put('/categories/{categorie}', [CategorieController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{categorie}', [CategorieController::class, 'destroy'])->name('categories.destroy');
-    });        
+
+        // Modules
+        Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
+        Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');
+        Route::put('/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
+        Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');    });        
 
 // ===== PROFIL =====
 Route::middleware('auth')->group(function () {

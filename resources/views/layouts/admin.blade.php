@@ -53,6 +53,7 @@
                 ['route' => 'admin.categories.index', 'icon' => '📂', 'label' => 'Catégories', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.services.index', 'icon' => '💼', 'label' => 'Services', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.demandes.index', 'icon' => '📋', 'label' => 'Demandes', 'group' => null, 'compteur' => 'admin.demandes.index'],
+                ['route' => 'admin.modules.index', 'icon' => '📚', 'label' => 'Modules de formations', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.formations.index', 'icon' => '🎓', 'label' => 'Formations', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.paiements.index', 'icon' => '💰', 'label' => 'Paiements', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.qcms.index', 'icon' => '📝', 'label' => 'QCMs', 'group' => null, 'compteur' => null],

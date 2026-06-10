@@ -30,22 +30,33 @@
     @error('description') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
-{{-- Niveau + Durée --}}
+{{-- Module + Durée --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
     <div>
-        <label class="edc-label">Niveau *</label>
-        <select name="niveau" required class="edc-select">
-            <option value="debutant" {{ old('niveau', $formation->niveau ?? '') == 'debutant' ? 'selected' : '' }}>🟢 Débutant</option>
-            <option value="intermediaire" {{ old('niveau', $formation->niveau ?? '') == 'intermediaire' ? 'selected' : '' }}>🟡 Intermédiaire</option>
-            <option value="avance" {{ old('niveau', $formation->niveau ?? '') == 'avance' ? 'selected' : '' }}>🔴 Avancé</option>
+        <label class="edc-label">Module *</label>
+        <select name="module_id" required class="edc-select">
+            <option value="">-- Choisir un module --</option>
+            @foreach($modules as $module)
+            <option value="{{ $module->id }}"
+                {{ old('module_id', $formation->module_id ?? '') == $module->id ? 'selected' : '' }}>
+                {{ $module->icone }} {{ $module->nom }}
+            </option>
+            @endforeach
         </select>
-        @error('niveau') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+        @error('module_id') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
     <div>
         <label class="edc-label">Durée</label>
         <input type="text" name="duree" value="{{ old('duree', $formation->duree ?? '') }}"
             class="edc-input" placeholder="Ex : 3 semaines">
     </div>
+</div>
+
+{{-- Prix --}}
+<div class="mb-5">
+    <label class="edc-label">Prix (FCFA) — laisser vide si gratuit</label>
+    <input type="number" name="prix" value="{{ old('prix', $formation->prix ?? '') }}" min="0"
+        class="edc-input" placeholder="Ex : 50000">
 </div>
 
 {{-- Statut --}}
