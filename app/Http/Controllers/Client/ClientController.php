@@ -131,12 +131,25 @@ class ClientController extends Controller
     }
 
     // ===== RESSOURCES D'UNE FORMATION =====
-    public function ressources(Formation $formation)
+   public function ressources(Formation $formation)
     {
         $inscription = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $formation->id)
             ->where('statut', 'valide')
             ->firstOrFail();
+
+        // Vérifier si la formation est payante et si le client a payé
+        if ($formation->prix && $formation->prix > 0) {
+            $aPaye = Paiement::where('user_id', auth()->id())
+                ->where('formation_id', $formation->id)
+                ->where('statut', 'complete')
+                ->exists();
+
+            if (!$aPaye) {
+                return redirect()->route('client.paiement.form', ['formation', $formation->id])
+                    ->with('error', 'Vous devez payer cette formation avant d\'accéder aux ressources.');
+            }
+        }
 
         $niveaux = $formation->niveaux()
             ->with(['ressources' => function($q) {
@@ -297,5 +310,36 @@ class ClientController extends Controller
 
         return redirect()->route('client.paiements')
             ->with('success', '✅ Paiement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA effectué !');
+    }
+
+    // Formation disponible pour un client connecter puisse choisir une formation et s'inscrire
+    public function formationsDisponibles()
+    {
+        $formations = Formation::with('module')
+            ->where('statut', 'publie')
+            ->get();
+
+        return view('client.formations-disponibles', compact('formations'));
+    }
+    public function inscrireFormation(Formation $formation)
+    {
+        // Vérifier si déjà inscrit
+        $dejaInscrit = InscriptionFormation::where('user_id', auth()->id())
+            ->where('formation_id', $formation->id)
+            ->exists();
+
+        if ($dejaInscrit) {
+            return back()->with('error', 'Vous êtes déjà inscrit à cette formation.');
+        }
+
+        InscriptionFormation::create([
+            'user_id'          => auth()->id(),
+            'formation_id'     => $formation->id,
+            'statut'           => 'en_attente',
+            'date_inscription' => now(),
+        ]);
+
+        return redirect()->route('client.formations')
+            ->with('success', 'Inscription à "' . $formation->titre . '" envoyée ! En attente de validation.');
     }
 }

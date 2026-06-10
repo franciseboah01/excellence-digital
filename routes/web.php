@@ -121,6 +121,8 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/paiements', [ClientController::class, 'paiements'])->name('paiements');
         Route::get('/paiement/{type}/{id}', [ClientController::class, 'paiementForm'])->name('paiement.form');
         Route::post('/paiement/process', [ClientController::class, 'paiementProcess'])->name('paiement.process');
+        Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
+        Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
     });
 
 // ===== ENSEIGNANT =====

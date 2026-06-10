@@ -2,22 +2,29 @@
 @section('title', 'Mes Formations')
 
 @section('content')
-<div class="mb-6">
-    <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">🎓 Mes Formations</h1>
-    <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">Accédez aux ressources de vos formations validées</p>
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+        <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">🎓 Mes Formations</h1>
+        <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">Accédez aux ressources de vos formations validées</p>
+    </div>
+    <a href="{{ route('client.formations.disponibles') }}" class="btn-primary btn-sm">
+        ➕ S'inscrire à une formation
+    </a>
 </div>
 
 @forelse($inscriptions as $inscription)
 <div class="edc-card mb-6 overflow-hidden">
-    {{-- En-tête formation --}}
     <div class="p-5" style="background: linear-gradient(135deg, #1e3a8a, #2563eb);">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div>
                 <h2 class="text-xl font-bold" style="color: #fff;">{{ $inscription->formation->titre }}</h2>
                 <p class="text-sm mt-1" style="color: rgba(255,255,255,0.7);">
-                    Niveau : {{ ucfirst($inscription->formation->niveau) }}
+                    Module : {{ $inscription->formation->module->nom ?? '—' }}
                     @if($inscription->formation->duree)
                     • ⏱ {{ $inscription->formation->duree }}
+                    @endif
+                    @if($inscription->formation->prix)
+                    • 💰 {{ number_format($inscription->formation->prix, 0, ',', ' ') }} FCFA
                     @endif
                 </p>
             </div>
@@ -38,10 +45,22 @@
 
     <div class="p-5">
         @if($inscription->statut === 'valide')
-        <a href="{{ route('client.ressources', $inscription->formation) }}" class="btn-primary">
-            <span>📚 Accéder aux ressources</span>
-            <span>→</span>
-        </a>
+            @php
+                $aPaye = \App\Models\Paiement::where('user_id', auth()->id())
+                    ->where('formation_id', $inscription->formation->id)
+                    ->where('statut', 'complete')
+                    ->exists();
+            @endphp
+            @if($inscription->formation->prix && !$aPaye)
+            <a href="{{ route('client.paiement.form', ['formation', $inscription->formation->id]) }}" class="btn-success">
+                <span>💳 Payer {{ number_format($inscription->formation->prix, 0, ',', ' ') }} FCFA</span>
+            </a>
+            @else
+            <a href="{{ route('client.ressources', $inscription->formation) }}" class="btn-primary">
+                <span>📚 Accéder aux ressources</span>
+                <span>→</span>
+            </a>
+            @endif
         @else
         <div class="alert alert-warning">
             <span>⏳</span>
@@ -54,7 +73,7 @@
 <div class="edc-card text-center py-16" style="color: var(--edc-text-muted);">
     <p class="text-5xl mb-4">🎓</p>
     <p class="font-medium">Vous n'êtes inscrit à aucune formation.</p>
-    <a href="{{ route('formations.index') }}" class="btn-primary btn-sm mt-4 inline-block">
+    <a href="{{ route('client.formations.disponibles') }}" class="btn-primary btn-sm mt-4 inline-block">
         Voir les formations disponibles
     </a>
 </div>
