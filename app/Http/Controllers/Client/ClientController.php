@@ -69,18 +69,45 @@ class ClientController extends Controller
             'message'            => 'nullable|string|max:2000',
         ]);
 
-        DemandeService::create([
-            'user_id'            => auth()->id(),
-            'service_id'         => $validated['service_id'],
-            'nom_visiteur'       => auth()->user()->nom_complet,
-            'email_visiteur'     => auth()->user()->email,
-            'telephone_visiteur' => $validated['telephone_visiteur'] ?? auth()->user()->telephone,
-            'message'            => $validated['message'] ?? null,
-            'statut'             => 'en_attente',
+        $service = Service::findOrFail($validated['service_id']);
+
+        // Stocker les données en session pour les récupérer après paiement
+        session([
+            'demande_data' => [
+                'service_id'         => $service->id,
+                'telephone_visiteur' => $validated['telephone_visiteur'] ?? auth()->user()->telephone,
+                'message'            => $validated['message'] ?? null,
+            ]
         ]);
+
+        // Si le service est payant, rediriger vers le paiement
+        if ($service->prix && $service->prix > 0) {
+            return redirect()->route('client.paiement.form', ['service', $service->id]);
+        }
+
+        // Si gratuit, enregistrer directement
+        $this->enregistrerDemande();
+        session()->forget('demande_data');
 
         return redirect()->route('client.demandes')
             ->with('success', 'Votre demande a été envoyée avec succès !');
+    }
+
+// Méthode privée pour enregistrer la demande
+    private function enregistrerDemande()
+    {
+        $data = session('demande_data');
+        if (!$data) return;
+
+        DemandeService::create([
+            'user_id'            => auth()->id(),
+            'service_id'         => $data['service_id'],
+            'nom_visiteur'       => auth()->user()->nom_complet,
+            'email_visiteur'     => auth()->user()->email,
+            'telephone_visiteur' => $data['telephone_visiteur'],
+            'message'            => $data['message'],
+            'statut'             => 'en_attente',
+        ]);
     }
 
     // ===== MES DEMANDES =====
@@ -246,10 +273,9 @@ class ClientController extends Controller
             'telephone'     => 'nullable|string|max:20',
         ]);
 
-        // Simulation de paiement réussi
         $reference = 'EDC-PAY-' . strtoupper(uniqid());
 
-        $paiement = Paiement::create([
+        Paiement::create([
             'user_id'        => auth()->id(),
             'formation_id'   => $request->type === 'formation' ? $request->id : null,
             'service_id'     => $request->type === 'service' ? $request->id : null,
@@ -263,7 +289,13 @@ class ClientController extends Controller
             'notes'          => 'Paiement simulé — ' . $request->mode_paiement,
         ]);
 
+        // Enregistrer la demande après paiement
+        if ($request->type === 'service' && session('demande_data')) {
+            $this->enregistrerDemande();
+            session()->forget('demande_data');
+        }
+
         return redirect()->route('client.paiements')
-            ->with('success', '✅ Paiement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA effectué avec succès ! Réf : ' . $reference);
+            ->with('success', '✅ Paiement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA effectué !');
     }
 }

@@ -4,8 +4,8 @@
 @section('content')
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">📋 Mes Demandes de Service</h1>
-    <a href="{{ route('demande.form') }}" class="btn-primary btn-sm">
-        + Nouvelle demande
+    <a href="{{ route('client.demande.form') }}" class="btn-primary btn-sm">
+        <span>➕</span><span>Nouvelle demande</span>
     </a>
 </div>
 
@@ -73,7 +73,7 @@
     <div class="text-center py-16" style="color: var(--edc-text-muted);">
         <p class="text-5xl mb-4">📋</p>
         <p class="font-medium">Aucune demande pour le moment.</p>
-        <a href="{{ route('demande.form') }}" class="btn-primary btn-sm mt-4 inline-block">
+        <a href="{{ route('client.demande.form') }}" class="btn-primary btn-sm mt-4 inline-block">
             Faire une demande
         </a>
     </div>

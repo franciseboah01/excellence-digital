@@ -12,7 +12,7 @@
             <span>Retour au dashboard</span>
         </a>
         <h1 class="text-xl sm:text-2xl font-extrabold mt-2" style="color: var(--edc-text-primary);">📋 Nouvelle demande de service</h1>
-        <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">Remplissez le formulaire, nous vous répondons sous 24h</p>
+        <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">Remplissez le formulaire, vous serez redirigé vers le paiement</p>
     </div>
 
     <div class="edc-card p-6 sm:p-8">
@@ -24,7 +24,6 @@
                 <label class="edc-label">Nom complet</label>
                 <input type="text" value="{{ auth()->user()->nom_complet }}"
                     class="edc-input" style="opacity: 0.6;" disabled>
-                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Connecté en tant que {{ auth()->user()->nom_complet }}</p>
             </div>
 
             {{-- Email (pré-rempli, non modifiable) --}}
@@ -44,15 +43,23 @@
             {{-- Service souhaité --}}
             <div>
                 <label class="edc-label">Service souhaité *</label>
-                <select name="service_id" class="edc-select" required>
+                <select name="service_id" id="service_id" class="edc-select" required onchange="afficherPrix()">
                     <option value="">-- Choisir un service --</option>
                     @foreach($services as $service)
-                    <option value="{{ $service->id }}" {{ old('service_id', request('service')) == $service->id ? 'selected' : '' }}>
+                    <option value="{{ $service->id }}"
+                        data-prix="{{ $service->prix }}"
+                        {{ old('service_id', request('service')) == $service->id ? 'selected' : '' }}>
                         {{ $service->icone ?? '⚙️' }} {{ $service->titre }}
                     </option>
                     @endforeach
                 </select>
                 @error('service_id') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Prix affiché dynamiquement --}}
+            <div id="prix_affiche" class="hidden rounded-xl p-4" style="background-color: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.20);">
+                <p class="text-sm" style="color: var(--edc-text-secondary);">Prix du service :</p>
+                <p class="text-2xl font-extrabold" style="color: var(--edc-primary-light);" id="prix_texte"></p>
             </div>
 
             {{-- Message --}}
@@ -64,9 +71,34 @@
             </div>
 
             <button type="submit" class="btn-primary w-full">
-                📩 Envoyer ma demande
+                📩 Envoyer et procéder au paiement
             </button>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function afficherPrix() {
+        const select = document.getElementById('service_id');
+        const option = select.options[select.selectedIndex];
+        const prix = option.getAttribute('data-prix');
+        const div = document.getElementById('prix_affiche');
+        const texte = document.getElementById('prix_texte');
+
+        if (prix && prix > 0) {
+            texte.textContent = new Intl.NumberFormat('fr-FR').format(prix) + ' FCFA';
+            div.classList.remove('hidden');
+        } else if (prix == 0) {
+            texte.textContent = 'Gratuit';
+            div.classList.remove('hidden');
+        } else {
+            div.classList.add('hidden');
+        }
+    }
+
+    // Afficher au chargement si un service est déjà sélectionné
+    document.addEventListener('DOMContentLoaded', afficherPrix);
+</script>
+@endpush
 @endsection

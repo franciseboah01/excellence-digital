@@ -82,7 +82,7 @@
                     </td>
                     <td>
                         <p class="font-medium" style="color: var(--edc-text-primary);">{{ $demande->service->titre }}</p>
-                        <p class="text-xs" style="color: var(--edc-text-muted);">{{ $demande->service->icone }} {{ ucfirst(str_replace('_', ' ', $demande->service->categorie)) }}</p>
+                        <p class="text-xs" style="color: var(--edc-text-muted);">{{ $demande->service->categorie->icone ?? '📂' }} {{ $demande->service->categorie->nom ?? '—' }}</p>
                     </td>
                     <td style="color: var(--edc-text-muted);" class="text-xs">
                         {{ $demande->created_at->format('d/m/Y') }}<br>

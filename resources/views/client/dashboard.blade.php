@@ -87,7 +87,7 @@
                         {{ $i->formation->titre }}
                     </p>
                     <span class="badge badge-green mt-0.5">
-                        {{ ucfirst($i->formation->niveau) }}
+                        {{ ucfirst($i->formation->module->nom) }}
                     </span>
                 </div>
                 <a href="{{ route('client.ressources', $i->formation) }}"
@@ -99,7 +99,7 @@
             <div class="text-center py-6" style="color: var(--edc-text-muted);">
                 <p class="text-3xl mb-2">🎓</p>
                 <p class="text-sm">Aucune formation.</p>
-                <a href="{{ route('formations.index') }}" class="btn-primary btn-xs mt-2 inline-block">
+                <a href="{{ route('client.formations') }}" class="btn-primary btn-xs mt-2 inline-block">
                     Voir les formations
                 </a>
             </div>
