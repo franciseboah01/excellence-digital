@@ -35,7 +35,7 @@
                     <td class="font-medium" style="color: var(--edc-text-primary);">{{ $cert->user->prenom }} {{ $cert->user->nom }}</td>
                     <td class="text-xs" style="color: var(--edc-text-secondary);">{{ $cert->formation->titre }}</td>
                     <td>
-                        <span class="font-bold" style="color: var(--edc-secondary);">{{ $cert->note_obtenue }}/20</span>
+                        <span class="font-bold" style="color: var(--edc-secondary);">{{ $cert->note_obtenue }}/{{ $qcm->bareme }}</span>
                     </td>
                     <td class="text-xs" style="color: var(--edc-text-muted);">{{ $cert->delivre_le->format('d/m/Y') }}</td>
                 </tr>

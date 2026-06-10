@@ -49,7 +49,7 @@
                     <td>
                         <p class="font-semibold" style="color: var(--edc-text-primary);">{{ $qcm->titre }}</p>
                         <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
-                            🎯 {{ $qcm->note_minimale }}/20 requis • ⏱ {{ $qcm->duree_par_question }}s/Q
+                            🎯 {{ $qcm->note_minimale }}/{{ $qcm->bareme }} requis • ⏱ {{ $qcm->duree_par_question }}s/Q
                         </p>
                     </td>
                     <td>

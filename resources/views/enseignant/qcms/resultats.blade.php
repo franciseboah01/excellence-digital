@@ -36,7 +36,7 @@
     <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
         <p class="stat-value">
             @if($stat[0] === 'moyenne')
-                {{ number_format($stats['moyenne'], 1) }}/20
+                {{ number_format($stats['moyenne'], 1) }}/{{ $qcm->bareme }}
             @elseif($stat[0] === 'echoues')
                 {{ $stats['total'] - $stats['reussis'] }}
             @else
@@ -52,7 +52,7 @@
 <div class="rounded-xl p-4 mb-6 flex flex-wrap gap-4 text-sm"
     style="background-color: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.20);">
     <span class="font-medium" style="color: var(--edc-primary-light);">⏱ {{ $qcm->duree_par_question }}s / question</span>
-    <span class="font-medium" style="color: var(--edc-primary-light);">🎯 Note minimale : {{ $qcm->note_minimale }}/20</span>
+    <span class="font-medium" style="color: var(--edc-primary-light);">🎯 Note minimale : {{ $qcm->note_minimale }}/{{ $qcm->bareme }}</span>
     <span class="font-medium" style="color: var(--edc-primary-light);">🔄 Max {{ $qcm->tentatives_max }} tentative(s)</span>
     <span class="font-medium" style="color: var(--edc-primary-light);">📝 {{ $qcm->questions->count() }} questions</span>
     @if($stats['total'] > 0)
@@ -117,7 +117,7 @@
                     </td>
                     <td>
                         <span class="font-bold text-base" style="color: {{ $session->note >= $qcm->note_minimale ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">
-                            {{ $session->note }}/20
+                            {{ $session->note }}/{{ $qcm->bareme }}
                         </span>
                     </td>
                     <td>
@@ -165,7 +165,7 @@
                 </div>
                 <div class="rounded-lg p-2" style="background-color: {{ $session->reussi ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)' }};">
                     <p class="text-xs" style="color: var(--edc-text-muted);">Note</p>
-                    <p class="font-bold text-sm" style="color: {{ $session->reussi ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">{{ $session->note }}/20</p>
+                    <p class="font-bold text-sm" style="color: {{ $session->reussi ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">{{ $session->note }}/{{ $qcm->bareme }}</p>
                 </div>
                 <div class="rounded-lg p-2" style="background-color: var(--edc-bg-base);">
                     <p class="text-xs" style="color: var(--edc-text-muted);">Date</p>

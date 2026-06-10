@@ -40,7 +40,7 @@ class QcmController extends Controller
         return view('enseignant.qcms.create', compact('formations'));
     }
 
-    // ===== ENREGISTRER QCM =====
+       // ===== ENREGISTRER QCM =====
     public function store(Request $request)
     {
         $request->validate([
@@ -49,7 +49,8 @@ class QcmController extends Controller
             'titre'               => 'required|string|max:200',
             'description'         => 'nullable|string|max:500',
             'duree_par_question'  => 'required|integer|min:30|max:600',
-            'note_minimale'       => 'required|integer|min:1|max:20',
+            'bareme'              => 'required|integer|in:20,50,100',
+            'note_minimale'       => 'required|integer|min:1|max:100',
             'tentatives_max'      => 'required|integer|min:1|max:5',
         ]);
 
@@ -60,6 +61,7 @@ class QcmController extends Controller
             'titre'               => $request->titre,
             'description'         => $request->description,
             'duree_par_question'  => $request->duree_par_question,
+            'bareme'              => $request->bareme,
             'note_minimale'       => $request->note_minimale,
             'tentatives_max'      => $request->tentatives_max,
             'actif'               => false,

@@ -204,4 +204,14 @@ class ClientController extends Controller
 
         return back()->with('success', 'Mot de passe modifié avec succès !');
     }
+
+    public function paiements()
+    {
+        $paiements = Paiement::where('user_id', auth()->id())
+            ->with(['formation', 'service'])
+            ->latest()
+            ->paginate(10);
+
+        return view('client.paiements', compact('paiements'));
+    }
 }

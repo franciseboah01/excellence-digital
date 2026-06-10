@@ -50,6 +50,7 @@
                 ['route' => 'admin.dashboard', 'icon' => '🏠', 'label' => 'Dashboard', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.users.index', 'icon' => '👥', 'label' => 'Clients', 'group' => 'Gestion', 'compteur' => 'admin.users.index'],
                 ['route' => 'admin.enseignants.index', 'icon' => '👨‍🏫', 'label' => 'Enseignants', 'group' => null, 'compteur' => null],
+                ['route' => 'admin.categories.index', 'icon' => '📂', 'label' => 'Catégories', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.services.index', 'icon' => '💼', 'label' => 'Services', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.demandes.index', 'icon' => '📋', 'label' => 'Demandes', 'group' => null, 'compteur' => 'admin.demandes.index'],
                 ['route' => 'admin.formations.index', 'icon' => '🎓', 'label' => 'Formations', 'group' => null, 'compteur' => null],

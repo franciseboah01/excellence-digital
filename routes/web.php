@@ -30,6 +30,7 @@ use App\Http\Controllers\Enseignant\QcmController as EnseignantQcmController;
 use App\Http\Controllers\Client\QcmController as ClientQcmController;
 use App\Http\Controllers\CertificatController;
 use App\Http\Controllers\Admin\QcmController as AdminQcmController;
+use App\Http\Controllers\Admin\CategorieController;
 
 
 // ===== ROUTES PUBLIQUES =====
@@ -115,6 +116,7 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
         Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
         Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
+        Route::get('/paiements', [ClientController::class, 'paiements'])->name('paiements');
     });
 
 // ===== ENSEIGNANT =====
@@ -268,7 +270,18 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/qcms/{qcm}', [AdminQcmController::class, 'show'])->name('qcms.show');
         Route::post('/qcms/{qcm}/toggle', [AdminQcmController::class, 'toggleActif'])->name('qcms.toggle');
         Route::delete('/qcms/{qcm}', [AdminQcmController::class, 'destroy'])->name('qcms.destroy');
-        Route::get('/certificats', [AdminQcmController::class, 'certificats'])->name('certificats.index');
+        
+        //Route::get('/certificats', [AdminQcmController::class, 'certificats'])->name('certificats.index');
+        Route::get('/certificats', [CertificatController::class, 'index'])
+            ->name('certificats.index');
+        Route::post('/certificats/{certificat}/duplicata', [CertificatController::class, 'duplicata'])
+            ->name('certificats.duplicata');
+
+        // Catégories de services
+        Route::get('/categories', [CategorieController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [CategorieController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{categorie}', [CategorieController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{categorie}', [CategorieController::class, 'destroy'])->name('categories.destroy');
     });        
 
 // ===== PROFIL =====

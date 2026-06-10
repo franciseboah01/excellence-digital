@@ -32,6 +32,7 @@
                         ['client.formations', '🎓', 'Formations'],
                         ['client.qcms.index', '📝', 'QCMs'],
                         ['messages.index', '💬', 'Messages'],
+                        ['client.paiements', '💰', 'Paiements'],
                     ] as $item)
                     <a href="{{ route($item[0]) }}"
                         class="nav-link {{ request()->routeIs($item[0]) ? 'active' : '' }}">

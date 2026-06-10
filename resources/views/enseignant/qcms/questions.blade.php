@@ -17,7 +17,7 @@
             🎓 {{ $qcm->formation->titre }}
             @if($qcm->niveau) — {{ $qcm->niveau->nom }} @endif
             • ⏱ {{ $qcm->duree_par_question }}s/question
-            • 🎯 {{ $qcm->note_minimale }}/20
+            • 🎯 {{ $qcm->note_minimale }}/{{ $qcm->bareme }}
         </p>
     </div>
     <div class="flex-shrink-0">

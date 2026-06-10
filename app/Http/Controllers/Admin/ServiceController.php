@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Models\Categorie;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -11,15 +12,15 @@ class ServiceController extends Controller
     // ===== LISTE =====
     public function index()
     {
-        $services = Service::withCount('demandes')
-            ->latest()->paginate(12);
+        $services = Service::with('categorie')
+            ->withCount('demandes')
+            ->latest()
+            ->paginate(12);
 
         $stats = [
-            'total'       => Service::count(),
-            'actifs'      => Service::where('actif', true)->count(),
-            'bureautique' => Service::where('categorie', 'bureautique')->count(),
-            'design'      => Service::where('categorie', 'design')->count(),
-            'web_mobile'  => Service::where('categorie', 'web_mobile')->count(),
+            'total'    => Service::count(),
+            'actifs'   => Service::where('actif', true)->count(),
+            'inactifs' => Service::where('actif', false)->count(),
         ];
 
         return view('admin.services.index', compact('services', 'stats'));
@@ -28,28 +29,22 @@ class ServiceController extends Controller
     // ===== FORMULAIRE CRÉATION =====
     public function create()
     {
-        return view('admin.services.create');
+        $categories = Categorie::where('actif', true)->get();
+        return view('admin.services.create', compact('categories'));
     }
 
     // ===== ENREGISTRER =====
     public function store(Request $request)
     {
-        $request->validate([
-            'titre'       => 'required|string|max:200',
-            'description' => 'required|string',
-            'categorie'   => 'required|in:bureautique,design,web_mobile',
-            'prix'        => 'nullable|numeric|min:0',
-            'icone'       => 'nullable|string|max:10',
+        $validated = $request->validate([
+            'icone'        => 'nullable|string|max:5',
+            'categorie_id' => 'required|exists:categories,id',
+            'titre'        => 'required|string|max:200',
+            'description'  => 'required|string|max:1000',
+            'prix'         => 'nullable|integer|min:0',
         ]);
 
-        Service::create([
-            'titre'       => $request->titre,
-            'description' => $request->description,
-            'categorie'   => $request->categorie,
-            'prix'        => $request->prix,
-            'icone'       => $request->icone ?? '⚙️',
-            'actif'       => true,
-        ]);
+        Service::create($validated + ['actif' => true]);
 
         return redirect()->route('admin.services.index')
             ->with('success', 'Service créé avec succès !');
@@ -58,28 +53,23 @@ class ServiceController extends Controller
     // ===== FORMULAIRE MODIFICATION =====
     public function edit(Service $service)
     {
-        return view('admin.services.edit', compact('service'));
+        $categories = Categorie::where('actif', true)->get();
+        return view('admin.services.edit', compact('service', 'categories'));
     }
 
     // ===== METTRE À JOUR =====
     public function update(Request $request, Service $service)
     {
-        $request->validate([
-            'titre'       => 'required|string|max:200',
-            'description' => 'required|string',
-            'categorie'   => 'required|in:bureautique,design,web_mobile',
-            'prix'        => 'nullable|numeric|min:0',
-            'icone'       => 'nullable|string|max:10',
+        $validated = $request->validate([
+            'icone'        => 'nullable|string|max:5',
+            'categorie_id' => 'required|exists:categories,id',
+            'titre'        => 'required|string|max:200',
+            'description'  => 'required|string|max:1000',
+            'prix'         => 'nullable|integer|min:0',
+            'actif'        => 'boolean',
         ]);
 
-        $service->update([
-            'titre'       => $request->titre,
-            'description' => $request->description,
-            'categorie'   => $request->categorie,
-            'prix'        => $request->prix,
-            'icone'       => $request->icone,
-            'actif'       => $request->boolean('actif'),
-        ]);
+        $service->update($validated);
 
         return redirect()->route('admin.services.index')
             ->with('success', 'Service mis à jour !');
@@ -96,8 +86,6 @@ class ServiceController extends Controller
     public function toggleActif(Service $service)
     {
         $service->update(['actif' => !$service->actif]);
-        return back()->with('success',
-            'Service ' . ($service->actif ? 'désactivé' : 'activé') . '.'
-        );
+        return back()->with('success', 'Service ' . ($service->actif ? 'activé' : 'désactivé') . '.');
     }
 }

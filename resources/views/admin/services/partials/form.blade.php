@@ -6,30 +6,27 @@
     <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Copiez-collez un emoji</p>
 </div>
 
+{{-- Catégorie --}}
+<div class="mb-5">
+    <label class="edc-label">Catégorie *</label>
+    <select name="categorie_id" required class="edc-select">
+        <option value="">-- Choisir --</option>
+        @foreach($categories as $categorie)
+        <option value="{{ $categorie->id }}"
+            {{ old('categorie_id', $service->categorie_id ?? '') == $categorie->id ? 'selected' : '' }}>
+            {{ $categorie->icone }} {{ $categorie->nom }}
+        </option>
+        @endforeach
+    </select>
+    @error('categorie_id') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
+
 {{-- Titre --}}
 <div class="mb-5">
     <label class="edc-label">Titre *</label>
     <input type="text" name="titre" value="{{ old('titre', $service->titre ?? '') }}" required
         class="edc-input" placeholder="Ex : Création de CV professionnel">
     @error('titre') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-</div>
-
-{{-- Catégorie --}}
-<div class="mb-5">
-    <label class="edc-label">Catégorie *</label>
-    <select name="categorie" required class="edc-select">
-        <option value="">-- Choisir --</option>
-        <option value="bureautique" {{ old('categorie', $service->categorie ?? '') == 'bureautique' ? 'selected' : '' }}>
-            💼 Bureautique
-        </option>
-        <option value="design" {{ old('categorie', $service->categorie ?? '') == 'design' ? 'selected' : '' }}>
-            🌐 Digital & Design
-        </option>
-        <option value="web_mobile" {{ old('categorie', $service->categorie ?? '') == 'web_mobile' ? 'selected' : '' }}>
-            💻 Web & Mobile
-        </option>
-    </select>
-    @error('categorie') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
 {{-- Description --}}

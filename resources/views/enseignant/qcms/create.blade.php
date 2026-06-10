@@ -54,11 +54,20 @@
                     <p class="text-xs mt-1" style="color: var(--edc-text-muted);">30s à 10min</p>
                 </div>
                 <div>
-                    <label class="edc-label">Note minimale /20 *</label>
-                    <input type="number" name="note_minimale" value="14"
-                        min="1" max="20" required class="edc-input">
-                    <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Pour obtenir le cert.</p>
-                </div>
+                <label class="edc-label">Barème *</label>
+                <select name="bareme" required class="edc-select">
+                    <option value="20" {{ old('bareme') == 20 ? 'selected' : '' }}>Sur 20</option>
+                    <option value="50" {{ old('bareme') == 50 ? 'selected' : '' }}>Sur 50</option>
+                    <option value="100" {{ old('bareme') == 100 ? 'selected' : '' }}>Sur 100</option>
+                </select>
+            </div>
+            <div>
+                <label class="edc-label">Note minimale *</label>
+                <input type="number" name="note_minimale"
+                    value="{{ old('note_minimale', \App\Models\Configuration::get('qcm_note_minimale', 14)) }}"
+                    min="1" max="100" required class="edc-input">
+                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">L'apprenant doit obtenir cette note pour réussir</p>
+            </div>
                 <div>
                     <label class="edc-label">Tentatives max *</label>
                     <input type="number" name="tentatives_max" value="3"

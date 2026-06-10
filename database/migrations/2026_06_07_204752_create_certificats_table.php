@@ -18,8 +18,10 @@ return new class extends Migration
             $table->foreignId('session_qcm_id')->constrained('sessions_qcm')->cascadeOnDelete();
             $table->string('numero_certificat')->unique();
             $table->decimal('note_obtenue', 5, 2);
-            $table->timestamp('delivre_le');
+            $table->timestamp('delivre_le');   
+            $table->boolean('telecharge')->default(false);
             $table->timestamps();
+            
         });
     }
 

@@ -33,7 +33,7 @@
 
             <div class="flex items-center space-x-4 mt-3 text-xs" style="color: var(--edc-text-muted);">
                 <span>⏱ {{ $qcm->duree_par_question }}s/q</span>
-                <span>🎯 {{ $qcm->note_minimale }}/20</span>
+                <span>🎯 {{ $qcm->note_minimale }}{{ $qcm->bareme }}</span>
                 <span>🔄 {{ $qcm->tentatives_max }} essais</span>
             </div>
         </div>

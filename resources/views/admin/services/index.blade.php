@@ -6,13 +6,11 @@
 @section('content')
 
 {{-- STATS --}}
-<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
     @foreach([
-        ['total',       'Total',         'var(--edc-primary)'],
-        ['actifs',      'Actifs',        'var(--edc-secondary)'],
-        ['bureautique', '💼 Bureautique', '#A78BFA'],
-        ['design',      '🌐 Design',     'var(--edc-accent-gold)'],
-        ['web_mobile',  '💻 Web & Mobile','var(--edc-danger)'],
+        ['total',   'Total',   'var(--edc-primary)'],
+        ['actifs',  'Actifs',  'var(--edc-secondary)'],
+        ['inactifs','Inactifs','var(--edc-text-muted)'],
     ] as $stat)
     <div class="stat-card" style="border-left-color: {{ $stat[2] }};">
         <p class="stat-value">{{ $stats[$stat[0]] }}</p>
@@ -21,8 +19,9 @@
     @endforeach
 </div>
 
-{{-- BOUTON AJOUTER --}}
-<div class="flex justify-end mt-5">
+{{-- BOUTONS --}}
+<div class="flex justify-end mt-5 space-x-3">
+    <a href="{{ route('admin.categories.index') }}" class="btn-tertiary btn-sm">📂 Gérer les catégories</a>
     <a href="{{ route('admin.services.create') }}" class="btn-primary btn-sm">➕ Nouveau service</a>
 </div>
 
@@ -45,11 +44,8 @@
 
             <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $service->titre }}</h3>
 
-            <span class="badge badge-gray text-xs">
-                @if($service->categorie == 'bureautique') 💼 Bureautique
-                @elseif($service->categorie == 'design') 🌐 Design
-                @else 💻 Web & Mobile
-                @endif
+            <span class="badge text-xs" style="background-color: rgba(148,163,184,0.10); color: #94A3B8;">
+                {{ $service->categorie->icone ?? '📂' }} {{ $service->categorie->nom ?? 'Sans catégorie' }}
             </span>
 
             <p class="text-sm mt-2 leading-relaxed" style="color: var(--edc-text-secondary);">

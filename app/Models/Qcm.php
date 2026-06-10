@@ -9,7 +9,7 @@ class Qcm extends Model
     protected $fillable = [
         'formation_id', 'niveau_id', 'cree_par',
         'titre', 'description', 'duree_par_question',
-        'note_minimale', 'tentatives_max', 'actif',
+        'note_minimale', 'bareme', 'tentatives_max', 'actif',
     ];
 
     protected $casts = ['actif' => 'boolean'];
