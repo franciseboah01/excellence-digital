@@ -14,7 +14,9 @@ class HomeController extends Controller
         $services = Service::where('actif', true)->take(6)->get();
 
         $formations = Formation::where('statut', 'publie')
-            ->take(3)
+            ->with('module')
+            ->withCount('inscriptions')
+            ->latest()
             ->get();
 
         $temoignages = Temoignage::where('statut_validation', 'valide')

@@ -4,6 +4,29 @@
 @section('page_subtitle', 'Ajout, modification et supervision des enseignants')
 
 @section('content')
+
+{{-- FILTRES --}}
+<div class="edc-card p-5 mt-6">
+    <form method="GET" action="{{ route('admin.enseignants.index') }}"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+        <input type="text" name="search" value="{{ request('search') }}"
+            placeholder="🔍 Nom, prénom, email..."
+            class="edc-input">
+
+        <select name="statut" class="edc-select">
+            <option value="">Tous les statuts</option>
+            <option value="actif"    {{ request('statut') == 'actif' ? 'selected' : '' }}>✅ Actif</option>
+            <option value="suspendu" {{ request('statut') == 'suspendu' ? 'selected' : '' }}>⛔ Suspendu</option>
+        </select>
+
+        <div class="flex space-x-2">
+            <button type="submit" class="btn-primary btn-sm flex-1">Filtrer</button>
+            <a href="{{ route('admin.enseignants.index') }}" class="btn-tertiary btn-sm flex-1 text-center">Reset</a>
+        </div>
+    </form>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
     {{-- FORMULAIRE AJOUT --}}
@@ -99,7 +122,6 @@
                     </div>
                 </div>
 
-                {{-- Formulaire de modification inline --}}
                 <div x-show="editOpen" x-cloak class="mt-4 rounded-xl p-4" style="background-color: var(--edc-bg-base);">
                     <form method="POST" action="{{ route('admin.enseignants.update', $enseignant) }}" class="space-y-3">
                         @csrf @method('PUT')

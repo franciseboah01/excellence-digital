@@ -8,11 +8,19 @@ use Illuminate\Support\Str;
 class Certificat extends Model
 {
     protected $fillable = [
-        'user_id', 'formation_id', 'session_qcm_id',
-        'numero_certificat', 'note_obtenue', 'delivre_le',
+        'user_id',
+        'formation_id',
+        'session_qcm_id',
+        'numero_certificat',
+        'note_obtenue',
+        'delivre_le',
+        'telecharge',
     ];
 
-    protected $casts = ['delivre_le' => 'datetime'];
+    protected $casts = [
+        'delivre_le' => 'datetime',
+        'telecharge' => 'boolean',
+    ];
 
     public function user()
     {

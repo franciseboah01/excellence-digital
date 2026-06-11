@@ -27,9 +27,16 @@
                 <tr>
                     <td class="font-mono text-xs" style="color: var(--edc-primary-light);">{{ $p->reference }}</td>
                     <td style="color: var(--edc-text-primary);">
-                        @if($p->formation) 🎓 {{ $p->formation->titre }}
-                        @elseif($p->service) 💼 {{ $p->service->titre }}
-                        @else — @endif
+                        {{-- CORRECTION : Prise en compte du duplicata via la relation certificat --}}
+                        @if($p->formation) 
+                            🎓 {{ $p->formation->titre }}
+                        @elseif($p->service) 
+                            💼 {{ $p->service->titre }}
+                        @elseif($p->certificat) 
+                            🔄 Duplicata Certificat ({{ $p->certificat->formation?->titre ?? 'N° ' . $p->certificat->numero_certificat }})
+                        @else 
+                            — 
+                        @endif
                     </td>
                     <td class="font-semibold" style="color: var(--edc-text-primary);">{{ number_format($p->montant_paye, 0, ',', ' ') }} FCFA</td>
                     <td>
@@ -62,12 +69,16 @@
     $formationsAPayer = \App\Models\InscriptionFormation::with('formation')
         ->where('user_id', auth()->id())
         ->where('statut', 'valide')
+        // Optionnel : s'assurer qu'un paiement complet n'existe pas déjà pour cette formation
+        ->whereDoesntHave('formation.paiements', function($q) {
+            $q->where('user_id', auth()->id())->where('statut', 'complete');
+        })
         ->get();
 @endphp
 
 @if($formationsAPayer->count())
 <div class="edc-card p-6 mb-6">
-    <h3 class="font-bold mb-4" style="color: var(--edc-text-primary);">🎓 Formations</h3>
+    <h3 class="font-bold mb-4" style="color: var(--edc-text-primary);">🎓 Formations en attente de paiement</h3>
     @foreach($formationsAPayer as $inscription)
     <div class="flex items-center justify-between py-3" style="border-bottom: 1px solid var(--edc-border);">
         <span style="color: var(--edc-text-primary);">{{ $inscription->formation->titre }}</span>

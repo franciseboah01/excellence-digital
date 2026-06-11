@@ -10,7 +10,9 @@ class FormationController extends Controller
     public function index()
     {
         $formations = Formation::where('statut', 'publie')
+                        ->with('module')
                         ->withCount('inscriptions')
+                        ->latest()
                         ->get();
         return view('public.formations', compact('formations'));
     }

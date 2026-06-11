@@ -23,16 +23,26 @@
                     <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
                         N° {{ $certificat->numero_certificat }} •
                         {{ $certificat->delivre_le->format('d/m/Y') }} •
-                        Note : {{ $certificat->note_obtenue }}/{{ $qcm->bareme }}
+                        Note : {{ $certificat->note_obtenue }}/{{ $qcm->bareme ?? 20  }}
                     </p>
                 </div>
-                <a href="{{ route('certificats.telecharger', $certificat) }}"
-                    class="btn-xs rounded-lg text-xs font-bold flex-shrink-0 transition"
-                    style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
-                    onmouseover="this.style.filter='brightness(1.1)'"
-                    onmouseout="this.style.filter='brightness(1)'">
-                    📄 PDF
-                </a>
+                @if($certificat->telecharge)
+                    <span class="text-xs font-medium" style="color: var(--edc-text-muted);">✅ Déjà téléchargé</span>
+                    <form method="POST" action="{{ route('client.certificats.demande-duplicata', $certificat) }}" class="mt-2">
+                        @csrf
+                        <button type="submit" class="text-xs font-bold hover:underline" style="color: var(--edc-accent-gold);">
+                            🔄 Duplicata (1000 FCFA)
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('certificats.telecharger', $certificat) }}"
+                        class="btn-xs rounded-lg text-xs font-bold flex-shrink-0 ml-3 transition"
+                        style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
+                        onmouseover="this.style.filter='brightness(1.1)'"
+                        onmouseout="this.style.filter='brightness(1)'">
+                        📄 PDF
+                    </a>
+                @endif
             </div>
             @endforeach
         </div>
@@ -71,7 +81,7 @@
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(16,185,129,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Note min.</p>
-                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/{{ $qcm->bareme }}</p>
+                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}</p>
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(245,158,11,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Durée/Q</p>
@@ -83,7 +93,7 @@
                 <div class="mt-3">
                     <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
                         <span>Meilleure note</span>
-                        <span>{{ $qcm->meilleure_note }}/{{ $qcm->bareme }}</span>
+                        <span>{{ $qcm->meilleure_note }}/{{ $certificat->session->qcm->bareme ?? 20 }}</span>
                     </div>
                     <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
                         <div class="h-2 rounded-full transition-all"

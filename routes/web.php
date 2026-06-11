@@ -123,6 +123,8 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::post('/paiement/process', [ClientController::class, 'paiementProcess'])->name('paiement.process');
         Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
         Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
+        Route::post('/certificats/{certificat}/demande-duplicata', [CertificatController::class, 'demandeDuplicata'])
+                ->name('certificats.demande-duplicata');
     });
 
 // ===== ENSEIGNANT =====
@@ -282,6 +284,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             ->name('certificats.index');
         Route::post('/certificats/{certificat}/duplicata', [CertificatController::class, 'duplicata'])
             ->name('certificats.duplicata');
+
+            Route::post('/certificats/{certificat}/duplicata', [CertificatController::class, 'duplicata'])
+                ->name('certificats.duplicata');
 
         // Catégories de services
         Route::get('/categories', [CategorieController::class, 'index'])->name('categories.index');

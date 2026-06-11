@@ -247,10 +247,11 @@ class ClientController extends Controller
     }
 
     // ===== MES PAIEMENTS =====
+   // ===== MES PAIEMENTS =====
     public function paiements()
     {
         $paiements = Paiement::where('user_id', auth()->id())
-            ->with(['formation', 'service'])
+            ->with(['formation', 'service', 'certificat.formation']) // Eager loading indispensable pour éviter les bugs d'affichage
             ->latest()
             ->paginate(10);
 
@@ -258,29 +259,33 @@ class ClientController extends Controller
     }
 
     // ===== FORMULAIRE DE PAIEMENT =====
-    public function paiementForm(Request $request, $type, $id)
-    {
-        if ($type === 'formation') {
-            $item = Formation::findOrFail($id);
-            $montant = $item->prix ?? 0;
-            $description = $item->titre;
-        } elseif ($type === 'service') {
-            $item = Service::findOrFail($id);
-            $montant = $item->prix ?? 0;
-            $description = $item->titre;
-        } else {
-            abort(404);
-        }
-
-        return view('client.paiement-form', compact('type', 'id', 'montant', 'description'));
+   public function paiementForm(Request $request, $type, $id)
+{
+    if ($type === 'formation') {
+        $item = Formation::findOrFail($id);
+        $montant = $item->prix ?? 0;
+        $description = $item->titre;
+    } elseif ($type === 'service' && $id === 'duplicata') {
+        $montant = 1000;
+        $description = 'Duplicata de certificat';
+    } elseif ($type === 'service') {
+        $item = Service::findOrFail($id);
+        $montant = $item->prix ?? 0;
+        $description = $item->titre;
+    } else {
+        abort(404);
     }
 
+    return view('client.paiement-form', compact('type', 'id', 'montant', 'description'));
+}
+
+    // ===== TRAITEMENT DU PAIEMENT (SIMULÉ) =====
     // ===== TRAITEMENT DU PAIEMENT (SIMULÉ) =====
     public function paiementProcess(Request $request)
     {
         $request->validate([
             'type'          => 'required|in:formation,service',
-            'id'            => 'required|integer',
+            'id'            => 'required|string',
             'montant'       => 'required|numeric|min:100',
             'mode_paiement' => 'required|in:orange_money,mtn_money,moov_money,visa,mastercard',
             'telephone'     => 'nullable|string|max:20',
@@ -288,10 +293,14 @@ class ClientController extends Controller
 
         $reference = 'EDC-PAY-' . strtoupper(uniqid());
 
+        // On récupère l'ID du certificat depuis la session si c'est un duplicata
+        $certificatId = ($request->type === 'service' && $request->id === 'duplicata') ? session('certificat_id') : null;
+
         Paiement::create([
             'user_id'        => auth()->id(),
             'formation_id'   => $request->type === 'formation' ? $request->id : null,
-            'service_id'     => $request->type === 'service' ? $request->id : null,
+            'service_id'     => ($request->type === 'service' && $request->id !== 'duplicata') ? $request->id : null,
+            'certificat_id'  => $certificatId, 
             'montant_total'  => $request->montant,
             'montant_paye'   => $request->montant,
             'statut'         => 'complete',
@@ -302,10 +311,35 @@ class ClientController extends Controller
             'notes'          => 'Paiement simulé — ' . $request->mode_paiement,
         ]);
 
-        // Enregistrer la demande après paiement
+        // Enregistrer la demande après paiement (pour les services classiques)
         if ($request->type === 'service' && session('demande_data')) {
             $this->enregistrerDemande();
             session()->forget('demande_data');
+        }
+
+        // Traitement de la génération du duplicata si applicable
+        if ($certificatId) {
+            $certificat = \App\Models\Certificat::find($certificatId);
+            if ($certificat) {
+                \App\Models\Certificat::create([
+                    'user_id'           => $certificat->user_id,
+                    'formation_id'      => $certificat->formation_id,
+                    'session_qcm_id'    => $certificat->session_qcm_id,
+                    'numero_certificat' => \App\Models\Certificat::genererNumero() . '-DUP',
+                    'note_obtenue'      => $certificat->note_obtenue,
+                    'delivre_le'        => now(),
+                    'telecharge'        => false,
+                ]);
+
+                \App\Models\Notification::create([
+                    'user_id' => \App\Models\User::role('admin')->first()->id ?? 1,
+                    'titre'   => '📄 Demande de duplicata',
+                    'message' => auth()->user()->nom_complet . ' a demandé un duplicata pour ' . $certificat->formation->titre,
+                    'type'    => 'info',
+                ]);
+
+                session()->forget('certificat_id');
+            }
         }
 
         return redirect()->route('client.paiements')

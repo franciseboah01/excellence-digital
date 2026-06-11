@@ -94,9 +94,17 @@
                     </td>
                     <td>
                         <p class="text-xs" style="color: var(--edc-text-secondary);">
-                            @if($paiement->formation) 🎓 {{ Str::limit($paiement->formation->titre, 25) }}
-                            @elseif($paiement->service) 💼 {{ Str::limit($paiement->service->titre, 25) }}
-                            @else — @endif
+                            @if($paiement->formation) 
+                                🎓 {{ Str::limit($paiement->formation->titre, 25) }}
+                            @elseif($paiement->service) 
+                                💼 {{ Str::limit($paiement->service->titre, 25) }}
+                            @elseif($paiement->notes && str_contains($paiement->notes, 'Duplicata')) 
+                                📄 Duplicata certificat
+                            @elseif($paiement->notes) 
+                                📝 {{ Str::limit($paiement->notes, 25) }}
+                            @else 
+                                — 
+                            @endif
                         </p>
                         <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
                             {{ ucfirst(str_replace('_', ' ', $paiement->mode_paiement)) }}

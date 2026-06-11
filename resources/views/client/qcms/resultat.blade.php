@@ -15,7 +15,7 @@
             {{ $session->reussi ? 'Félicitations !' : 'Essayez encore !' }}
         </h1>
         <p class="text-xl font-bold mb-1">
-            Note : {{ $session->note }}/{{ $qcm->bareme }}
+            Note : {{ $session->note }}/{{ $certificat->session->qcm->bareme ?? 20 }}
         </p>
         <p class="text-sm" style="opacity: 0.8;">
             Score : {{ $session->score }} / {{ $session->score_max }} points •
@@ -31,11 +31,11 @@
 
         @if($session->reussi)
         <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
-            ✅ Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $qcm->bareme }} — Objectif atteint !
+            ✅ Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }} — Objectif atteint !
         </p>
         @else
         <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
-            Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $qcm->bareme }}
+            Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}
             @if($session->tentative < $session->qcm->tentatives_max)
             — Il vous reste {{ $session->qcm->tentatives_max - $session->tentative }} tentative(s).
             @endif

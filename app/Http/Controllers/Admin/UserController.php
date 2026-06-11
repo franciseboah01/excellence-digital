@@ -17,7 +17,10 @@ class UserController extends Controller
     // ===== LISTE CLIENTS =====
     public function index(Request $request)
     {
-        $query = User::role('client')->with(['inscriptions.formation']);
+        $query = User::role('client')
+            ->with(['inscriptions' => fn($q) => $q->latest()->with('formation')])
+            ->withMax('inscriptions', 'created_at')
+            ->orderByDesc('inscriptions_max_created_at');
 
         // Filtre statut
         if ($request->filled('statut')) {

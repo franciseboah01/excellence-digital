@@ -165,7 +165,7 @@
                 </div>
                 <div class="rounded-lg p-2" style="background-color: {{ $session->reussi ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)' }};">
                     <p class="text-xs" style="color: var(--edc-text-muted);">Note</p>
-                    <p class="font-bold text-sm" style="color: {{ $session->reussi ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">{{ $session->note }}/{{ $qcm->bareme }}</p>
+                    <p class="font-bold text-sm" style="color: {{ $session->reussi ? 'var(--edc-secondary)' : 'var(--edc-danger)' }};">{{ $session->note }}/{{ $certificat->session->qcm->bareme ?? 20 }}</p>
                 </div>
                 <div class="rounded-lg p-2" style="background-color: var(--edc-bg-base);">
                     <p class="text-xs" style="color: var(--edc-text-muted);">Date</p>

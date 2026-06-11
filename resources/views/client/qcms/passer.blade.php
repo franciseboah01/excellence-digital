@@ -17,7 +17,7 @@
             </div>
             <div class="text-right flex-shrink-0">
                 <p class="text-xs" style="color: var(--edc-text-muted);">Tentative {{ $tentativesFaites + 1 }} / {{ $qcm->tentatives_max }}</p>
-                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Note minimale : <strong style="color: var(--edc-primary-light);">{{ $qcm->note_minimale }}/{{ $qcm->bareme }}</strong></p>
+                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Note minimale : <strong style="color: var(--edc-primary-light);">{{ $qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}</strong></p>
             </div>
         </div>
 

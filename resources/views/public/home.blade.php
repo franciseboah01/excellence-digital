@@ -286,13 +286,14 @@
      Grille de cartes formation avec image miniature,
      badge de niveau, durée, titre, description et CTA.
      ============================================================ --}}
+{{-- ============================================================
+     SECTION 4 : NOS FORMATIONS
+     ============================================================ --}}
 <section class="py-16 sm:py-20 px-4" style="background-color: #0F172A;">
     <div class="max-w-5xl mx-auto">
 
-        {{-- En-tête --}}
         <div class="text-center mb-12">
-            <p class="text-xs font-bold uppercase tracking-widest mb-3"
-               style="color: #10B981;">
+            <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: #10B981;">
                 Nos Formations
             </p>
             <h2 class="text-section">
@@ -303,12 +304,10 @@
             </p>
         </div>
 
-        {{-- Grille de cartes formations --}}
         <div class="grid-responsive-3">
             @forelse($formations as $formation)
             <div class="edc-card overflow-hidden">
 
-                {{-- Image ou placeholder gradient --}}
                 @if($formation->image)
                 <img src="{{ asset('storage/'.$formation->image) }}"
                      alt="{{ $formation->titre }}"
@@ -321,29 +320,27 @@
                 @endif
 
                 <div class="p-5">
-                    {{-- Ligne de métadonnées : niveau + durée --}}
                     <div class="flex items-center gap-2 mb-3">
-                        <span class="badge badge-green">
-                            {{ ucfirst($formation->niveau) }}
+                        <span class="badge badge-green text-xs">
+                            {{ $formation->module->icone ?? '📚' }} {{ $formation->module->nom ?? '—' }}
                         </span>
                         @if($formation->duree)
-                        <span class="text-xs" style="color: #475569;">
-                            ⏱ {{ $formation->duree }}
-                        </span>
+                        <span class="text-xs" style="color: #475569;">⏱ {{ $formation->duree }}</span>
                         @endif
                     </div>
 
-                    {{-- Titre --}}
-                    <h3 class="font-bold mb-2" style="color: #F1F5F9;">
-                        {{ $formation->titre }}
-                    </h3>
+                    <h3 class="font-bold mb-2" style="color: #F1F5F9;">{{ $formation->titre }}</h3>
 
-                    {{-- Description tronquée --}}
                     <p class="text-sm leading-relaxed mb-4" style="color: #64748B;">
                         {{ Str::limit($formation->description, 75) }}
                     </p>
 
-                    {{-- Bouton d'action --}}
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-bold" style="color: #60A5FA;">
+                            {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
+                        </span>
+                    </div>
+
                     <a href="{{ route('formations.show', $formation) }}"
                        class="block text-center py-2.5 rounded-xl text-sm font-bold transition"
                        style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #ffffff;"
@@ -354,11 +351,17 @@
                 </div>
             </div>
             @empty
-            {{-- État vide --}}
             <p class="text-center col-span-3 py-10" style="color: #475569;">
                 Aucune formation pour le moment.
             </p>
             @endforelse
+        </div>
+
+        <div class="text-center mt-10">
+            <a href="{{ route('formations.index') }}" class="btn-primary">
+                <span>Voir toutes les formations</span>
+                <span>→</span>
+            </a>
         </div>
     </div>
 </section>

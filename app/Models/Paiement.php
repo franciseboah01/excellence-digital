@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Paiement extends Model
 {
     protected $fillable = [
-        'user_id', 'formation_id', 'service_id', 'demande_id',
+        'user_id', 'formation_id', 'service_id', 'demande_id', 
+        'certificat_id', // <-- CORRIGÉ : Ajouté ici pour autoriser l'enregistrement
         'montant_total', 'montant_paye', 'statut',
         'mode_paiement', 'reference', 'notes',
         'enregistre_par', 'date_paiement',
@@ -32,6 +33,11 @@ class Paiement extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function certificat()
+    {
+        return $this->belongsTo(Certificat::class, 'certificat_id');
     }
 
     public function demande()
