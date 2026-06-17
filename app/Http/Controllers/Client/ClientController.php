@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\Configuration;
+use App\Models\DemandeDuplicata;
 use App\Models\DemandeService;
 use App\Models\Formation;
 use App\Models\InscriptionFormation;
@@ -10,51 +12,65 @@ use App\Models\Notification;
 use App\Models\Paiement;
 use App\Models\Ressource;
 use App\Models\Service;
+use App\Models\User;
+use App\Http\Requests\UpdateProfilRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\UpdateProfilRequest;
+use Illuminate\Support\Facades\Log;
 
 class ClientController extends Controller
 {
-    // ===== DASHBOARD =====
+    /**
+     * ============================================================
+     * 1. DASHBOARD
+     * ============================================================
+     */
     public function dashboard()
     {
         $user = auth()->user();
 
         $stats = [
             'demandes_total'   => DemandeService::where('user_id', $user->id)->count(),
-            'demandes_attente' => DemandeService::where('user_id', $user->id)
-                                    ->where('statut', 'en_attente')->count(),
-            'demandes_cours'   => DemandeService::where('user_id', $user->id)
-                                    ->where('statut', 'en_cours')->count(),
-            'demandes_termine' => DemandeService::where('user_id', $user->id)
-                                    ->where('statut', 'termine')->count(),
-            'demandes_annule'  => DemandeService::where('user_id', $user->id)
-                                    ->where('statut', 'annule')->count(),
+            'demandes_attente' => DemandeService::where('user_id', $user->id)->where('statut', 'en_attente')->count(),
+            'demandes_cours'   => DemandeService::where('user_id', $user->id)->where('statut', 'en_cours')->count(),
+            'demandes_termine' => DemandeService::where('user_id', $user->id)->where('statut', 'termine')->count(),
+            'demandes_annule'  => DemandeService::where('user_id', $user->id)->where('statut', 'annule')->count(),
             'formations'       => InscriptionFormation::where('user_id', $user->id)->count(),
             'notifications'    => Notification::where('user_id', $user->id)->where('lu', false)->count(),
         ];
 
         $dernieres_demandes = DemandeService::with('service')
             ->where('user_id', $user->id)
-            ->latest()->take(3)->get();
+            ->latest()
+            ->take(3)
+            ->get();
 
         $mes_formations = InscriptionFormation::with('formation')
             ->where('user_id', $user->id)
             ->where('statut', 'valide')
-            ->latest()->take(3)->get();
+            ->latest()
+            ->take(3)
+            ->get();
 
         $notifications = Notification::where('user_id', $user->id)
-            ->latest()->take(5)->get();
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('client.dashboard', compact(
-            'stats', 'dernieres_demandes',
-            'mes_formations', 'notifications'
+            'stats',
+            'dernieres_demandes',
+            'mes_formations',
+            'notifications'
         ));
     }
 
-    // ===== DEMANDE DE SERVICE (NOUVEAU) =====
+    /**
+     * ============================================================
+     * 2. DEMANDE DE SERVICE
+     * ============================================================
+     */
     public function demandeForm()
     {
         $services = Service::where('actif', true)->get();
@@ -71,7 +87,7 @@ class ClientController extends Controller
 
         $service = Service::findOrFail($validated['service_id']);
 
-        // Stocker les données en session pour les récupérer après paiement
+        // Stocker les données en session
         session([
             'demande_data' => [
                 'service_id'         => $service->id,
@@ -80,12 +96,12 @@ class ClientController extends Controller
             ]
         ]);
 
-        // Si le service est payant, rediriger vers le paiement
+        // Si le service est payant
         if ($service->prix && $service->prix > 0) {
-            return redirect()->route('client.paiement.form', ['service', $service->id]);
+            return redirect()->route('client.paiement.form', ['type' => 'service', 'id' => $service->id]);
         }
 
-        // Si gratuit, enregistrer directement
+        // Service gratuit
         $this->enregistrerDemande();
         session()->forget('demande_data');
 
@@ -93,11 +109,12 @@ class ClientController extends Controller
             ->with('success', 'Votre demande a été envoyée avec succès !');
     }
 
-// Méthode privée pour enregistrer la demande
     private function enregistrerDemande()
     {
         $data = session('demande_data');
-        if (!$data) return;
+        if (!$data) {
+            return;
+        }
 
         DemandeService::create([
             'user_id'            => auth()->id(),
@@ -110,17 +127,26 @@ class ClientController extends Controller
         ]);
     }
 
-    // ===== MES DEMANDES =====
+    /**
+     * ============================================================
+     * 3. MES DEMANDES
+     * ============================================================
+     */
     public function demandes()
     {
         $demandes = DemandeService::with('service')
             ->where('user_id', auth()->id())
-            ->latest()->paginate(10);
+            ->latest()
+            ->paginate(10);
 
         return view('client.demandes', compact('demandes'));
     }
 
-    // ===== MES FORMATIONS =====
+    /**
+     * ============================================================
+     * 4. MES FORMATIONS
+     * ============================================================
+     */
     public function formations()
     {
         $inscriptions = InscriptionFormation::with(['formation.niveaux'])
@@ -130,15 +156,19 @@ class ClientController extends Controller
         return view('client.formations', compact('inscriptions'));
     }
 
-    // ===== RESSOURCES D'UNE FORMATION =====
-   public function ressources(Formation $formation)
+    /**
+     * ============================================================
+     * 5. RESSOURCES D'UNE FORMATION
+     * ============================================================
+     */
+    public function ressources(Formation $formation)
     {
         $inscription = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $formation->id)
             ->where('statut', 'valide')
             ->firstOrFail();
 
-        // Vérifier si la formation est payante et si le client a payé
+        // Vérifier paiement pour formations payantes
         if ($formation->prix && $formation->prix > 0) {
             $aPaye = Paiement::where('user_id', auth()->id())
                 ->where('formation_id', $formation->id)
@@ -146,13 +176,13 @@ class ClientController extends Controller
                 ->exists();
 
             if (!$aPaye) {
-                return redirect()->route('client.paiement.form', ['formation', $formation->id])
+                return redirect()->route('client.paiement.form', ['type' => 'formation', 'id' => $formation->id])
                     ->with('error', 'Vous devez payer cette formation avant d\'accéder aux ressources.');
             }
         }
 
         $niveaux = $formation->niveaux()
-            ->with(['ressources' => function($q) {
+            ->with(['ressources' => function ($q) {
                 $q->where('actif', true)->orderBy('created_at', 'desc');
             }])
             ->orderBy('ordre')
@@ -166,7 +196,11 @@ class ClientController extends Controller
         return view('client.ressources', compact('formation', 'niveaux', 'ressources_generales'));
     }
 
-    // ===== VISUALISER UN PDF =====
+    /**
+     * ============================================================
+     * 6. VISUALISER UN PDF
+     * ============================================================
+     */
     public function voirPdf(Ressource $ressource)
     {
         $inscription = InscriptionFormation::where('user_id', auth()->id())
@@ -179,7 +213,7 @@ class ClientController extends Controller
         }
 
         if (!Storage::exists($ressource->fichier_path)) {
-            return back()->with('error', 'Le fichier est introuvable sur le serveur. Contactez un enseignant.');
+            return back()->with('error', 'Le fichier est introuvable sur le serveur.');
         }
 
         return response()->file(Storage::path($ressource->fichier_path), [
@@ -188,7 +222,11 @@ class ClientController extends Controller
         ]);
     }
 
-    // ===== NOTIFICATIONS =====
+    /**
+     * ============================================================
+     * 7. NOTIFICATIONS
+     * ============================================================
+     */
     public function notifications()
     {
         Notification::where('user_id', auth()->id())
@@ -196,12 +234,17 @@ class ClientController extends Controller
             ->update(['lu' => true]);
 
         $notifications = Notification::where('user_id', auth()->id())
-            ->latest()->paginate(15);
+            ->latest()
+            ->paginate(15);
 
         return view('client.notifications', compact('notifications'));
     }
 
-    // ===== PROFIL =====
+    /**
+     * ============================================================
+     * 8. PROFIL
+     * ============================================================
+     */
     public function profil()
     {
         $formations_disponibles = Formation::where('statut', 'publie')->get();
@@ -213,7 +256,9 @@ class ClientController extends Controller
         $user = auth()->user();
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) Storage::delete($user->avatar);
+            if ($user->avatar) {
+                Storage::delete($user->avatar);
+            }
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
         }
@@ -231,8 +276,8 @@ class ClientController extends Controller
     public function passwordUpdate(Request $request)
     {
         $request->validate([
-            'current_password' => 'required',
-            'password'         => 'required|min:8|confirmed',
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:8|confirmed',
         ]);
 
         if (!Hash::check($request->current_password, auth()->user()->password)) {
@@ -246,45 +291,59 @@ class ClientController extends Controller
         return back()->with('success', 'Mot de passe modifié avec succès !');
     }
 
-    // ===== MES PAIEMENTS =====
-   // ===== MES PAIEMENTS =====
+    /**
+     * ============================================================
+     * 9. MES PAIEMENTS
+     * ============================================================
+     */
     public function paiements()
     {
         $paiements = Paiement::where('user_id', auth()->id())
-            ->with(['formation', 'service', 'certificat.formation']) // Eager loading indispensable pour éviter les bugs d'affichage
+            ->with(['formation', 'service', 'certificat.formation'])
             ->latest()
             ->paginate(10);
 
         return view('client.paiements', compact('paiements'));
     }
 
-    // ===== FORMULAIRE DE PAIEMENT =====
-   public function paiementForm(Request $request, $type, $id)
-{
-    if ($type === 'formation') {
-        $item = Formation::findOrFail($id);
-        $montant = $item->prix ?? 0;
-        $description = $item->titre;
-    } elseif ($type === 'service' && $id === 'duplicata') {
-        $montant = 1000;
-        $description = 'Duplicata de certificat';
-    } elseif ($type === 'service') {
-        $item = Service::findOrFail($id);
-        $montant = $item->prix ?? 0;
-        $description = $item->titre;
-    } else {
-        abort(404);
+    /**
+     * ============================================================
+     * 10. FORMULAIRE DE PAIEMENT
+     * ============================================================
+     */
+    public function paiementForm(Request $request, $type, $id)
+    {
+        $montant = 0;
+        $description = '';
+        $item = null;
+
+        if ($type === 'formation') {
+            $item = Formation::findOrFail($id);
+            $montant = $item->prix ?? 0;
+            $description = $item->titre;
+        } elseif ($type === 'service' && $id === 'duplicata') {
+            $montant = (int) Configuration::get('duplicata_prix', 1000);
+            $description = 'Duplicata de certificat';
+        } elseif ($type === 'service') {
+            $item = Service::findOrFail($id);
+            $montant = $item->prix ?? 0;
+            $description = $item->titre;
+        } else {
+            abort(404, 'Type de paiement invalide.');
+        }
+
+        return view('client.paiement-form', compact('type', 'id', 'montant', 'description', 'item'));
     }
 
-    return view('client.paiement-form', compact('type', 'id', 'montant', 'description'));
-}
-
-    // ===== TRAITEMENT DU PAIEMENT (SIMULÉ) =====
-    // ===== TRAITEMENT DU PAIEMENT (SIMULÉ) =====
+    /**
+     * ============================================================
+     * 11. TRAITEMENT DU PAIEMENT
+     * ============================================================
+     */
     public function paiementProcess(Request $request)
     {
         $request->validate([
-            'type'          => 'required|in:formation,service',
+            'type'          => 'required|in:formation,service,duplicata',
             'id'            => 'required|string',
             'montant'       => 'required|numeric|min:100',
             'mode_paiement' => 'required|in:orange_money,mtn_money,moov_money,visa,mastercard',
@@ -292,15 +351,31 @@ class ClientController extends Controller
         ]);
 
         $reference = 'EDC-PAY-' . strtoupper(uniqid());
+        $modePropre = strtoupper(str_replace('_', ' ', $request->mode_paiement));
 
-        // On récupère l'ID du certificat depuis la session si c'est un duplicata
-        $certificatId = ($request->type === 'service' && $request->id === 'duplicata') ? session('certificat_id') : null;
+        // Déterminer les champs selon le type
+        $formationId = null;
+        $serviceId = null;
+        $certificatId = null;
+        $notes = '';
 
-        Paiement::create([
+        if ($request->type === 'formation') {
+            $formationId = $request->id;
+            $notes = "Inscription à la formation — " . $modePropre;
+        } elseif ($request->type === 'service' && $request->id === 'duplicata') {
+            $certificatId = session('certificat_id');
+            $notes = "Achat de duplicata de certificat — " . $modePropre;
+        } elseif ($request->type === 'service') {
+            $serviceId = $request->id;
+            $notes = "Achat de service — " . $modePropre;
+        }
+
+        // ===== CRÉER LE PAIEMENT =====
+        $paiement = Paiement::create([
             'user_id'        => auth()->id(),
-            'formation_id'   => $request->type === 'formation' ? $request->id : null,
-            'service_id'     => ($request->type === 'service' && $request->id !== 'duplicata') ? $request->id : null,
-            'certificat_id'  => $certificatId, 
+            'formation_id'   => $formationId,
+            'service_id'     => $serviceId,
+            'certificat_id'  => $certificatId,
             'montant_total'  => $request->montant,
             'montant_paye'   => $request->montant,
             'statut'         => 'complete',
@@ -308,45 +383,33 @@ class ClientController extends Controller
             'reference'      => $reference,
             'enregistre_par' => auth()->id(),
             'date_paiement'  => now(),
-            'notes'          => 'Paiement simulé — ' . $request->mode_paiement,
+            'notes'          => $notes,
         ]);
 
-        // Enregistrer la demande après paiement (pour les services classiques)
-        if ($request->type === 'service' && session('demande_data')) {
+        // ===== SERVICE CLASSIQUE =====
+        if ($request->type === 'service' && $request->id !== 'duplicata' && session('demande_data')) {
             $this->enregistrerDemande();
             session()->forget('demande_data');
         }
 
-        // Traitement de la génération du duplicata si applicable
-        if ($certificatId) {
-            $certificat = \App\Models\Certificat::find($certificatId);
-            if ($certificat) {
-                \App\Models\Certificat::create([
-                    'user_id'           => $certificat->user_id,
-                    'formation_id'      => $certificat->formation_id,
-                    'session_qcm_id'    => $certificat->session_qcm_id,
-                    'numero_certificat' => \App\Models\Certificat::genererNumero() . '-DUP',
-                    'note_obtenue'      => $certificat->note_obtenue,
-                    'delivre_le'        => now(),
-                    'telecharge'        => false,
-                ]);
+        // ===== DUPLICATA =====
+        if ($request->type === 'service' && $request->id === 'duplicata' && $certificatId) {
+            $this->traiterDemandeDuplicata($certificatId, $paiement);
+            session()->forget('certificat_id');
 
-                \App\Models\Notification::create([
-                    'user_id' => \App\Models\User::role('admin')->first()->id ?? 1,
-                    'titre'   => '📄 Demande de duplicata',
-                    'message' => auth()->user()->nom_complet . ' a demandé un duplicata pour ' . $certificat->formation->titre,
-                    'type'    => 'info',
-                ]);
-
-                session()->forget('certificat_id');
-            }
+            return redirect()->route('client.paiements')
+                ->with('success', '✅ Paiement effectué ! Votre demande de duplicata est en attente de validation par l\'administration.');
         }
 
         return redirect()->route('client.paiements')
             ->with('success', '✅ Paiement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA effectué !');
     }
 
-    // Formation disponible pour un client connecter puisse choisir une formation et s'inscrire
+    /**
+     * ============================================================
+     * 12. FORMATIONS DISPONIBLES
+     * ============================================================
+     */
     public function formationsDisponibles()
     {
         $formations = Formation::with('module')
@@ -355,6 +418,12 @@ class ClientController extends Controller
 
         return view('client.formations-disponibles', compact('formations'));
     }
+
+    /**
+     * ============================================================
+     * 13. INSCRIPTION À UNE FORMATION
+     * ============================================================
+     */
     public function inscrireFormation(Formation $formation)
     {
         // Vérifier si déjà inscrit
@@ -366,6 +435,17 @@ class ClientController extends Controller
             return back()->with('error', 'Vous êtes déjà inscrit à cette formation.');
         }
 
+        // Vérifier si la formation est complète
+        if ($formation->places_max && $formation->places_max > 0) {
+            $inscriptions = InscriptionFormation::where('formation_id', $formation->id)
+                ->where('statut', 'valide')
+                ->count();
+
+            if ($inscriptions >= $formation->places_max) {
+                return back()->with('error', 'Cette formation est complète. Plus de places disponibles.');
+            }
+        }
+
         InscriptionFormation::create([
             'user_id'          => auth()->id(),
             'formation_id'     => $formation->id,
@@ -373,7 +453,76 @@ class ClientController extends Controller
             'date_inscription' => now(),
         ]);
 
+        // Notifier l'admin
+        $admin = User::role('admin')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'titre'   => '📝 Nouvelle inscription en attente',
+                'message' => auth()->user()->nom_complet . ' s\'est inscrit à la formation "' . $formation->titre . '".',
+                'type'    => 'info',
+                'lien'    => route('admin.inscriptions.index'),
+            ]);
+        }
+
         return redirect()->route('client.formations')
             ->with('success', 'Inscription à "' . $formation->titre . '" envoyée ! En attente de validation.');
+    }
+
+    /**
+     * ============================================================
+     * 14. MÉTHODES PRIVÉES
+     * ============================================================
+     */
+
+    /**
+     * Traiter une demande de duplicata après paiement
+     */
+    private function traiterDemandeDuplicata(int $certificatId, Paiement $paiement)
+    {
+        $certificat = \App\Models\Certificat::find($certificatId);
+
+        if (!$certificat) {
+            Log::error('Certificat non trouvé pour la demande de duplicata', ['certificat_id' => $certificatId]);
+            return;
+        }
+
+        // Vérifier qu'il n'y a pas déjà une demande en cours
+        $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
+            ->whereIn('statut', ['en_attente', 'valide'])
+            ->exists();
+
+        if ($demandeExistante) {
+            Log::warning('Demande de duplicata déjà existante', ['certificat_id' => $certificat->id]);
+            return;
+        }
+
+        // Créer la demande de duplicata
+        DemandeDuplicata::create([
+            'certificat_id' => $certificat->id,
+            'user_id'       => auth()->id(),
+            'paiement_id'   => $paiement->id,
+            'statut'        => 'en_attente',
+            'paye'          => true,
+            'montant_paye'  => $paiement->montant_paye,
+        ]);
+
+        // Notifier l'admin
+        $admin = User::role('admin')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'titre'   => '📄 Demande de duplicata - Paiement reçu',
+                'message' => auth()->user()->nom_complet . ' a payé ' . number_format($paiement->montant_paye, 0, ',', ' ') . ' FCFA pour un duplicata (' . ($certificat->formation->titre ?? '') . ').',
+                'type'    => 'info',
+                'lien'    => route('admin.duplicatas.demandes'),
+            ]);
+        }
+
+        Log::info('Demande de duplicata créée', [
+            'certificat_id' => $certificat->id,
+            'user_id' => auth()->id(),
+            'paiement_id' => $paiement->id,
+        ]);
     }
 }

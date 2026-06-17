@@ -1,6 +1,12 @@
 @extends('layouts.client')
 @section('title', 'QCMs & Certificats')
 
+@php
+    use App\Models\DemandeDuplicata;
+    use App\Models\Certificat;
+    use App\Models\Configuration;
+@endphp
+
 @section('content')
 <div class="max-w-3xl mx-auto">
     <div class="mb-8 text-center">
@@ -21,28 +27,81 @@
                 <div class="min-w-0">
                     <p class="font-bold truncate" style="color: var(--edc-text-primary);">{{ $certificat->formation->titre }}</p>
                     <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
-                        N° {{ $certificat->numero_certificat }} •
+                        N° {{ $certificat->numero_certificat }}
+                        @if(str_ends_with($certificat->numero_certificat, '-DUP'))
+                            <span class="badge badge-warning text-[10px] ml-1" style="background: #F59E0B; color: #1a1a1a; padding: 1px 8px; border-radius: 9999px; font-weight: 600;">Duplicata</span>
+                        @else
+                            <span class="badge badge-primary text-[10px] ml-1" style="background: #3B82F6; color: white; padding: 1px 8px; border-radius: 9999px; font-weight: 600;">Original</span>
+                        @endif
+                        •
                         {{ $certificat->delivre_le->format('d/m/Y') }} •
-                        Note : {{ $certificat->note_obtenue }}/{{ $qcm->bareme ?? 20  }}
+                        Note : {{ $certificat->note_obtenue }}/20
                     </p>
                 </div>
-                @if($certificat->telecharge)
-                    <span class="text-xs font-medium" style="color: var(--edc-text-muted);">✅ Déjà téléchargé</span>
-                    <form method="POST" action="{{ route('client.certificats.demande-duplicata', $certificat) }}" class="mt-2">
-                        @csrf
-                        <button type="submit" class="text-xs font-bold hover:underline" style="color: var(--edc-accent-gold);">
-                            🔄 Duplicata (1000 FCFA)
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('certificats.telecharger', $certificat) }}"
-                        class="btn-xs rounded-lg text-xs font-bold flex-shrink-0 ml-3 transition"
-                        style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
-                        onmouseover="this.style.filter='brightness(1.1)'"
-                        onmouseout="this.style.filter='brightness(1)'">
-                        📄 PDF
-                    </a>
-                @endif
+
+                {{-- STATUT TÉLÉCHARGEMENT --}}
+                <div class="flex flex-col items-end gap-2">
+                    @if(!$certificat->telecharge)
+                        <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">✅ Téléchargeable</span>
+                    @else
+                        <span class="badge badge-danger text-xs" style="background: #EF4444; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">❌ Déjà téléchargé</span>
+                    @endif
+                </div>
+
+                {{-- ACTIONS --}}
+                <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                    @if(!$certificat->telecharge)
+                        {{-- Téléchargement PDF --}}
+                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'pdf']) }}"
+                            class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
+                            style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
+                            onmouseover="this.style.filter='brightness(1.1)'"
+                            onmouseout="this.style.filter='brightness(1)'">
+                            📄 PDF
+                        </a>
+                        {{-- Téléchargement JPG --}}
+                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'jpg']) }}"
+                            class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
+                            style="background: linear-gradient(135deg, #6B7280, #4B5563); color: white;"
+                            onmouseover="this.style.filter='brightness(1.1)'"
+                            onmouseout="this.style.filter='brightness(1)'">
+                            🖼️ JPG
+                        </a>
+
+                    @elseif(!str_ends_with($certificat->numero_certificat, '-DUP'))
+                        {{-- Original déjà téléchargé : Demander duplicata --}}
+                        @php
+                            $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
+                                ->whereIn('statut', ['en_attente', 'valide'])
+                                ->exists();
+                            $duplicataExistant = Certificat::where('parent_id', $certificat->id)
+                                ->where('telecharge', false)
+                                ->exists();
+                            $prixDuplicata = Configuration::get('duplicata_prix', 1000);
+                        @endphp
+
+                        @if(!$demandeExistante && !$duplicataExistant)
+                            <form method="POST" action="{{ route('client.duplicata.demander', $certificat) }}" class="inline">
+                                @csrf
+                                <button type="submit" 
+                                    class="text-xs font-bold hover:underline px-3 py-1.5 rounded-lg transition"
+                                    style="color: var(--edc-accent-gold); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);"
+                                    onmouseover="this.style.background='rgba(245,158,11,0.2)'"
+                                    onmouseout="this.style.background='rgba(245,158,11,0.1)'">
+                                    🔄 Duplicata ({{ number_format($prixDuplicata, 0, ',', ' ') }} FCFA)
+                                </button>
+                            </form>
+                        @elseif($demandeExistante)
+                            <span class="badge badge-info text-xs" style="background: #3B82F6; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">⏳ Demande en cours</span>
+                        @elseif($duplicataExistant)
+                            <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">✅ Duplicata disponible</span>
+                        @endif
+
+                    @else
+                        {{-- Duplicata déjà téléchargé --}}
+                        <span class="text-xs" style="color: var(--edc-text-muted);">Téléchargé</span>
+                    @endif
+                </div>
             </div>
             @endforeach
         </div>
@@ -81,7 +140,7 @@
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(16,185,129,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Note min.</p>
-                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}</p>
+                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/20</p>
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(245,158,11,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Durée/Q</p>
@@ -93,7 +152,7 @@
                 <div class="mt-3">
                     <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
                         <span>Meilleure note</span>
-                        <span>{{ $qcm->meilleure_note }}/{{ $certificat->session->qcm->bareme ?? 20 }}</span>
+                        <span>{{ $qcm->meilleure_note }}/20</span>
                     </div>
                     <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
                         <div class="h-2 rounded-full transition-all"

@@ -58,6 +58,7 @@
                 ['route' => 'admin.paiements.index', 'icon' => '💰', 'label' => 'Paiements', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.qcms.index', 'icon' => '📝', 'label' => 'QCMs', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.certificats.index', 'icon' => '🏆', 'label' => 'Certificats', 'group' => null, 'compteur' => null],
+                ['route' => 'admin.duplicatas.demandes', 'icon' => '📄', 'label' => 'Demandes duplicata', 'group' => null, 'compteur' => null],
                 ['route' => 'admin.notifications.form', 'icon' => '🔔', 'label' => 'Notifications', 'group' => 'Communication', 'compteur' => null],
                 ['route' => 'admin.emails.form', 'icon' => '✉️', 'label' => 'Emails', 'group' => null, 'compteur' => null],
                 ['route' => 'messages.index', 'icon' => '💬', 'label' => 'Messages', 'group' => null, 'compteur' => 'messages.index'],

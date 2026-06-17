@@ -31,4 +31,13 @@ class Configuration extends Model
         );
         Cache::forget("config_{$cle}");
     }
+
+    /**
+     * Vérifier si une clé de configuration existe et n'est pas vide
+     */
+    public static function has(string $cle): bool
+    {
+        $valeur = static::get($cle);
+        return !empty($valeur);
+    }
 }

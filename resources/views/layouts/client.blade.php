@@ -30,7 +30,7 @@
                         ['client.dashboard', '🏠', 'Dashboard'],
                         ['client.demandes', '📋', 'Demandes'],
                         ['client.formations', '🎓', 'Formations'],
-                        ['client.qcms.index', '📝', 'QCMs'],
+                        ['client.qcms.index', '📝', 'QCMs et Certificat'],
                         ['messages.index', '💬', 'Messages'],
                         ['client.paiements', '💰', 'Paiements'],
                                             ] as $item)
