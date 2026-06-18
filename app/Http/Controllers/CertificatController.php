@@ -567,6 +567,7 @@ class CertificatController extends Controller
     /**
      * Créer un duplicata (logique centralisée)
      */
+    // Dans CertificatController, méthode creerDuplicata()
     private function creerDuplicata(Certificat $original): Certificat
     {
         return Certificat::create([
@@ -578,7 +579,7 @@ class CertificatController extends Controller
             'delivre_le'        => null,
             'telecharge'        => true,
             'parent_id'         => $original->id,
-            'verification_token' => $original->verification_token,
+            'verification_token' => \Illuminate\Support\Str::uuid(), // ✅ Token unique
         ]);
     }
 
