@@ -322,6 +322,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');
         Route::put('/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
         Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+
+         // Spécimen certificat
+        Route::get('/configurations/certificat/specimen', [CertificatController::class, 'specimen'])->name('configurations.specimen');
      });        
 
 // ===== PROFIL =====

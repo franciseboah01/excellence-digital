@@ -640,15 +640,120 @@ class CertificatController extends Controller
         }
     }
 
-    /**
-     * Calculer la mention en fonction de la note
+        /**
+         * Calculer la mention en fonction de la note
+         */
+        private function calculerMention(float $note): string
+        {
+            if ($note >= 18) return 'Très Bien';
+            if ($note >= 16) return 'Bien';
+            if ($note >= 14) return 'Assez Bien';
+            if ($note >= 12) return 'Passable';
+            return 'Insuffisant';
+        }
+
+        /**
+     * ============================================================
+     * GÉNÉRER UN CERTIFICAT SPÉCIMEN (ADMIN)
+     * ============================================================
      */
-    private function calculerMention(float $note): string
+    public function specimen()
     {
-        if ($note >= 18) return 'Très Bien';
-        if ($note >= 16) return 'Bien';
-        if ($note >= 14) return 'Assez Bien';
-        if ($note >= 12) return 'Passable';
-        return 'Insuffisant';
+        // Créer un certificat factice pour le spécimen
+        $certificat = new Certificat();
+        $certificat->numero_certificat = 'SPECIMEN-' . strtoupper(\Illuminate\Support\Str::random(8));
+        $certificat->verification_token = 'specimen-' . \Illuminate\Support\Str::uuid();
+        $certificat->note_obtenue = 18.5;
+        
+        // Créer un utilisateur factice
+        $certificat->user = (object) [
+            'name' => 'KOUASSI Yao Jean-Marc',
+        ];
+        
+        // Créer une formation factice
+        $certificat->formation = (object) [
+            'titre' => 'Développement Web Full Stack',
+        ];
+        
+        // Créer une session QCM factice avec niveau
+        $certificat->session = (object) [
+            'qcm' => (object) [
+                'niveau' => (object) [
+                    'nom' => 'Niveau Expert',
+                ],
+            ],
+        ];
+        
+        // Mention
+        $certificat->mention = $this->calculerMention($certificat->note_obtenue);
+        
+        // Données pour la vue
+        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
+        $backgroundImage = asset('storage/' . $backgroundPath);
+
+        $positions = [
+            'numero' => [
+                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
+                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
+                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
+            ],
+            'name' => [
+                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
+                'size' => (int) Configuration::get('certificat_font_size_name', 28),
+            ],
+            'formation' => [
+                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
+                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
+            ],
+            'performance' => [
+                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
+                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
+            ],
+            'metadata' => [
+                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
+                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
+            ],
+        ];
+
+        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
+        $showNote = (bool) Configuration::get('certificat_show_note', 1);
+        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
+        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
+        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+
+        // QR Code spécimen
+        $qrCodeDataUri = null;
+        if ($showQrCode) {
+            $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);
+        }
+
+        $data = [
+            'certificat' => $certificat,
+            'backgroundImage' => $backgroundImage,
+            'positions' => $positions,
+            'fontColor' => $fontColor,
+            'showNote' => $showNote,
+            'showMention' => $showMention,
+            'showQrCode' => $showQrCode,
+            'qrSize' => $qrSize,
+            'qrCodeDataUri' => $qrCodeDataUri,
+        ];
+
+        // Générer le PDF
+        $pdf = Pdf::loadView('client.pdf.certificat', $data)
+            ->setPaper('a4', 'landscape');
+        
+        // Ajouter un filigrane "SPÉCIMEN"
+        $pdf->getDomPDF()->getCanvas()->page_text(
+            400, 300, 
+            'SPÉCIMEN', 
+            null, 80, 
+            array(0, 0, 0, 0.05)
+        );
+
+        return $pdf->download('specimen-certificat.pdf');
     }
 }

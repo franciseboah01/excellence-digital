@@ -77,64 +77,62 @@
                         <label class="edc-label">Adresse Web officielle</label>
                         <input type="text" name="site_web" value="{{ \App\Models\Configuration::get('site_web') }}" class="edc-input">
                     </div>
-                        
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="edc-label">Numéro WhatsApp (format international sans +)</label>
-                            <input type="text" name="site_whatsapp" 
-                                value="{{ \App\Models\Configuration::get('site_whatsapp', '2250700000000') }}" 
-                                class="edc-input" placeholder="2250700000000">
-                            <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Sans le signe +, ex: 225XXXXXXXX</p>
-                        </div>
-                        <div>
-                            <label class="edc-label">Ville / Localité</label>
-                            <input type="text" name="site_ville" 
-                                value="{{ \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso') }}" 
-                                class="edc-input">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="edc-label">Description courte (footer, meta)</label>
-                            <textarea name="site_description" rows="2" class="edc-input">{{ \App\Models\Configuration::get('site_description', 'Services bureautiques, digital et formation à Korhogo / Sirasso. Votre centre de référence pour réussir dans l\'univers digital.') }}</textarea>
-                        </div>
-                        <div>
-                            <label class="edc-label">Devise / Signature</label>
-                            <input type="text" name="site_devise" 
-                                value="{{ \App\Models\Configuration::get('site_devise', 'Former • Créer • Réussir') }}" 
-                                class="edc-input">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="edc-label">Pays</label>
-                            <input type="text" name="site_pays" 
-                                value="{{ \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire') }}" 
-                                class="edc-input">
-                        </div>
-                        <div>
-                            <label class="edc-label">Copyright texte</label>
-                            <input type="text" name="site_copyright" 
-                                value="{{ \App\Models\Configuration::get('site_copyright', '© ' . date('Y') . ' Excellence Digital Center — Tous droits réservés') }}" 
-                                class="edc-input">
-                        </div>
-                    </div>
-
                 </div>
 
-                    {{-- Google Maps embed --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="edc-label">Numéro WhatsApp (format international sans +)</label>
+                        <input type="text" name="site_whatsapp" 
+                            value="{{ \App\Models\Configuration::get('site_whatsapp', '2250700000000') }}" 
+                            class="edc-input" placeholder="2250700000000">
+                        <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Sans le signe +, ex: 225XXXXXXXX</p>
+                    </div>
+                    <div>
+                        <label class="edc-label">Ville / Localité</label>
+                        <input type="text" name="site_ville" 
+                            value="{{ \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso') }}" 
+                            class="edc-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="edc-label">Description courte (footer, meta)</label>
+                        <textarea name="site_description" rows="2" class="edc-input">{{ \App\Models\Configuration::get('site_description', 'Services bureautiques, digital et formation à Korhogo / Sirasso. Votre centre de référence pour réussir dans l\'univers digital.') }}</textarea>
+                    </div>
+                    <div>
+                        <label class="edc-label">Devise / Signature</label>
+                        <input type="text" name="site_devise" 
+                            value="{{ \App\Models\Configuration::get('site_devise', 'Former • Créer • Réussir') }}" 
+                            class="edc-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="edc-label">Pays</label>
+                        <input type="text" name="site_pays" 
+                            value="{{ \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire') }}" 
+                            class="edc-input">
+                    </div>
+                    <div>
+                        <label class="edc-label">Copyright texte</label>
+                        <input type="text" name="site_copyright" 
+                            value="{{ \App\Models\Configuration::get('site_copyright', '© ' . date('Y') . ' Excellence Digital Center — Tous droits réservés') }}" 
+                            class="edc-input">
+                    </div>
+                </div>
+
+                {{-- Google Maps embed --}}
                 <div>
                     <label class="edc-label">Code embed Google Maps</label>
                     <textarea name="site_maps_embed" rows="4" class="edc-input" placeholder="<iframe src='https://...' ...></iframe>">{{ \App\Models\Configuration::get('site_maps_embed') }}</textarea>
                 </div>
-
             </div>
         </div>
 
         {{-- ══ PANEL 1 : STOCKAGE & FICHIERS ══ --}}
-        <div id="panel-stockage" class="settings-panel space-y-6">
+        <div id="panel-stockage" class="settings-panel space-y-6" style="display:none;">
             <div class="edc-card p-6 sm:p-8 space-y-5">
                 <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">📁 Paramètres d'upload globaux</h3>
                 
@@ -244,6 +242,7 @@
                 <div class="space-y-5">
                     <label class="edc-label text-xs uppercase tracking-wider text-slate-400 block">2. Alignements des données dynamiques (Axes X / Y en pixels)</label>
                     
+                    {{-- Numéro Unique --}}
                     <div class="p-4 rounded-xl bg-slate-950 border border-slate-900 space-y-3">
                         <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">📌 Numéro Unique du Certificat <span class="text-[10px] font-normal text-slate-500">(Ex: N° CERT-2026-000154)</span></div>
                         <div class="grid grid-cols-3 gap-3">
@@ -262,6 +261,7 @@
                         </div>
                     </div>
 
+                    {{-- Nom & Prénom --}}
                     <div class="p-4 rounded-xl bg-slate-950 border border-slate-900 space-y-3">
                         <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">⭐ Nom & Prénom de l'Apprenant <span class="text-[10px] font-normal text-slate-500">(Élément central principal)</span></div>
                         <div class="grid grid-cols-3 gap-3">
@@ -280,6 +280,7 @@
                         </div>
                     </div>
 
+                    {{-- Intitulé du Programme --}}
                     <div class="p-4 rounded-xl bg-slate-950 border border-slate-900 space-y-3">
                         <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">📖 Intitulé du Programme & Spécialité</div>
                         <div class="grid grid-cols-3 gap-3">
@@ -298,6 +299,7 @@
                         </div>
                     </div>
 
+                    {{-- Notes, Mentions & Performances --}}
                     <div class="p-4 rounded-xl bg-slate-950 border border-slate-900 space-y-3">
                         <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
                             <span>📊 Notes, Mentions & Performances</span>
@@ -326,6 +328,7 @@
                         </div>
                     </div>
 
+                    {{-- Bloc d'Authentification --}}
                     <div class="p-4 rounded-xl bg-slate-950 border border-slate-900 space-y-3">
                         <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
                             <span>🔐 Bloc d'Authentification (Lieu, Date, Signatures & QR Code)</span>
@@ -344,81 +347,15 @@
                             </div>
                             <div>
                                 <label class="text-[11px] text-slate-400 block mb-1">Dimension QR Code</label>
-                                <input type="number" name="certificat_qr_size" min="40" max="200" value="{{ \App\Models\Configuration::get('certificat_qr_size', 70) }}" class="edc-input text-xs p-2" placeholder="Taille en px">
+                                <input type="number" name="certificat_qr_size" min="40" max="300" value="{{ \App\Models\Configuration::get('certificat_qr_size', 120) }}" class="edc-input text-xs p-2" placeholder="Taille en px">
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {{-- SECTION C : RÉGULATION DUPLICATA --}}
                 <hr class="border-slate-800">
-
-                {{-- SECTION C : CALIBRAGE ET POSITIONNEMENT DU QR CODE --}}
-                <div class="edc-card p-6 mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 space-y-5">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h4 class="text-sm font-bold text-slate-300 uppercase tracking-wide flex items-center gap-2">
-                            <i class="fas fa-qrcode text-emerald-400"></i> Options & Positionnement du QR Code
-                        </h4>
-                        
-                        {{-- Toggle pour Activer / Désactiver le QR Code --}}
-                        <div class="flex items-center gap-3 toggle-wrapper">
-                            <span class="toggle-status text-xs font-bold w-16 text-right {{ \App\Models\Configuration::get('certificat_show_qrcode', 1) ? 'text-emerald-400' : 'text-slate-500' }}">
-                                {{ \App\Models\Configuration::get('certificat_show_qrcode', 1) ? 'Activé' : 'Désactivé' }}
-                            </span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="certificat_show_qrcode" value="1" 
-                                    class="sr-only peer structural-toggle" 
-                                    {{ \App\Models\Configuration::get('certificat_show_qrcode', 1) ? 'checked' : '' }}>
-                                <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                            </label>
-                        </div>
-                    </div>
-
-                    {{-- Champs de réglage des dimensions et coordonnées (Masqués ou grisés via CSS si désactivé) --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        
-                        {{-- Taille du QR Code --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-2">
-                                Taille du carré <span class="text-slate-600">(en pixels)</span>
-                            </label>
-                            <div class="relative rounded-lg shadow-sm">
-                                <input type="number" name="certificat_qr_size" 
-                                    value="{{ \App\Models\Configuration::get('certificat_qr_size', 120) }}" 
-                                    min="40" max="300" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs text-slate-500">px</div>
-                            </div>
-                        </div>
-
-                        {{-- Axe X --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-2">
-                                Position Horizontale (Axe X)
-                            </label>
-                            <div class="relative rounded-lg shadow-sm">
-                                <input type="number" name="certificat_axis_x_metadata" 
-                                    value="{{ \App\Models\Configuration::get('certificat_axis_x_metadata', 50) }}" 
-                                    min="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs text-slate-500">px</div>
-                            </div>
-                        </div>
-
-                        {{-- Axe Y --}}
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-2">
-                                Position Verticale (Axe Y)
-                            </label>
-                            <div class="relative rounded-lg shadow-sm">
-                                <input type="number" name="certificat_axis_y_metadata" 
-                                    value="{{ \App\Models\Configuration::get('certificat_axis_y_metadata', 450) }}" 
-                                    min="0" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs text-slate-500">px</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                {{-- SECTION D : REGULATION DUPLICATA --}}
+                
                 <div class="toggle-container p-4 rounded-xl border border-slate-800 bg-slate-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="space-y-0.5">
                         <label class="text-sm font-bold block" style="color: var(--edc-text-primary);">📜 Gestion des Duplicatas</label>
@@ -427,15 +364,15 @@
                     @php $duplicata = \App\Models\Configuration::get('certificat_duplicata_active', '0'); @endphp
                     <label class="toggle-wrapper flex items-center gap-3 cursor-pointer relative select-none shrink-0">
                         <input type="checkbox" name="certificat_duplicata_active" value="1" class="absolute opacity-0 w-0 h-0 structural-toggle" {{ $duplicata == '1' ? 'checked' : '' }}>
-                        <span class="toggle-slider w-11 h-6 bg-slate-850 rounded-full relative transition-all duration-200 block border border-slate-700 after:content-[''] after:absolute after:w-4 after:h-4 after:bg-white after:rounded-full after:top-0.5 after:left-0.5 after:transition-all"></span>
+                        <span class="toggle-slider w-11 h-6 bg-slate-800 rounded-full relative transition-all duration-200 block border border-slate-700 after:content-[''] after:absolute after:w-4 after:h-4 after:bg-white after:rounded-full after:top-0.5 after:left-0.5 after:transition-all"></span>
                         <span class="toggle-status text-xs font-bold w-16 {{ $duplicata == '1' ? 'text-emerald-400' : 'text-slate-500' }}">
                             {{ $duplicata == '1' ? 'Activé' : 'Désactivé' }}
                         </span>
                     </label>
                 </div>
 
-                {{-- ══ PRIX DU DUPLICATA ══ --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                {{-- PRIX DU DUPLICATA --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-400 block mb-2">💰 Prix du duplicata (FCFA)</label>
                         <input type="number" name="duplicata_prix" 
@@ -457,20 +394,16 @@
         {{-- ══ PANEL 4 : STATS & ARGUMENTS ══ --}}
         <div id="panel-marque" class="settings-panel space-y-6" style="display:none;">
             
-            {{-- ━━━ SECTION A : STATS DU HERO ━━━ --}}
+            {{-- SECTION A : STATS DU HERO --}}
             <div class="edc-card p-6 sm:p-8 space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
-                        📈 Chiffres Clés (Hero)
-                    </h3>
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">📈 Chiffres Clés (Hero)</h3>
                     <button type="button" onclick="addStatRow()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
                         + Ajouter une stat
                     </button>
                 </div>
-                <p class="text-xs text-slate-500 -mt-2">
-                    Affichés sous le titre principal de la page d'accueil.
-                </p>
+                <p class="text-xs text-slate-500 -mt-2">Affichés sous le titre principal de la page d'accueil.</p>
 
                 <div id="stats-container" class="space-y-3">
                     @php $stats = json_decode(\App\Models\Configuration::get('site_stats', '[]'), true); @endphp
@@ -487,20 +420,16 @@
                 </div>
             </div>
 
-            {{-- ━━━ SECTION B : POURQUOI NOUS ━━━ --}}
+            {{-- SECTION B : POURQUOI NOUS --}}
             <div class="edc-card p-6 sm:p-8 space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
-                        🎯 Arguments "Pourquoi Nous"
-                    </h3>
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">🎯 Arguments "Pourquoi Nous"</h3>
                     <button type="button" onclick="addArgumentRow()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
                         + Ajouter un argument
                     </button>
                 </div>
-                <p class="text-xs text-slate-500 -mt-2">
-                    Grille 2×2 ou 4 colonnes sur la page d'accueil.
-                </p>
+                <p class="text-xs text-slate-500 -mt-2">Grille 2×2 ou 4 colonnes sur la page d'accueil.</p>
 
                 <div id="arguments-container" class="space-y-3">
                     @php $arguments = json_decode(\App\Models\Configuration::get('site_pourquoi_nous', '[]'), true); @endphp
@@ -524,17 +453,13 @@
         <div id="panel-galerie" class="settings-panel space-y-6" style="display:none;">
             <div class="edc-card p-6 sm:p-8 space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
-                        🖼️ Galerie d'images (format 9:16)
-                    </h3>
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">🖼️ Galerie d'images (format 9:16)</h3>
                     <button type="button" onclick="addGalerieRow()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
                         + Ajouter une image
                     </button>
                 </div>
-                <p class="text-xs text-slate-500 -mt-2">
-                    Images au format portrait. Défilement automatique sur la page d'accueil.
-                </p>
+                <p class="text-xs text-slate-500 -mt-2">Images au format portrait. Défilement automatique sur la page d'accueil.</p>
 
                 <div id="galerie-container" class="space-y-4">
                     @php $galeries = json_decode(\App\Models\Configuration::get('site_galeries', '[]'), true); @endphp
@@ -557,9 +482,7 @@
                 <div class="mt-4 p-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/50">
                     <p class="text-xs text-slate-400 mb-2">📤 Uploader des images (seront ajoutées à la galerie)</p>
                     <input type="file" name="galerie_files[]" multiple accept="image/*" class="text-xs text-slate-300 w-full">
-                    <p class="text-[10px] text-slate-500 mt-1">
-                        Format 9:16 recommandé. Les images uploadées remplaceront la galerie actuelle.
-                    </p>
+                    <p class="text-[10px] text-slate-500 mt-1">Format 9:16 recommandé. Les images uploadées remplaceront la galerie actuelle.</p>
                 </div>
             </div>
         </div>
@@ -616,6 +539,27 @@
             </div>
         </div>
 
+        {{-- ══ PANEL 7 : CONTRÔLEUR D'ACTION (SPÉCIMEN) ══ --}}
+        <div id="panel-action-test" class="settings-panel mt-6 mb-8" style="display:none;">
+            <div class="edc-card p-6 sm:p-8">
+                <h3 class="text-md font-bold mb-3" style="color: var(--edc-text-primary);"><i class="fas fa-vial text-amber-500 mr-1.5"></i> Calibrage & Validation à blanc</h3>
+                <div class="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="text-xs font-bold text-amber-400">Générer un Certificat de Démonstration (Spécimen)</div>
+                        <div class="text-[11px] text-slate-400 max-w-xl">Cette action crée un PDF de test avec un profil fictif pour vérifier instantanément si vos axes de coordonnées X / Y sont parfaits.</div>
+                    </div>
+                    <div class="shrink-0 w-full md:w-auto">
+                        <div class="shrink-0 w-full md:w-auto">
+                            <a href="{{ route('admin.configurations.specimen') }}" 
+                            class="w-full md:w-auto px-4 py-2 border border-amber-500/30 text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-file-pdf"></i> Générer un PDF spécimen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- ══ STICKY BANNER BARRE DE SAUVEGARDE GLOBALE ══ --}}
         <div class="form-actions sticky bottom-0 z-50 py-4 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent">
             <div class="sticky-inner bg-slate-900 border border-slate-800 rounded-xl p-3 px-5 flex items-center justify-end gap-4 shadow-2xl">
@@ -628,33 +572,12 @@
             </div>
         </div>
     </form>
-
-    {{-- ══ CONTROLEUR D'ACTION INDÉPENDANTE (STYLE MAINTENANCE WIDGET) ══ --}}
-    <div id="panel-action-test" class="settings-panel mt-6 mb-8" style="display:none;">
-        <div class="edc-card p-6 sm:p-8">
-            <h3 class="text-md font-bold mb-3" style="color: var(--edc-text-primary);"><i class="fas fa-vial text-amber-500 mr-1.5"></i> Calibrage & Validation à blanc</h3>
-            <div class="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="text-xs font-bold text-amber-400">Générer un Certificat de Démonstration (Spécimen)</div>
-                    <div class="text-[11px] text-slate-400 max-w-xl">Cette action crée un PDF de test avec un profil fictif pour vérifier instantanément si vos axes de coordonnées X / Y sont parfaits.</div>
-                </div>
-                <div class="shrink-0 w-full md:w-auto">
-                    <button type="button" class="w-full md:w-auto px-4 py-2 border border-amber-500/30 text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-file-pdf"></i> Générer un PDF spécimen
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <style>
-    /* Masquer la scrollbar proprement */
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Style structurel interne pour le Toggle Switch */
     .structural-toggle:checked + .toggle-slider { background-color: var(--edc-primary-light, #10b981); border-color: transparent; }
     .structural-toggle:checked + .toggle-slider::after { transform: translateX(20px); }
     .structural-toggle + .toggle-slider::after { background: #0f172a; top:3px; left:3px; }
@@ -663,48 +586,47 @@
 <script>
 let formDirty = false;
 
-// Système de basculement dynamique et unique des onglets
+// ═══════════════════════════════════════════
+// FONCTION UNIQUE DE NAVIGATION PAR ONGLETS
+// ═══════════════════════════════════════════
 function showTab(key) {
-    // 1. Masquer tous les panels principaux
+    // 1. Masquer tous les panels
     document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
     
-    // 2. Réinitialiser les classes de tous les boutons d'onglets
+    // 2. Réinitialiser tous les onglets
     document.querySelectorAll('.tab-btn').forEach(b => {
         b.className = "tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30";
     });
     
-    // 3. Activer visuellement l'onglet sélectionné
+    // 3. Activer l'onglet cliqué
     const currentBtn = document.getElementById('tab-' + key);
     if (currentBtn) {
         currentBtn.className = "tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 tab-active bg-emerald-500/10 border-emerald-500 text-emerald-400";
         currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
     
-    // 4. Affichage conditionnel des conteneurs de formulaires et du widget de test
-    if (key === 'certificat') {
-        document.getElementById('panel-certificat').style.display = 'block';
-        if (document.getElementById('panel-action-test')) {
-            document.getElementById('panel-action-test').style.display = 'block';
-        }
-    } else {
-        const targetPanel = document.getElementById('panel-' + key);
-        if (targetPanel) targetPanel.style.display = 'block';
-        
-        if (document.getElementById('panel-action-test')) {
-            document.getElementById('panel-action-test').style.display = 'none';
-        }
+    // 4. Afficher le panel correspondant
+    const targetPanel = document.getElementById('panel-' + key);
+    if (targetPanel) targetPanel.style.display = 'block';
+    
+    // 5. Afficher le panel action-test UNIQUEMENT pour l'onglet certificat
+    const actionTest = document.getElementById('panel-action-test');
+    if (actionTest) {
+        actionTest.style.display = (key === 'certificat') ? 'block' : 'none';
     }
 }
 
-// Initialisation forcée sur le premier onglet au chargement complet du DOM
+// ═══════════════════════════════════════════
+// INITIALISATION AU CHARGEMENT
+// ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
     showTab('institution');
     
-    // Initialisation des écouteurs pour changer la couleur du label de statut des Toggles
+    // Écouteurs pour les toggles
     document.querySelectorAll('.structural-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
             const wrapper = this.closest('.toggle-wrapper');
-            const status = wrapper.querySelector('.toggle-status');
+            const status = wrapper?.querySelector('.toggle-status');
             if (!status) return;
             status.textContent = this.checked ? 'Activé' : 'Désactivé';
             status.className = 'toggle-status text-xs font-bold w-16 ' + (this.checked ? 'text-emerald-400' : 'text-slate-500');
@@ -712,7 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Aperçu direct du fond d'écran du certificat lors du téléversement
+// ═══════════════════════════════════════════
+// APERÇU DU FOND DE CERTIFICAT
+// ═══════════════════════════════════════════
 function previewCertificat(input) {
     const wrapper = document.getElementById('cert-preview');
     const img = document.getElementById('cert-preview-img');
@@ -729,10 +653,14 @@ function previewCertificat(input) {
     }
 }
 
-// Compteurs pour les nouveaux éléments
+// ═══════════════════════════════════════════
+// COMPTEURS POUR LES LIGNES DYNAMIQUES
+// ═══════════════════════════════════════════
 let statIndex = {{ count($stats) }};
 let argIndex = {{ count($arguments) }};
 let galerieIndex = {{ count($galeries) }};
+let missionIndex = {{ count($mission ?? []) }};
+let valeurIndex = {{ count($valeurs ?? []) }};
 
 function addStatRow() {
     const container = document.getElementById('stats-container');
@@ -771,17 +699,6 @@ function addGalerieRow() {
     galerieIndex++;
 }
 
-// Ajouter marque et galerie dans le showTab
-const originalShowTab = showTab;
-showTab = function(key) {
-    originalShowTab(key);
-    document.getElementById('panel-marque').style.display = (key === 'marque') ? 'block' : 'none';
-    document.getElementById('panel-galerie').style.display = (key === 'galerie') ? 'block' : 'none';
-};
-
-let missionIndex = {{ count($mission ?? []) }};
-let valeurIndex = {{ count($valeurs ?? []) }};
-
 function addMissionRow() {
     const c = document.getElementById('mission-container');
     c.insertAdjacentHTML('beforeend', `
@@ -806,14 +723,9 @@ function addValeurRow() {
     valeurIndex++;
 }
 
-// Mise à jour showTab
-const origShowTab = showTab;
-showTab = function(key) {
-    origShowTab(key);
-    document.getElementById('panel-mission').style.display = (key === 'mission') ? 'block' : 'none';
-};
-
-// Détection des modifications dans le formulaire pour la Sticky bar d'alerte
+// ═══════════════════════════════════════════
+// DÉTECTION DE MODIFICATIONS
+// ═══════════════════════════════════════════
 const hintBar = document.getElementById('saveHint');
 document.getElementById('settingsForm')?.addEventListener('input', () => {
     if (!formDirty) { formDirty = true; hintBar?.classList.remove('opacity-0'); }
