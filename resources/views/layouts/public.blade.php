@@ -318,8 +318,8 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
                 {{-- ══ COLONNE 1 : IDENTITÉ ══ --}}
-                <div class="sm:col-span-2 lg:col-span-1">
-                    <div class="flex items-center space-x-2 mb-5">
+                <div class="sm:col-span-2 lg:col-span-1 text-center sm:text-left">
+                    <div class="flex items-center justify-center sm:justify-start space-x-2 mb-5">
                         <div class="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white text-sm"
                             style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                             EDC
@@ -334,16 +334,16 @@
                 </div>
 
                 {{-- ══ COLONNE 2 : NAVIGATION ══ --}}
-                <div>
+                <div class="text-center sm:text-left">
                     <h3>Navigation</h3>
-                    <ul class="space-y-3 text-sm">
+                    <ul class="space-y-3 text-sm flex flex-col items-center sm:items-start">
                         @foreach([
                             ['home', 'Accueil'],
                             ['services.index', 'Services'],
                             ['formations.index', 'Formations'],
                             ['blog.index', 'Blog'],
                             ['faq', 'FAQ'],
-                            ['contact', 'Contact'],
+                            ['contact', 'Contact']
                             ['about', 'À propos'],
                         ] as $l)
                         <li><a href="{{ route($l[0]) }}">{{ $l[1] }}</a></li>
@@ -352,9 +352,9 @@
                 </div>
 
                 {{-- ══ COLONNE 3 : SERVICES ══ --}}
-                <div>
+                <div class="text-center sm:text-left">
                     <h3>Services</h3>
-                    <ul class="space-y-3 text-sm">
+                    <ul class="space-y-3 text-sm flex flex-col items-center sm:items-start">
                         @foreach(['Création de CV','Mise en page Word','Logo & Design','Site Web','Formation Excel'] as $s)
                         <li><a href="{{ route('demande.form') }}">{{ $s }}</a></li>
                         @endforeach
@@ -362,9 +362,9 @@
                 </div>
 
                 {{-- ══ COLONNE 4 : CONTACT DYNAMIQUE ══ --}}
-                <div>
+                <div class="text-center sm:text-left">
                     <h3>Contact</h3>
-                    <ul class="space-y-3 text-sm" style="color: #64748B;">
+                    <ul class="space-y-3 text-sm flex flex-col items-center sm:items-start" style="color: #64748B;">
                         {{-- Adresse --}}
                         @if($siteAdresse || $siteVille)
                         <li class="flex items-start space-x-2">
