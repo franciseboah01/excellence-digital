@@ -343,7 +343,7 @@
                             ['formations.index', 'Formations'],
                             ['blog.index', 'Blog'],
                             ['faq', 'FAQ'],
-                            ['contact', 'Contact']
+                            ['contact', 'Contact'],
                             ['about', 'À propos'],
                         ] as $l)
                         <li><a href="{{ route($l[0]) }}">{{ $l[1] }}</a></li>
