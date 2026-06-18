@@ -52,7 +52,7 @@
                 <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     @if(!$certificat->telecharge)
                         {{-- Téléchargement PDF --}}
-                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'pdf']) }}"
+                        <a href="{{ route('certificats.telecharger', ['certificat' => $certificat, 'format' => 'pdf']) }}"
                             class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
                             style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
                             onmouseover="this.style.filter='brightness(1.1)'"
@@ -60,7 +60,7 @@
                             📄 PDF
                         </a>
                         {{-- Téléchargement JPG --}}
-                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'jpg']) }}"
+                        <a href="{{ route('certificats.telecharger', ['certificat' => $certificat, 'format' => 'jpg']) }}"
                             class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
                             style="background: linear-gradient(135deg, #6B7280, #4B5563); color: white;"
                             onmouseover="this.style.filter='brightness(1.1)'"
