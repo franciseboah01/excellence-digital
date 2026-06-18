@@ -145,15 +145,7 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
         Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
         Route::post('/certificats/{certificat}/demande-duplicata', [CertificatController::class, 'demandeDuplicata'])->name('certificats.demande-duplicata');
-
-        // Certificats client
-Route::get('/client/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])
-    ->name('client.certificats.telecharger')
-    ->middleware('auth');
-
-Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])
-    ->name('certificats.telecharger')
-    ->middleware('auth');
+        Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('certificats.telecharger');
     });
 
 // ===== ENSEIGNANT =====

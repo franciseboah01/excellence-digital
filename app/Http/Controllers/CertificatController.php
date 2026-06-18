@@ -43,7 +43,7 @@ class CertificatController extends Controller
         // --- ORIGINAL ---
         if (!$estDuplicata) {
             if ($certificat->telecharge) {
-                return redirect()->route('client.duplicata.demander', $certificat)
+                return redirect()->route('client.certificats.demande-duplicata', $certificat)
                     ->with('error', 'Vous avez déjà téléchargé ce certificat. Souhaitez-vous demander un duplicata ?');
             }
         }
@@ -205,7 +205,7 @@ class CertificatController extends Controller
             'titre'   => '✅ Duplicata disponible !',
             'message' => 'Votre duplicata pour la formation "' . ($certificatOriginal->formation->titre ?? '') . '" est disponible. Téléchargez-le maintenant.',
             'type'    => 'success',
-            'lien'    => route('certificats.telecharger', ['certificat' => $duplicata->id, 'format' => 'pdf']),
+            'lien'    => route('client.certificats.telecharger', ['certificat' => $duplicata->id, 'format' => 'pdf']),
         ]);
 
         return back()->with('success', 'Duplicata validé et disponible pour le client.');
