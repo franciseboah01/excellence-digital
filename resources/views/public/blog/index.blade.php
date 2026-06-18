@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', 'Blog & Actualités — EDC')
+@section('title', 'Blog & Actualités — ' . \App\Models\Configuration::get('site_nom', 'EDC'))
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 py-16">
@@ -7,6 +7,24 @@
         <h1 class="text-section">📰 Blog & Actualités</h1>
         <p class="section-subtitle">Conseils, tutoriels et actualités du numérique</p>
     </div>
+
+    {{-- 🆕 FILTRES PAR CATÉGORIE --}}
+    @if($categories->count())
+    <div class="flex flex-wrap justify-center gap-2 mb-10">
+        <a href="{{ route('blog.index') }}"
+           class="px-4 py-2 rounded-full text-xs font-semibold transition
+                  {{ empty($categorieActive) ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white' }}">
+            Tous
+        </a>
+        @foreach($categories as $cat)
+        <a href="{{ route('blog.index', ['categorie' => $cat]) }}"
+           class="px-4 py-2 rounded-full text-xs font-semibold transition
+                  {{ ($categorieActive ?? '') === $cat ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white' }}">
+            {{ ucfirst($cat) }}
+        </a>
+        @endforeach
+    </div>
+    @endif
 
     <div class="grid-responsive-3">
         @forelse($articles as $article)

@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', 'Services — Excellence Digital Center')
+@section('title', 'Services — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 py-16">
@@ -10,12 +10,20 @@
 
     @foreach($services as $categorie => $liste)
     <div class="mb-12">
-        <h2 class="text-2xl font-bold mb-6 pb-2" style="color: var(--edc-primary-light); border-bottom: 2px solid var(--edc-border);">
-            @if($categorie == 'bureautique') 💼 Bureautique
-            @elseif($categorie == 'design') 🌐 Digital & Design
-            @else 💻 Développement Web & Mobile
+        {{-- En-tête avec titre + bouton Voir tout --}}
+        <div class="flex items-center justify-between mb-6 pb-2" style="border-bottom: 2px solid var(--edc-border);">
+            <h2 class="text-2xl font-bold" style="color: var(--edc-primary-light);">
+                {{ $categorie }}
+            </h2>
+            @if($liste->count() == 4)
+            <a href="{{ route('services.categorie', ['categorie' => Str::slug($categorie)]) }}"
+               class="text-sm font-semibold transition hover:opacity-80"
+               style="color: var(--edc-primary-light);">
+                Voir tout →
+            </a>
             @endif
-        </h2>
+        </div>
+
         <div class="grid-responsive-3">
             @foreach($liste as $service)
             <div class="edc-card p-6">

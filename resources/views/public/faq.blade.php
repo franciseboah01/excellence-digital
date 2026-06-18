@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', 'FAQ — Excellence Digital Center')
+@section('title', 'FAQ — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 py-16">

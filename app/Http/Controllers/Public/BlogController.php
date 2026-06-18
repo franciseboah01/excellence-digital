@@ -9,18 +9,24 @@ use App\Models\Faq;
 class BlogController extends Controller
 {
     // ===== LISTE ARTICLES =====
-    public function index()
+    public function index($categorie = null)
     {
-        $articles = Article::where('statut', 'publie')
-            ->with('auteur')
-            ->latest('publie_le')
-            ->paginate(9);
+        $query = Article::where('statut', 'publie')->with('auteur');
+
+        // Filtre par catégorie si demandé
+        if ($categorie) {
+            $query->where('categorie', $categorie);
+        }
+
+        $articles = $query->latest('publie_le')->paginate(9);
 
         $categories = Article::where('statut', 'publie')
             ->distinct()
             ->pluck('categorie');
 
-        return view('public.blog.index', compact('articles', 'categories'));
+        $categorieActive = $categorie;
+
+        return view('public.blog.index', compact('articles', 'categories', 'categorieActive'));
     }
 
     // ===== DÉTAIL ARTICLE =====

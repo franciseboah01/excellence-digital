@@ -1,5 +1,10 @@
 @extends('layouts.public')
-@section('title', 'Demande de service — Excellence Digital Center')
+@section('title', 'Demande de service — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
+
+@php
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+    $whatsappUrl  = 'https://wa.me/' . $siteWhatsapp;
+@endphp
 
 @section('content')
 <div class="max-w-2xl mx-auto px-4 py-16">
@@ -67,7 +72,7 @@
 
     <p class="text-center text-sm mt-6" style="color: var(--edc-text-muted);">
         Ou contactez-nous directement sur
-        <a href="https://wa.me/2250748746140" class="font-medium hover:underline"
+        <a href="{{ $whatsappUrl }}" class="font-medium hover:underline"
             style="color: var(--edc-secondary);" target="_blank">
             WhatsApp 💬
         </a>

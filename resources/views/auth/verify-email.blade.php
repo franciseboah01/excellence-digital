@@ -1,11 +1,19 @@
+@php
+    $siteNom  = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
+    $initiales = collect(explode(' ', $siteNom))
+        ->map(fn($m) => strtoupper(substr($m, 0, 1)))
+        ->take(3)
+        ->implode('') ?: 'EDC';
+@endphp
+
 <x-guest-layout>
     <div class="mb-6 text-center">
         <a href="{{ route('home') }}" class="inline-flex items-center space-x-2.5">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center font-black text-white text-lg"
                 style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
-                EDC
+                {{ $initiales }}
             </div>
-            <span class="font-extrabold text-lg" style="color: #F1F5F9;">Excellence Digital Center</span>
+            <span class="font-extrabold text-lg" style="color: #F1F5F9;">{{ $siteNom }}</span>
         </a>
         <p class="text-sm mt-2" style="color: #94A3B8;">Vérification de l'email</p>
     </div>
@@ -28,9 +36,7 @@
 
         <form method="POST" action="{{ route('verification.send') }}" class="mb-6">
             @csrf
-            <button type="submit" class="btn-primary w-full">
-                Renvoyer l'email de vérification
-            </button>
+            <button type="submit" class="btn-primary w-full">Renvoyer l'email de vérification</button>
         </form>
 
         <div class="space-y-3">
@@ -41,7 +47,6 @@
                     Se déconnecter
                 </button>
             </form>
-
             <a href="{{ route('home') }}" class="block text-sm transition"
                 style="color: #64748B;" onmouseover="this.style.color='#60A5FA'" onmouseout="this.style.color='#64748B'">
                 ← Retour à l'accueil

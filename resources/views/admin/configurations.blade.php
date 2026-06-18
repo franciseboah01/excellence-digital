@@ -16,6 +16,10 @@
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 tab-active bg-emerald-500/10 border-emerald-500 text-emerald-400">
                     🏢 Institution & Marque
                 </button>
+                <button type="button" onclick="showTab('galerie')" id="tab-galerie"
+                    class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
+                    🖼️ Galerie
+                </button>
                 <button type="button" onclick="showTab('stockage')" id="tab-stockage"
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
                     📁 Stockage & Fichiers
@@ -27,6 +31,10 @@
                 <button type="button" onclick="showTab('certificat')" id="tab-certificat"
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
                     📜 Maquette Certificats
+                </button>
+                <button type="button" onclick="showTab('marque')" id="tab-marque"
+                    class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
+                    📊 Stats & Arguments
                 </button>
             </div>
         </div>
@@ -65,6 +73,51 @@
                         <label class="edc-label">Adresse Web officielle</label>
                         <input type="text" name="site_web" value="{{ \App\Models\Configuration::get('site_web') }}" class="edc-input">
                     </div>
+                        
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="edc-label">Numéro WhatsApp (format international sans +)</label>
+                            <input type="text" name="site_whatsapp" 
+                                value="{{ \App\Models\Configuration::get('site_whatsapp', '2250700000000') }}" 
+                                class="edc-input" placeholder="2250700000000">
+                            <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Sans le signe +, ex: 225XXXXXXXX</p>
+                        </div>
+                        <div>
+                            <label class="edc-label">Ville / Localité</label>
+                            <input type="text" name="site_ville" 
+                                value="{{ \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso') }}" 
+                                class="edc-input">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="edc-label">Description courte (footer, meta)</label>
+                            <textarea name="site_description" rows="2" class="edc-input">{{ \App\Models\Configuration::get('site_description', 'Services bureautiques, digital et formation à Korhogo / Sirasso. Votre centre de référence pour réussir dans l\'univers digital.') }}</textarea>
+                        </div>
+                        <div>
+                            <label class="edc-label">Devise / Signature</label>
+                            <input type="text" name="site_devise" 
+                                value="{{ \App\Models\Configuration::get('site_devise', 'Former • Créer • Réussir') }}" 
+                                class="edc-input">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="edc-label">Pays</label>
+                            <input type="text" name="site_pays" 
+                                value="{{ \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire') }}" 
+                                class="edc-input">
+                        </div>
+                        <div>
+                            <label class="edc-label">Copyright texte</label>
+                            <input type="text" name="site_copyright" 
+                                value="{{ \App\Models\Configuration::get('site_copyright', '© ' . date('Y') . ' Excellence Digital Center — Tous droits réservés') }}" 
+                                class="edc-input">
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -390,6 +443,116 @@
             </div>
         </div>
 
+        {{-- ══ PANEL 4 : STATS & ARGUMENTS ══ --}}
+        <div id="panel-marque" class="settings-panel space-y-6" style="display:none;">
+            
+            {{-- ━━━ SECTION A : STATS DU HERO ━━━ --}}
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
+                        📈 Chiffres Clés (Hero)
+                    </h3>
+                    <button type="button" onclick="addStatRow()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
+                        + Ajouter une stat
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 -mt-2">
+                    Affichés sous le titre principal de la page d'accueil.
+                </p>
+
+                <div id="stats-container" class="space-y-3">
+                    @php $stats = json_decode(\App\Models\Configuration::get('site_stats', '[]'), true); @endphp
+                    @foreach($stats as $i => $stat)
+                    <div class="stat-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <input type="text" name="site_stats[{{ $i }}][valeur]" value="{{ $stat['valeur'] ?? '' }}"
+                            placeholder="Valeur (ex: 500+)" class="edc-input flex-1">
+                        <input type="text" name="site_stats[{{ $i }}][description]" value="{{ $stat['description'] ?? '' }}"
+                            placeholder="Description (ex: Clients satisfaits)" class="edc-input flex-[2]">
+                        <button type="button" onclick="this.closest('.stat-row').remove()"
+                            class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- ━━━ SECTION B : POURQUOI NOUS ━━━ --}}
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
+                        🎯 Arguments "Pourquoi Nous"
+                    </h3>
+                    <button type="button" onclick="addArgumentRow()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
+                        + Ajouter un argument
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 -mt-2">
+                    Grille 2×2 ou 4 colonnes sur la page d'accueil.
+                </p>
+
+                <div id="arguments-container" class="space-y-3">
+                    @php $arguments = json_decode(\App\Models\Configuration::get('site_pourquoi_nous', '[]'), true); @endphp
+                    @foreach($arguments as $i => $arg)
+                    <div class="arg-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <input type="text" name="site_pourquoi_nous[{{ $i }}][icone]" value="{{ $arg['icone'] ?? '' }}"
+                            placeholder="Icône (ex: ⚡)" class="edc-input w-24">
+                        <input type="text" name="site_pourquoi_nous[{{ $i }}][titre]" value="{{ $arg['titre'] ?? '' }}"
+                            placeholder="Titre (ex: Rapidité)" class="edc-input flex-1">
+                        <input type="text" name="site_pourquoi_nous[{{ $i }}][description]" value="{{ $arg['description'] ?? '' }}"
+                            placeholder="Description courte" class="edc-input flex-[2]">
+                        <button type="button" onclick="this.closest('.arg-row').remove()"
+                            class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ PANEL 5 : GALERIE ══ --}}
+        <div id="panel-galerie" class="settings-panel space-y-6" style="display:none;">
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">
+                        🖼️ Galerie d'images (format 9:16)
+                    </h3>
+                    <button type="button" onclick="addGalerieRow()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">
+                        + Ajouter une image
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 -mt-2">
+                    Images au format portrait. Défilement automatique sur la page d'accueil.
+                </p>
+
+                <div id="galerie-container" class="space-y-4">
+                    @php $galeries = json_decode(\App\Models\Configuration::get('site_galeries', '[]'), true); @endphp
+                    @foreach($galeries as $i => $img)
+                    <div class="galerie-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800 items-start">
+                        <input type="text" name="site_galeries[{{ $i }}][titre]" value="{{ $img['titre'] ?? '' }}"
+                            placeholder="Titre (optionnel)" class="edc-input flex-1">
+                        <input type="text" name="site_galeries[{{ $i }}][image]" value="{{ $img['image'] ?? '' }}"
+                            placeholder="Chemin (ex: galerie/photo1.jpg)" class="edc-input flex-[2]">
+                        @if(!empty($img['image']))
+                        <img src="{{ asset('storage/' . $img['image']) }}" class="h-12 w-8 object-cover rounded border border-slate-700">
+                        @endif
+                        <button type="button" onclick="this.closest('.galerie-row').remove()"
+                            class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+                    </div>
+                    @endforeach
+                </div>
+
+                {{-- Upload multiple --}}
+                <div class="mt-4 p-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/50">
+                    <p class="text-xs text-slate-400 mb-2">📤 Uploader des images (seront ajoutées à la galerie)</p>
+                    <input type="file" name="galerie_files[]" multiple accept="image/*" class="text-xs text-slate-300 w-full">
+                    <p class="text-[10px] text-slate-500 mt-1">
+                        Format 9:16 recommandé. Les images uploadées remplaceront la galerie actuelle.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- ══ STICKY BANNER BARRE DE SAUVEGARDE GLOBALE ══ --}}
         <div class="form-actions sticky bottom-0 z-50 py-4 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent">
             <div class="sticky-inner bg-slate-900 border border-slate-800 rounded-xl p-3 px-5 flex items-center justify-end gap-4 shadow-2xl">
@@ -502,6 +665,56 @@ function previewCertificat(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// Compteurs pour les nouveaux éléments
+let statIndex = {{ count($stats) }};
+let argIndex = {{ count($arguments) }};
+let galerieIndex = {{ count($galeries) }};
+
+function addStatRow() {
+    const container = document.getElementById('stats-container');
+    const html = `
+        <div class="stat-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <input type="text" name="site_stats[${statIndex}][valeur]" placeholder="Valeur (ex: 500+)" class="edc-input flex-1">
+            <input type="text" name="site_stats[${statIndex}][description]" placeholder="Description" class="edc-input flex-[2]">
+            <button type="button" onclick="this.closest('.stat-row').remove()" class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    statIndex++;
+}
+
+function addArgumentRow() {
+    const container = document.getElementById('arguments-container');
+    const html = `
+        <div class="arg-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <input type="text" name="site_pourquoi_nous[${argIndex}][icone]" placeholder="Icône (ex: ⚡)" class="edc-input w-24">
+            <input type="text" name="site_pourquoi_nous[${argIndex}][titre]" placeholder="Titre" class="edc-input flex-1">
+            <input type="text" name="site_pourquoi_nous[${argIndex}][description]" placeholder="Description" class="edc-input flex-[2]">
+            <button type="button" onclick="this.closest('.arg-row').remove()" class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    argIndex++;
+}
+
+function addGalerieRow() {
+    const container = document.getElementById('galerie-container');
+    const html = `
+        <div class="galerie-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800 items-start">
+            <input type="text" name="site_galeries[${galerieIndex}][titre]" placeholder="Titre" class="edc-input flex-1">
+            <input type="text" name="site_galeries[${galerieIndex}][image]" placeholder="Chemin image" class="edc-input flex-[2]">
+            <button type="button" onclick="this.closest('.galerie-row').remove()" class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    galerieIndex++;
+}
+
+// Ajouter marque et galerie dans le showTab
+const originalShowTab = showTab;
+showTab = function(key) {
+    originalShowTab(key);
+    document.getElementById('panel-marque').style.display = (key === 'marque') ? 'block' : 'none';
+    document.getElementById('panel-galerie').style.display = (key === 'galerie') ? 'block' : 'none';
+};
 
 // Détection des modifications dans le formulaire pour la Sticky bar d'alerte
 const hintBar = document.getElementById('saveHint');

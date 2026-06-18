@@ -37,16 +37,38 @@ use App\Http\Controllers\Admin\ModuleController;
 
 // ===== ROUTES PUBLIQUES =====
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Services
 Route::get('/services', [PublicServiceController::class, 'index'])->name('services.index');
+Route::get('/services/categorie/{categorie}', [PublicServiceController::class, 'categorie'])->name('services.categorie');
 Route::get('/services/{service}', [PublicServiceController::class, 'show'])->name('services.show');
+
+// Formations
 Route::get('/formations', [PublicFormationController::class, 'index'])->name('formations.index');
+Route::get('/formations/module/{slug}', [PublicFormationController::class, 'module'])->name('formations.module');
 Route::get('/formations/{formation}', [PublicFormationController::class, 'show'])->name('formations.show');
+
+// Contact
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
+
+// Demande de service
 Route::get('/demande-service', [ContactController::class, 'demandeForm'])->name('demande.form');
 Route::post('/demande-service', [ContactController::class, 'demandeStore'])->name('demande.store');
+
+// Recherche
 Route::get('/recherche', [SearchController::class, 'search'])->name('recherche');
 Route::get('/recherche/autocomplete', [SearchController::class, 'autocomplete'])->name('recherche.autocomplete');
+
+// Blog
+Route::get('/blog/{categorie?}', [BlogController::class, 'index'])
+    ->where('categorie', '.*')
+    ->name('blog.index');
+Route::get('/article/{article:slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// FAQ
+Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
+
 
 // ===== ROUTE DASHBOARD UNIFIÉE =====
 Route::middleware('auth')->get('/dashboard', function () {
@@ -71,10 +93,6 @@ Route::middleware('auth')->get('/dashboard', function () {
         ->with('error', "Votre compte n'a pas de rôle assigné. Contactez l'administrateur.");
 
 })->name('dashboard');
-
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{article:slug}', [BlogController::class, 'show'])->name('blog.show');
-Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
 
 
 // ===== ROUTES AUTH (Breeze) =====

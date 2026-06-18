@@ -1,5 +1,10 @@
 @extends('layouts.public')
-@section('title', $formation->titre . ' — Excellence Digital Center')
+@section('title', $formation->titre . ' — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
+
+@php
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+    $whatsappUrl = 'https://wa.me/' . $siteWhatsapp;
+@endphp
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-12">
@@ -38,7 +43,7 @@
             <a href="{{ route('register') }}" class="btn-primary">
                 ✨ S'inscrire gratuitement
             </a>
-            <a href="https://wa.me/2250748746140" target="_blank" class="btn-secondary">
+            <a href="{{ $whatsappUrl }}" target="_blank" class="btn-secondary">
                 💬 Demander sur WhatsApp
             </a>
         </div>

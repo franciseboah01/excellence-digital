@@ -22,34 +22,51 @@ class ConfigurationController extends Controller
         return view('admin.configurations', compact('configs'));
     }
 
-    /**
-     * ============================================================
-     * 2. METTRE À JOUR LES CONFIGURATIONS
-     * ============================================================
-     */
-    public function update(Request $request)
+        /**
+         * ============================================================
+         * 2. METTRE À JOUR LES CONFIGURATIONS
+         * ============================================================
+         */
+        public function update(Request $request)
     {
         // Récupérer la taille max pour la validation
         $maxUploadSize = $request->input('upload_image_taille_max_mb', 2);
 
         // ===== VALIDATION =====
         $validated = $request->validate([
-            // --- Onglet 0 : Identité Institutionnelle ---
-            'site_nom'                     => 'required|string|max:150',
-            'site_slogan'                  => 'required|string|max:255',
-            'site_adresse'                 => 'required|string|max:255',
-            'site_contact'                 => 'required|string|max:50',
-            'site_email'                   => 'required|email|max:100',
-            'site_web'                     => 'required|string|max:100',
 
-            // --- Onglet 1 & 2 : Stockage & Sécurité ---
-            'upload_taille_max_mb'         => 'required|integer|min:1|max:100',
-            'upload_types_autorises'       => 'required|string|max:255',
-            'upload_image_taille_max_mb'   => 'required|integer|min:1|max:10',
-            'url_signee_expiration_minutes'=> 'required|integer|min:5|max:1440',
-            'qcm_note_minimale'            => 'required|integer|min:0|max:20',
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 0 : 🏢 Identité Institutionnelle & Coordonnées
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'site_nom'          => 'required|string|max:150',
+            'site_slogan'       => 'required|string|max:255',
+            'site_description'  => 'required|string|max:500',
+            'site_devise'       => 'required|string|max:150',
+            'site_adresse'      => 'required|string|max:255',
+            'site_ville'        => 'required|string|max:100',
+            'site_pays'         => 'required|string|max:100',
+            'site_contact'      => 'required|string|max:50',
+            'site_whatsapp'     => 'required|string|max:20',
+            'site_email'        => 'required|email|max:100',
+            'site_web'          => 'required|string|max:100',
+            'site_copyright'    => 'required|string|max:255',
 
-            // --- Onglet 3 : Maquette & Certificats ---
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 1 : 📁 Stockage & Fichiers
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'upload_taille_max_mb'       => 'required|integer|min:1|max:100',
+            'upload_types_autorises'     => 'required|string|max:255',
+            'upload_image_taille_max_mb' => 'required|integer|min:1|max:10',
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 2 : 🔐 Sécurité & QCM
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'url_signee_expiration_minutes' => 'required|integer|min:5|max:1440',
+            'qcm_note_minimale'             => 'required|integer|min:0|max:20',
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 3 : 📜 Maquette & Certificats
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             'certificat_background_file'   => 'nullable|image|mimes:jpeg,png,jpg|max:' . ($maxUploadSize * 1024),
             'certificat_font_color_name'   => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
             'certificat_axis_x_numero'     => 'required|integer|min:0|max:2000',
@@ -60,9 +77,9 @@ class ConfigurationController extends Controller
             'certificat_font_size_name'    => 'required|integer|min:8|max:72',
             'certificat_axis_x_formation'  => 'required|integer|min:0|max:2000',
             'certificat_axis_y_formation'  => 'required|integer|min:0|max:2000',
-            'certificat_font_size_formation'=> 'required|integer|min:8|max:50',
-            'certificat_axis_x_performance'=> 'required|integer|min:0|max:2000',
-            'certificat_axis_y_performance'=> 'required|integer|min:0|max:2000',
+            'certificat_font_size_formation' => 'required|integer|min:8|max:50',
+            'certificat_axis_x_performance' => 'required|integer|min:0|max:2000',
+            'certificat_axis_y_performance' => 'required|integer|min:0|max:2000',
             'certificat_font_size_perf'    => 'required|integer|min:8|max:30',
             'certificat_axis_x_metadata'   => 'required|integer|min:0|max:2000',
             'certificat_axis_y_metadata'   => 'required|integer|min:0|max:2000',
@@ -71,10 +88,22 @@ class ConfigurationController extends Controller
             'certificat_show_note'         => 'nullable|boolean',
             'certificat_show_mention'      => 'nullable|boolean',
             'certificat_show_qrcode'       => 'nullable|boolean',
-
-            // --- NOUVEAU : Prix du duplicata ---
             'duplicata_prix'               => 'required|integer|min:500|max:10000',
             'duplicata_delai_jours'        => 'required|integer|min:1|max:30',
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 4 : 📊 Stats & Arguments
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'site_stats'         => 'nullable|string',
+            'site_pourquoi_nous' => 'nullable|string',
+
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Onglet 5 : 🖼️ Galerie
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'site_galeries'      => 'nullable|string',
+            'galerie_files'      => 'nullable',
+            'galerie_files.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+
         ]);
 
         // ===== 1. GESTION DE L'IMAGE DE FOND =====
@@ -94,18 +123,29 @@ class ConfigurationController extends Controller
         }
 
         // ===== 3. GESTION DES AUTRES CHAMPS =====
-        $champsExclure = array_merge(['_token', '_method', 'certificat_background_file'], $toggles);
+        $champsExclure = array_merge(['_token', '_method', 'certificat_background_file', 'galerie_files'], $toggles);
         foreach ($request->except($champsExclure) as $cle => $valeur) {
-            // Ne pas écraser les toggles déjà traités
             if (!in_array($cle, $toggles)) {
                 Configuration::set($cle, $valeur);
             }
         }
 
-        // ===== 4. VIDER LE CACHE =====
+        // ===== 4. GESTION UPLOAD GALERIE =====
+        if ($request->hasFile('galerie_files')) {
+            $galeries = [];
+            
+            foreach ($request->file('galerie_files') as $file) {
+                $path = $file->store('galerie', 'public');
+                $galeries[] = ['titre' => '', 'image' => $path];
+            }
+            
+            Configuration::set('site_galeries', json_encode($galeries));
+        }
+
+        // ===== 5. VIDER LE CACHE =====
         Cache::flush();
 
-        // ===== 5. LOG =====
+        // ===== 6. LOG =====
         Log::info('Configurations mises à jour par ' . auth()->user()->email);
 
         return back()->with('success', '✅ Toutes les configurations ont été mises à jour !');

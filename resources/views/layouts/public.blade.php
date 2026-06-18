@@ -1,11 +1,40 @@
+{{-- ═══════════════════════════════════════ --}}
+{{-- CONFIGURATIONS GLOBALES --}}
+{{-- ═══════════════════════════════════════ --}}
+@php
+    $siteNom         = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
+    $siteSlogan      = \App\Models\Configuration::get('site_slogan', '');
+    $siteDescription = \App\Models\Configuration::get('site_description', 'Services bureautiques, digital et formation.');
+    $siteAdresse     = \App\Models\Configuration::get('site_adresse', '');
+    $siteVille       = \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso');
+    $sitePays        = \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire');
+    $siteContact     = \App\Models\Configuration::get('site_contact', '');
+    $siteEmail       = \App\Models\Configuration::get('site_email', '');
+    $siteWhatsapp    = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+    $siteDevise      = \App\Models\Configuration::get('site_devise', 'Former • Créer • Réussir');
+    $siteCopyright   = \App\Models\Configuration::get('site_copyright', '© ' . date('Y') . ' ' . $siteNom . ' — Tous droits réservés');
+    $whatsappUrl     = 'https://wa.me/' . $siteWhatsapp;
+    
+    // Initiales
+    $initiales = collect(explode(' ', $siteNom))
+        ->map(fn($mot) => strtoupper(substr($mot, 0, 1)))
+        ->take(3)
+        ->implode('');
+    $initiales = $initiales ?: 'EDC';
+@endphp
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="Excellence Digital Center — Services bureautiques, formations et solutions digitales à Korhogo. Votre centre digital de référence.">
+    <meta name="description" content="{{ $siteDescription }}">
     <meta name="theme-color" content="#0B0F1A">
-    <title>@yield('title', 'Excellence Digital Center')</title>
+    <title>@yield('title', $siteNom)</title>
+    
+    {{-- Favicon dynamique --}}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233B82F6'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='40' font-weight='bold' fill='white'>{{ $initiales }}</text></svg>">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -260,36 +289,66 @@
         @yield('content')
     </main>
 
-    {{-- FOOTER --}}
+    {{-- ═══════════════════════════════════════════ --}}
+    {{-- FOOTER DYNAMIQUE — Excellence Digital Center --}}
+    {{-- ═══════════════════════════════════════════ --}}
+
+    @php
+        // Récupération des configurations (avec fallback si vide)
+        $siteNom         = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
+        $siteDescription = \App\Models\Configuration::get('site_description', 'Services bureautiques, digital et formation.');
+        $siteAdresse     = \App\Models\Configuration::get('site_adresse', 'Korhogo / Sirasso');
+        $siteVille       = \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso');
+        $sitePays        = \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire');
+        $siteContact     = \App\Models\Configuration::get('site_contact', '+225 07 48 74 61 40');
+        $siteEmail       = \App\Models\Configuration::get('site_email', 'contact@excellencedigital.ci');
+        $siteWhatsapp    = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+        $siteDevise      = \App\Models\Configuration::get('site_devise', 'Former • Créer • Réussir');
+        $siteCopyright   = \App\Models\Configuration::get('site_copyright', '© ' . date('Y') . ' Excellence Digital Center — Tous droits réservés');
+        
+        // Construction des URLs
+        $whatsappUrl     = 'https://wa.me/' . $siteWhatsapp;
+        $whatsappTel     = '+' . substr($siteWhatsapp, 0, 3) . ' ' . substr($siteWhatsapp, 3, 2) . ' ' . substr($siteWhatsapp, 5, 2) . ' ' . substr($siteWhatsapp, 7, 2) . ' ' . substr($siteWhatsapp, 9);
+    @endphp
+
     <footer class="edc-footer">
         <div class="max-w-5xl mx-auto px-4 py-14">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
+                {{-- ══ COLONNE 1 : IDENTITÉ ══ --}}
                 <div class="sm:col-span-2 lg:col-span-1">
                     <div class="flex items-center space-x-2 mb-5">
                         <div class="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white text-sm"
-                             style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+                            style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                             EDC
                         </div>
                         <span class="font-extrabold text-sm" style="color: #F1F5F9;">
-                            Excellence Digital Center
+                            {{ $siteNom }}
                         </span>
                     </div>
                     <p class="text-sm leading-relaxed" style="color: #64748B;">
-                        Services bureautiques, digital et formation à Korhogo / Sirasso.
-                        Votre centre de référence pour réussir dans l'univers digital.
+                        {{ $siteDescription }}
                     </p>
                 </div>
 
+                {{-- ══ COLONNE 2 : NAVIGATION ══ --}}
                 <div>
                     <h3>Navigation</h3>
                     <ul class="space-y-3 text-sm">
-                        @foreach([['home','Accueil'],['services.index','Services'],['formations.index','Formations'],['blog.index','Blog'],['faq','FAQ'],['contact','Contact']] as $l)
+                        @foreach([
+                            ['home', 'Accueil'],
+                            ['services.index', 'Services'],
+                            ['formations.index', 'Formations'],
+                            ['blog.index', 'Blog'],
+                            ['faq', 'FAQ'],
+                            ['contact', 'Contact']
+                        ] as $l)
                         <li><a href="{{ route($l[0]) }}">{{ $l[1] }}</a></li>
                         @endforeach
                     </ul>
                 </div>
 
+                {{-- ══ COLONNE 3 : SERVICES ══ --}}
                 <div>
                     <h3>Services</h3>
                     <ul class="space-y-3 text-sm">
@@ -299,53 +358,79 @@
                     </ul>
                 </div>
 
+                {{-- ══ COLONNE 4 : CONTACT DYNAMIQUE ══ --}}
                 <div>
                     <h3>Contact</h3>
                     <ul class="space-y-3 text-sm" style="color: #64748B;">
+                        {{-- Adresse --}}
+                        @if($siteAdresse || $siteVille)
                         <li class="flex items-start space-x-2">
                             <span>📍</span>
-                            <span>Korhogo / Sirasso,<br>Côte d'Ivoire</span>
+                            <span>
+                                {{ $siteAdresse ?: $siteVille }}
+                                @if($sitePays)
+                                    <br>{{ $sitePays }}
+                                @endif
+                            </span>
                         </li>
+                        @endif
+
+                        {{-- Téléphone --}}
+                        @if($siteContact)
                         <li class="flex items-center space-x-2">
                             <span>📲</span>
-                            <a href="https://wa.me/2250748746140" class="hover:text-green-400 transition">
-                                +225 07 48 74 61 40
+                            <a href="tel:{{ $siteContact }}" class="hover:text-green-400 transition">
+                                {{ $siteContact }}
                             </a>
                         </li>
+                        @endif
+
+                        {{-- Email --}}
+                        @if($siteEmail)
                         <li class="flex items-center space-x-2">
                             <span>✉️</span>
-                            <span>contact@excellencedigital.ci</span>
+                            <a href="mailto:{{ $siteEmail }}" class="hover:text-blue-400 transition">
+                                {{ $siteEmail }}
+                            </a>
                         </li>
+                        @endif
                     </ul>
-                    <a href="https://wa.me/2250748746140" target="_blank"
-                       class="inline-flex items-center space-x-2 mt-5 px-5 py-2.5 rounded-xl text-sm font-bold transition"
-                       style="background: linear-gradient(135deg, #25D366, #128C7E); color: #ffffff;"
-                       onmouseover="this.style.boxShadow='0 4px 16px rgba(37,211,102,0.30)'"
-                       onmouseout="this.style.boxShadow='none'">
+
+                    {{-- Bouton WhatsApp dynamique --}}
+                    @if($siteWhatsapp)
+                    <a href="{{ $whatsappUrl }}" target="_blank"
+                    class="inline-flex items-center space-x-2 mt-5 px-5 py-2.5 rounded-xl text-sm font-bold transition"
+                    style="background: linear-gradient(135deg, #25D366, #128C7E); color: #ffffff;"
+                    onmouseover="this.style.boxShadow='0 4px 16px rgba(37,211,102,0.30)'"
+                    onmouseout="this.style.boxShadow='none'">
                         <span>💬</span>
                         <span>WhatsApp</span>
                     </a>
+                    @endif
                 </div>
             </div>
 
+            {{-- ══ BARRE INFÉRIEURE ══ --}}
             <div class="pt-8 flex flex-col sm:flex-row justify-between items-center gap-3"
-                 style="border-top: 1px solid #1A2235;">
+                style="border-top: 1px solid #1A2235;">
                 <p class="text-xs" style="color: #475569;">
-                    © {{ date('Y') }} Excellence Digital Center — Tous droits réservés
+                    {{ $siteCopyright }}
                 </p>
                 <p class="text-xs font-medium" style="color: #3B82F6;">
-                    Former • Créer • Réussir
+                    {{ $siteDevise }}
                 </p>
             </div>
         </div>
     </footer>
 
-    {{-- WHATSAPP FLOTTANT --}}
-    <a href="https://wa.me/2250748746140" target="_blank"
-       class="whatsapp-float animate-bounce-slow"
-       title="Nous contacter sur WhatsApp">
+    {{-- ══ WHATSAPP FLOTTANT DYNAMIQUE ══ --}}
+    @if($siteWhatsapp)
+    <a href="{{ $whatsappUrl }}" target="_blank"
+    class="whatsapp-float animate-bounce-slow"
+    title="Nous contacter sur WhatsApp">
         💬
     </a>
+    @endif
 
     @stack('scripts')
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

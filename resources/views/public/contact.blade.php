@@ -1,5 +1,15 @@
 @extends('layouts.public')
-@section('title', 'Contact — Excellence Digital Center')
+@section('title', 'Contact — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
+
+@php
+    $siteAdresse  = \App\Models\Configuration::get('site_adresse', 'Korhogo / Sirasso, Côte d\'Ivoire');
+    $siteVille    = \App\Models\Configuration::get('site_ville', 'Korhogo / Sirasso');
+    $sitePays     = \App\Models\Configuration::get('site_pays', 'Côte d\'Ivoire');
+    $siteContact  = \App\Models\Configuration::get('site_contact', '+225 0700000000');
+    $siteEmail    = \App\Models\Configuration::get('site_email', 'contact@excellencedigital.ci');
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250700000000');
+    $whatsappUrl  = 'https://wa.me/' . $siteWhatsapp;
+@endphp
 
 @section('content')
 <div class="max-w-5xl mx-auto px-4 py-16">
@@ -51,46 +61,63 @@
             </form>
         </div>
 
-        {{-- Infos de contact --}}
+        {{-- Infos de contact dynamiques --}}
         <div class="space-y-6">
             <div class="edc-card p-6">
                 <h3 class="text-lg font-bold mb-4" style="color: var(--edc-text-primary);">📍 Nos coordonnées</h3>
                 <ul class="space-y-4">
+                    {{-- Adresse --}}
+                    @if($siteAdresse || $siteVille)
                     <li class="flex items-start space-x-3">
                         <span class="text-2xl">📍</span>
                         <div>
                             <p class="font-semibold" style="color: var(--edc-text-primary);">Localisation</p>
-                            <p style="color: var(--edc-text-muted);">Korhogo / Sirasso, Côte d'Ivoire</p>
+                            <p style="color: var(--edc-text-muted);">
+                                {{ $siteAdresse ?: $siteVille }}{{ $sitePays ? ', ' . $sitePays : '' }}
+                            </p>
                         </div>
                     </li>
+                    @endif
+
+                    {{-- Téléphone --}}
+                    @if($siteContact)
                     <li class="flex items-start space-x-3">
                         <span class="text-2xl">📲</span>
                         <div>
                             <p class="font-semibold" style="color: var(--edc-text-primary);">WhatsApp</p>
-                            <a href="https://wa.me/2250748746140"
+                            <a href="{{ $whatsappUrl }}"
                                 class="font-medium hover:underline" style="color: var(--edc-secondary);" target="_blank">
-                                +225 07 48 74 61 40
+                                {{ $siteContact }}
                             </a>
                         </div>
                     </li>
+                    @endif
+
+                    {{-- Email --}}
+                    @if($siteEmail)
                     <li class="flex items-start space-x-3">
                         <span class="text-2xl">✉️</span>
                         <div>
                             <p class="font-semibold" style="color: var(--edc-text-primary);">Email</p>
-                            <p style="color: var(--edc-text-muted);">contact@excellencedigital.ci</p>
+                            <a href="mailto:{{ $siteEmail }}" style="color: var(--edc-text-muted);">
+                                {{ $siteEmail }}
+                            </a>
                         </div>
                     </li>
+                    @endif
                 </ul>
             </div>
 
+            {{-- CTA WhatsApp --}}
+            @if($siteWhatsapp)
             <div class="edc-card p-6 text-center" style="background: linear-gradient(135deg, var(--edc-primary-dark), var(--edc-primary));">
                 <p class="text-xl font-bold mb-2" style="color: #fff;">Besoin urgent ?</p>
                 <p class="text-sm mb-4" style="color: rgba(255,255,255,0.7);">Contactez-nous directement sur WhatsApp</p>
-                <a href="https://wa.me/2250748746140" target="_blank"
-                    class="btn-success">
+                <a href="{{ $whatsappUrl }}" target="_blank" class="btn-success">
                     💬 WhatsApp maintenant
                 </a>
             </div>
+            @endif
         </div>
     </div>
 </div>

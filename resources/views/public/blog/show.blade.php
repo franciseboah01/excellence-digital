@@ -1,5 +1,9 @@
 @extends('layouts.public')
-@section('title', $article->titre . ' — EDC')
+@section('title', $article->titre . ' — ' . \App\Models\Configuration::get('site_nom', 'EDC'))
+
+@php
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+@endphp
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-12">
@@ -47,7 +51,7 @@
                 class="btn-primary btn-xs" style="background: #1877F2;">
                 📘 Facebook
             </a>
-            <a href="https://wa.me/?text={{ urlencode($article->titre . ' — ' . url()->current()) }}"
+            <a href="https://wa.me/{{ $siteWhatsapp }}?text={{ urlencode($article->titre . ' — ' . url()->current()) }}"
                 target="_blank"
                 class="btn-success btn-xs">
                 💬 WhatsApp
