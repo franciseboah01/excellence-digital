@@ -16,6 +16,10 @@
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 tab-active bg-emerald-500/10 border-emerald-500 text-emerald-400">
                     🏢 Institution & Marque
                 </button>
+                <button type="button" onclick="showTab('mission')" id="tab-mission"
+                    class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
+                    🎯 Mission & Valeurs
+                </button>
                 <button type="button" onclick="showTab('galerie')" id="tab-galerie"
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
                     🖼️ Galerie
@@ -119,6 +123,13 @@
                     </div>
 
                 </div>
+
+                    {{-- Google Maps embed --}}
+                <div>
+                    <label class="edc-label">Code embed Google Maps</label>
+                    <textarea name="site_maps_embed" rows="4" class="edc-input" placeholder="<iframe src='https://...' ...></iframe>">{{ \App\Models\Configuration::get('site_maps_embed') }}</textarea>
+                </div>
+
             </div>
         </div>
 
@@ -553,6 +564,58 @@
             </div>
         </div>
 
+        {{-- ══ PANEL 6 : MISSION & VALEURS ══ --}}
+        <div id="panel-mission" class="settings-panel space-y-6" style="display:none;">
+
+            {{-- MISSION --}}
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">🎯 Mission</h3>
+                    <button type="button" onclick="addMissionRow()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">+ Ajouter</button>
+                </div>
+                <div id="mission-container" class="space-y-3">
+                    @php $mission = json_decode(\App\Models\Configuration::get('site_mission', '[]'), true); @endphp
+                    @foreach($mission as $i => $m)
+                    <div class="mission-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <input type="text" name="site_mission[{{ $i }}][icone]" value="{{ $m['icone'] ?? '' }}"
+                            placeholder="Icône (ex: 🎯)" class="edc-input w-24">
+                        <input type="text" name="site_mission[{{ $i }}][titre]" value="{{ $m['titre'] ?? '' }}"
+                            placeholder="Titre" class="edc-input flex-1">
+                        <input type="text" name="site_mission[{{ $i }}][description]" value="{{ $m['description'] ?? '' }}"
+                            placeholder="Description" class="edc-input flex-[2]">
+                        <button type="button" onclick="this.closest('.mission-row').remove()"
+                            class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- VALEURS --}}
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">💎 Valeurs</h3>
+                    <button type="button" onclick="addValeurRow()"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition">+ Ajouter</button>
+                </div>
+                <div id="valeurs-container" class="space-y-3">
+                    @php $valeurs = json_decode(\App\Models\Configuration::get('site_valeurs', '[]'), true); @endphp
+                    @foreach($valeurs as $i => $v)
+                    <div class="valeur-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <input type="text" name="site_valeurs[{{ $i }}][icone]" value="{{ $v['icone'] ?? '' }}"
+                            placeholder="Icône (ex: 💎)" class="edc-input w-24">
+                        <input type="text" name="site_valeurs[{{ $i }}][titre]" value="{{ $v['titre'] ?? '' }}"
+                            placeholder="Titre" class="edc-input flex-1">
+                        <input type="text" name="site_valeurs[{{ $i }}][description]" value="{{ $v['description'] ?? '' }}"
+                            placeholder="Description" class="edc-input flex-[2]">
+                        <button type="button" onclick="this.closest('.valeur-row').remove()"
+                            class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         {{-- ══ STICKY BANNER BARRE DE SAUVEGARDE GLOBALE ══ --}}
         <div class="form-actions sticky bottom-0 z-50 py-4 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent">
             <div class="sticky-inner bg-slate-900 border border-slate-800 rounded-xl p-3 px-5 flex items-center justify-end gap-4 shadow-2xl">
@@ -714,6 +777,40 @@ showTab = function(key) {
     originalShowTab(key);
     document.getElementById('panel-marque').style.display = (key === 'marque') ? 'block' : 'none';
     document.getElementById('panel-galerie').style.display = (key === 'galerie') ? 'block' : 'none';
+};
+
+let missionIndex = {{ count($mission ?? []) }};
+let valeurIndex = {{ count($valeurs ?? []) }};
+
+function addMissionRow() {
+    const c = document.getElementById('mission-container');
+    c.insertAdjacentHTML('beforeend', `
+        <div class="mission-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <input type="text" name="site_mission[${missionIndex}][icone]" placeholder="Icône" class="edc-input w-24">
+            <input type="text" name="site_mission[${missionIndex}][titre]" placeholder="Titre" class="edc-input flex-1">
+            <input type="text" name="site_mission[${missionIndex}][description]" placeholder="Description" class="edc-input flex-[2]">
+            <button type="button" onclick="this.closest('.mission-row').remove()" class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>`);
+    missionIndex++;
+}
+
+function addValeurRow() {
+    const c = document.getElementById('valeurs-container');
+    c.insertAdjacentHTML('beforeend', `
+        <div class="valeur-row flex flex-col sm:flex-row gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <input type="text" name="site_valeurs[${valeurIndex}][icone]" placeholder="Icône" class="edc-input w-24">
+            <input type="text" name="site_valeurs[${valeurIndex}][titre]" placeholder="Titre" class="edc-input flex-1">
+            <input type="text" name="site_valeurs[${valeurIndex}][description]" placeholder="Description" class="edc-input flex-[2]">
+            <button type="button" onclick="this.closest('.valeur-row').remove()" class="px-2 py-1 text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>`);
+    valeurIndex++;
+}
+
+// Mise à jour showTab
+const origShowTab = showTab;
+showTab = function(key) {
+    origShowTab(key);
+    document.getElementById('panel-mission').style.display = (key === 'mission') ? 'block' : 'none';
 };
 
 // Détection des modifications dans le formulaire pour la Sticky bar d'alerte

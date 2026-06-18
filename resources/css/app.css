@@ -307,6 +307,47 @@ body {
     color: var(--edc-text-muted);
 }
 
+/* Support de la classe combinée */
+.badge.badge-blue {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: var(--edc-primary-light);
+}
+
+.badge.badge-green {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--edc-secondary);
+}
+
+.badge.badge-gold {
+    background-color: rgba(251, 191, 36, 0.12);
+    color: var(--edc-accent-gold);
+}
+
+.badge.badge-red {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--edc-danger);
+}
+
+/* Support de la classe combinée */
+.badge.badge-blue {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: var(--edc-primary-light);
+}
+
+.badge.badge-green {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--edc-secondary);
+}
+
+.badge.badge-gold {
+    background-color: rgba(251, 191, 36, 0.12);
+    color: var(--edc-accent-gold);
+}
+
+.badge.badge-red {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--edc-danger);
+}
 
 /* ============================================================
    SECTION 5 — ALERTES

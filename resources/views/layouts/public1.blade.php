@@ -44,7 +44,7 @@
     {{-- ========== NAVBAR ========== --}}
     <nav class="edc-navbar sticky top-0 z-50"
          x-data="{ menuOpen: false, searchOpen: false, resultats: [], query: '' }">
-        <div class="max-w-7xl mx-auto px-6">
+        <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
 
                 {{-- LOGO --}}
@@ -60,7 +60,7 @@
                 </a>
 
                 {{-- LIENS DESKTOP --}}
-                <div class="hidden lg:flex items-center space-x-6">
+                <div class="hidden lg:flex items-center space-x-1">
                     @foreach([
                         ['home', 'Accueil'],
                         ['services.index', 'Services'],
@@ -71,14 +71,14 @@
                         ['about', 'À propos'],
                     ] as $item)
                     <a href="{{ route($item[0]) }}"
-                       class="nav-link px-4 py-2 {{ request()->routeIs($item[0]) ? 'active' : '' }}">
+                       class="nav-link {{ request()->routeIs($item[0]) ? 'active' : '' }}">
                         {{ $item[1] }}
                     </a>
                     @endforeach
                 </div>
 
                 {{-- RECHERCHE + ACTIONS DESKTOP --}}
-                <div class="hidden lg:flex items-center space-x-5 flex-shrink-0">
+                <div class="hidden lg:flex items-center space-x-3 flex-shrink-0">
 
                     {{-- BARRE DE RECHERCHE DESKTOP --}}
                     <div class="relative">
@@ -94,7 +94,7 @@
                                 "
                                 @click.away="resultats = []"
                                 placeholder="Rechercher..."
-                                class="w-52 px-4 py-2 text-sm rounded-xl transition-all duration-200
+                                class="w-44 px-4 py-2 text-sm rounded-xl transition-all duration-200
                                        focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 style="background-color: #151B2B; border: 1px solid #2A3552; color: #F1F5F9;"
                                 onfocus="this.style.borderColor='#3B82F6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.20)'"
@@ -343,7 +343,7 @@
                             ['formations.index', 'Formations'],
                             ['blog.index', 'Blog'],
                             ['faq', 'FAQ'],
-                            ['contact', 'Contact'],
+                            ['contact', 'Contact']
                             ['about', 'À propos'],
                         ] as $l)
                         <li><a href="{{ route($l[0]) }}">{{ $l[1] }}</a></li>

@@ -32,6 +32,7 @@ use App\Http\Controllers\CertificatController;
 use App\Http\Controllers\Admin\QcmController as AdminQcmController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Public\AboutController;
 
 
 
@@ -69,6 +70,8 @@ Route::get('/article/{article:slug}', [BlogController::class, 'show'])->name('bl
 // FAQ
 Route::get('/faq', [BlogController::class, 'faq'])->name('faq');
 
+// A-propos
+Route::get('/a-propos', [AboutController::class, 'index'])->name('about');
 
 // ===== ROUTE DASHBOARD UNIFIÉE =====
 Route::middleware('auth')->get('/dashboard', function () {

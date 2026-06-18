@@ -104,6 +104,13 @@ class ConfigurationController extends Controller
             'galerie_files'      => 'nullable',
             'galerie_files.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
 
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // Miscellaneous : Mission, Valeurs & Google Maps Embed
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            'site_mission'    => 'nullable|string',
+            'site_valeurs'    => 'nullable|string',
+            'site_maps_embed' => 'nullable|string',
+
         ]);
 
         // ===== 1. GESTION DE L'IMAGE DE FOND =====
