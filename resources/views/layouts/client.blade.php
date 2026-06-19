@@ -56,7 +56,7 @@
 
                     {{-- Bouton Voir le site --}}
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
-                        class="btn-tertiary btn-xs hidden md:inline-flex">
+                        class="btn-tertiary btn-xs hidden lg:inline-flex">
                         🌐 Voir le site
                     </a>
 
@@ -194,7 +194,7 @@
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
                         class="block w-full text-center py-3 rounded-xl text-sm font-bold transition"
                         style="background-color: rgba(59,130,246,0.12); color: #60A5FA; border: 1px solid rgba(59,130,246,0.30);">
-                        🌐 Voir mon site
+                        🌐 Voir le site
                     </a>
                 </div>
             </div>
