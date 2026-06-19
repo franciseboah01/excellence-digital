@@ -16,14 +16,18 @@
         }
 
         .certificat {
-            width: 277mm;
-            height: 190mm;
+            width: 297mm;
+            height: 210mm;
             position: relative;
-            border-radius: 16px;
             overflow: hidden;
-            background-image: url("{{ $backgroundImage ?? asset('storage/certificats/default_bg.jpg') }}");
-            background-size: cover;
+            @if($backgroundImage)
+            background-image: url("{{ $backgroundImage }}");
+            background-size: 297mm 210mm;
             background-position: center;
+            background-repeat: no-repeat;
+            @else
+            background-color: #1a1a2e;
+            @endif
         }
 
         /* ---- OVERLAY POUR LISIBILITÉ ---- */
@@ -34,7 +38,7 @@
             z-index: 1;
         }
 
-        /* ---- CONTENU POSITIONNÉ EN ABSOLU (comme GD) ---- */
+        /* ---- CONTENU POSITIONNÉ EN ABSOLU ---- */
         .contenu {
             position: absolute;
             top: 0;
@@ -42,16 +46,15 @@
             width: 100%;
             height: 100%;
             z-index: 2;
-            padding: 30px 50px;
         }
 
-        /* ---- STYLES DES ÉLÉMENTS (positions en mm pour le PDF) ---- */
+        /* ---- STYLES DES ÉLÉMENTS ---- */
 
         .cert-numero {
             position: absolute;
-            top: {{ $positions['numero']['y'] / 2.83 ?? 7 }}mm;
-            left: {{ $positions['numero']['x'] / 2.83 ?? 85 }}mm;
-            font-size: {{ $positions['numero']['size'] ?? 12 }}px;
+            top: {{ $positions['numero']['y'] }}px;
+            left: {{ $positions['numero']['x'] }}px;
+            font-size: {{ $positions['numero']['size'] }}px;
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-weight: bold;
             font-family: 'DejaVu Sans', sans-serif;
@@ -59,9 +62,9 @@
 
         .cert-nom {
             position: absolute;
-            top: {{ $positions['name']['y'] / 2.83 ?? 37 }}mm;
-            left: {{ $positions['name']['x'] / 2.83 ?? 52 }}mm;
-            font-size: {{ $positions['name']['size'] ?? 28 }}px;
+            top: {{ $positions['name']['y'] }}px;
+            left: {{ $positions['name']['x'] }}px;
+            font-size: {{ $positions['name']['size'] }}px;
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-weight: bold;
             text-transform: uppercase;
@@ -70,9 +73,9 @@
 
         .cert-formation {
             position: absolute;
-            top: {{ $positions['formation']['y'] / 2.83 ?? 48 }}mm;
-            left: {{ $positions['formation']['x'] / 2.83 ?? 52 }}mm;
-            font-size: {{ $positions['formation']['size'] ?? 20 }}px;
+            top: {{ $positions['formation']['y'] }}px;
+            left: {{ $positions['formation']['x'] }}px;
+            font-size: {{ $positions['formation']['size'] }}px;
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-weight: bold;
             font-family: 'DejaVu Sans', sans-serif;
@@ -80,19 +83,19 @@
 
         .cert-performance {
             position: absolute;
-            top: {{ $positions['performance']['y'] / 2.83 ?? 55 }}mm;
-            left: {{ $positions['performance']['x'] / 2.83 ?? 52 }}mm;
-            font-size: {{ $positions['performance']['size'] ?? 12 }}px;
+            top: {{ $positions['performance']['y'] }}px;
+            left: {{ $positions['performance']['x'] }}px;
+            font-size: {{ $positions['performance']['size'] }}px;
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-family: 'DejaVu Sans', sans-serif;
         }
 
         .cert-qr {
             position: absolute;
-            bottom: {{ 55 - ($positions['metadata']['y'] / 2.83 ?? 65) }}mm;
-            right: {{ 50 - ($positions['metadata']['x'] / 2.83 ?? 14) }}mm;
-            width: {{ $qrSize / 2.83 ?? 35 }}mm;
-            height: {{ $qrSize / 2.83 ?? 35 }}mm;
+            top: {{ $positions['metadata']['y'] }}px;
+            left: {{ $positions['metadata']['x'] }}px;
+            width: {{ $qrSize }}px;
+            height: {{ $qrSize }}px;
         }
         .cert-qr img {
             width: 100%;
@@ -101,8 +104,8 @@
 
         .cert-date-lieu {
             position: absolute;
-            bottom: {{ 45 - ($positions['metadata']['y'] / 2.83 ?? 65) }}mm;
-            left: {{ $positions['metadata']['x'] / 2.83 ?? 14 }}mm;
+            top: {{ $positions['metadata']['y'] + $qrSize + 10 }}px;
+            left: {{ $positions['metadata']['x'] }}px;
             font-size: 12px;
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-family: 'DejaVu Sans', sans-serif;

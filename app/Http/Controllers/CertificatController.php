@@ -652,7 +652,7 @@ class CertificatController extends Controller
             return 'Insuffisant';
         }
 
-        /**
+    /**
      * ============================================================
      * GÉNÉRER UN CERTIFICAT SPÉCIMEN (ADMIN)
      * ============================================================
@@ -661,21 +661,28 @@ class CertificatController extends Controller
     {
         // Créer un certificat factice pour le spécimen
         $certificat = new Certificat();
+        $certificat->id = 0;
         $certificat->numero_certificat = 'SPECIMEN-' . strtoupper(\Illuminate\Support\Str::random(8));
         $certificat->verification_token = 'specimen-' . \Illuminate\Support\Str::uuid();
         $certificat->note_obtenue = 18.5;
+        $certificat->delivre_le = now();
+        $certificat->created_at = now();
+        $certificat->telecharge = false;
         
-        // Créer un utilisateur factice
+        // ✅ Utilisateur factice (propriétés séparées)
         $certificat->user = (object) [
-            'name' => 'KOUASSI Yao Jean-Marc',
+            'prenom' => 'Yao Jean-Marc',
+            'nom'    => 'KOUASSI',
+            'name'   => 'KOUASSI Yao Jean-Marc',
+            'email'  => 'specimen@excellencedigital.ci',
         ];
         
-        // Créer une formation factice
+        // ✅ Formation factice
         $certificat->formation = (object) [
             'titre' => 'Développement Web Full Stack',
         ];
         
-        // Créer une session QCM factice avec niveau
+        // Session factice
         $certificat->session = (object) [
             'qcm' => (object) [
                 'niveau' => (object) [
@@ -687,9 +694,22 @@ class CertificatController extends Controller
         // Mention
         $certificat->mention = $this->calculerMention($certificat->note_obtenue);
         
-        // Données pour la vue
+        // ✅ CORRECTION : Image de fond en base64 pour DomPDF
         $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $backgroundImage = asset('storage/' . $backgroundPath);
+        $bgFullPath = storage_path('app/public/' . $backgroundPath);
+        
+        if (file_exists($bgFullPath)) {
+            $mime = mime_content_type($bgFullPath);
+            $backgroundImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgFullPath));
+        } else {
+            // Fallback : image par défaut
+            $defaultBgPath = storage_path('app/public/certificats/default_bg.jpg');
+            if (file_exists($defaultBgPath)) {
+                $backgroundImage = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($defaultBgPath));
+            } else {
+                $backgroundImage = null;
+            }
+        }
 
         $positions = [
             'numero' => [
@@ -745,14 +765,6 @@ class CertificatController extends Controller
         // Générer le PDF
         $pdf = Pdf::loadView('client.pdf.certificat', $data)
             ->setPaper('a4', 'landscape');
-        
-        // Ajouter un filigrane "SPÉCIMEN"
-        $pdf->getDomPDF()->getCanvas()->page_text(
-            400, 300, 
-            'SPÉCIMEN', 
-            null, 80, 
-            array(0, 0, 0, 0.05)
-        );
 
         return $pdf->download('specimen-certificat.pdf');
     }
