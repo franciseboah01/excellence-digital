@@ -56,7 +56,7 @@
 
                     {{-- Bouton Voir le site --}}
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
-                        class="btn-tertiary btn-xs hidden lg:inline-flex">
+                        class="btn-tertiary btn-xs hidden lg:inline-flex !hidden lg:!inline-flex">
                         🌐 Voir le site
                     </a>
 
