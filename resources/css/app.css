@@ -197,7 +197,8 @@ body {
 
 /* --- Bouton Tertiaire : discret, fond grisé --- */
 .btn-tertiary {
-    @apply font-semibold inline-flex items-center justify-center space-x-2;
+    @apply font-semibold items-center justify-center space-x-2;
+    display: inline-flex; /* Évite le conflit avec @apply */
     background-color: var(--edc-bg-elevated);
     color: var(--edc-text-secondary);
     padding: 14px 28px;
