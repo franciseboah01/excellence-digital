@@ -157,7 +157,8 @@
                         </div>
                     </div>
 
-                    {{-- Burger mobile --}}
+                </div>
+                {{-- Burger mobile --}}
                     <button @click="menuOpen = !menuOpen"
                         class="md:hidden p-2 rounded-lg transition"
                         style="color: var(--edc-text-secondary);">
@@ -165,7 +166,6 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-                </div>
             </div>
 
             {{-- Menu mobile --}}
