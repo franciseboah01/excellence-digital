@@ -19,17 +19,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233B82F6'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='40' font-weight='bold' fill='white'>{{ $initiales }}</text></svg>">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<script>
-(function() {
-    const btn = document.querySelector('.btn-tertiary.btn-xs[style*="display: none"]');
-    if (!btn) return;
-    function toggle() {
-        btn.style.display = window.innerWidth >= 1024 ? 'inline-flex' : 'none';
-    }
-    toggle();
-    window.addEventListener('resize', toggle);
-})();
-</script>
+
 <body class="font-sans antialiased" style="background-color: var(--edc-bg-deep); color: var(--edc-text-primary);">
 
     {{-- ========== NAVBAR CLIENT ========== --}}
