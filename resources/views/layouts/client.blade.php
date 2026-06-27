@@ -1,3 +1,6 @@
+{{-- ═══════════════════════════════════════ --}}
+{{-- CONFIGURATIONS GLOBALES --}}
+{{-- ═══════════════════════════════════════ --}}
 @php
     $siteNom  = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
     $initiales = collect(explode(' ', $siteNom))
@@ -13,6 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Mon Espace — ' . $siteNom)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233B82F6'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='40' font-weight='bold' fill='white'>{{ $initiales }}</text></svg>">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased" style="background-color: var(--edc-bg-deep); color: var(--edc-text-primary);">
