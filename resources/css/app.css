@@ -198,7 +198,8 @@ body {
 /* --- Bouton Tertiaire : discret, fond grisé --- */
 .btn-tertiary {
     @apply font-semibold items-center justify-center space-x-2;
-    display: inline-flex; /* Évite le conflit avec @apply */
+    display: inline-flex;
+    /* Évite le conflit avec @apply */
     background-color: var(--edc-bg-elevated);
     color: var(--edc-text-secondary);
     padding: 14px 28px;
@@ -207,10 +208,14 @@ body {
     transition: var(--edc-transition);
 }
 
-.btn-tertiary:hover {
-    background-color: var(--edc-bg-card);
-    color: var(--edc-text-primary);
-    border-color: var(--edc-border-hover);
+.btn-tertiary {
+    @apply font-semibold items-center justify-center space-x-2;
+    background-color: var(--edc-bg-elevated);
+    color: var(--edc-text-secondary);
+    padding: 14px 28px;
+    border-radius: var(--edc-radius);
+    border: 1px solid var(--edc-border);
+    transition: var(--edc-transition);
 }
 
 /* --- Bouton Succès (vert) --- */
