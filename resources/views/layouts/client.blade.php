@@ -57,7 +57,7 @@
                 </div>
 
                 {{-- Actions desktop --}}
-                <div class="flex items-center space-x-2">
+                <div class="hidden md:flex items-center space-x-2">
 
                     {{-- Bouton Voir le site --}}
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
