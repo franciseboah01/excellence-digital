@@ -56,10 +56,10 @@
                     @endforeach
                 </div>
 
-                {{-- Actions desktop --}}
-                <div class="hidden md:flex items-center space-x-2">
+                {{-- Actions — visibles sur tous les écrans --}}
+                <div class="flex items-center space-x-2">
 
-                    {{-- Bouton Voir le site --}}
+                    {{-- Bouton Voir le site (desktop uniquement) --}}
                     <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
                         class="btn-tertiary btn-xs hidden lg:inline-flex">
                         🌐 Voir le site
@@ -126,52 +126,53 @@
                                 {{ auth()->user()->prenom }}
                             </span>
                         </button>
+
+                        {{-- Dropdown du profil --}}
+                        <div x-show="open" @click.away="open = false"
+                            class="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl py-1 z-50"
+                            style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
+                            <a href="{{ route('client.profil') }}"
+                                class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                style="color: var(--edc-text-secondary);"
+                                onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
+                                <span>👤</span><span>Mon profil</span>
+                            </a>
+                            <a href="{{ route('client.notifications') }}"
+                                class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                style="color: var(--edc-text-secondary);"
+                                onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
+                                <span>🔔</span><span>Notifications</span>
+                            </a>
+                            <hr style="border-color: var(--edc-border);">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full flex items-center space-x-2 px-4 py-2.5 text-xs transition"
+                                    style="color: #EF4444;"
+                                    onmouseover="this.style.backgroundColor='rgba(239,68,68,0.08)'"
+                                    onmouseout="this.style.backgroundColor='transparent'">
+                                    <span>🚪</span><span>Déconnexion</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                </div>
 
-                <div x-show="open" @click.away="open = false"
-                    class="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl py-1 z-50"
-                    style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
-                    <a href="{{ route('client.profil') }}"
-                        class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
-                        style="color: var(--edc-text-secondary);"
-                        onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
-                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
-                        <span>👤</span><span>Mon profil</span>
-                    </a>
-                    <a href="{{ route('client.notifications') }}"
-                        class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
-                        style="color: var(--edc-text-secondary);"
-                        onmouseover="this.style.backgroundColor='rgba(59,130,246,0.08)'; this.style.color='#60A5FA';"
-                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='#94A3B8';">
-                        <span>🔔</span><span>Notifications</span>
-                    </a>
-                    <hr style="border-color: var(--edc-border);">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                            class="w-full flex items-center space-x-2 px-4 py-2.5 text-xs transition"
-                            style="color: #EF4444;"
-                            onmouseover="this.style.backgroundColor='rgba(239,68,68,0.08)'"
-                            onmouseout="this.style.backgroundColor='transparent'">
-                            <span>🚪</span><span>Déconnexion</span>
-                        </button>
-                    </form>
+                    {{-- Burger mobile --}}
+                    <button @click="menuOpen = !menuOpen"
+                        class="md:hidden p-2 rounded-lg transition"
+                        style="color: var(--edc-text-secondary);">
+                        <!-- Icône Burger (menu fermé) -->
+                        <svg x-show="!menuOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        <!-- Icône X (menu ouvert) -->
+                        <svg x-show="menuOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-
-                {{-- Burger mobile --}}
-                <button @click="menuOpen = !menuOpen"
-                    class="md:hidden p-2 rounded-lg transition"
-                    style="color: var(--edc-text-secondary);">
-                    <!-- Icône Burger (menu fermé) -->
-                    <svg x-show="!menuOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                    <!-- Icône X (menu ouvert) -->
-                    <svg x-show="menuOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
             </div>
 
             {{-- Menu mobile --}}
