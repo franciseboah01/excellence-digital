@@ -1,10 +1,22 @@
+{{-- ═══════════════════════════════════════ --}}
+{{-- CONFIGURATIONS GLOBALES --}}
+{{-- ═══════════════════════════════════════ --}}
+@php
+    $siteNom  = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
+    $initiales = collect(explode(' ', $siteNom))
+        ->map(fn($mot) => strtoupper(substr($mot, 0, 1)))
+        ->take(3)
+        ->implode('') ?: 'EDC';
+@endphp
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Administration — EDC')</title>
+    <title>@yield('title', 'Administration — ' . $siteNom)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233B82F6'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='40' font-weight='bold' fill='white'>{{ $initiales }}</text></svg>">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -25,8 +37,8 @@
         {{-- Logo --}}
         <div class="px-5 py-4 flex items-center justify-between" style="border-bottom: 1px solid rgba(59,130,246,0.15);">
             <div>
-                <h1 class="text-lg font-extrabold tracking-wide" style="color: #fff;">EDC Admin</h1>
-                <p class="text-xs mt-0.5" style="color: #60A5FA;">Excellence Digital Center</p>
+                <h1 class="text-lg font-extrabold tracking-wide" style="color: #fff;">{{ $initiales }} Admin</h1>
+                <p class="text-xs mt-0.5" style="color: #60A5FA;">{{ $siteNom }}</p>
             </div>
             <button @click="sidebarOpen = false" class="lg:hidden hover:text-white" style="color: #60A5FA;">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
