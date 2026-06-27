@@ -2,7 +2,7 @@
 @section('title', $formation->titre . ' — ' . \App\Models\Configuration::get('site_nom', 'Excellence Digital Center'))
 
 @php
-    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250700000000');
     $whatsappUrl = 'https://wa.me/' . $siteWhatsapp;
 @endphp
 
@@ -30,7 +30,7 @@
                 {{ $formation->module->icone ?? '📚' }} {{ $formation->module->nom ?? '—' }}
             </span>
             @if($formation->duree)
-            <span class="badge text-xs" style="background-color: rgba(148,163,184,0.10); color: #94A3B8;">⏱ {{ $formation->duree }}</span>
+            <span class="badge text-xs" style="background-color: rgba(148,163,184,0.10); color: #94A3B8;">⏱ {{ $formation->duree }} semaine(s)</span>
             @endif
             @if($formation->prix)
             <span class="badge text-xs" style="background-color: rgba(16,185,129,0.12); color: #34D399;">💰 {{ number_format($formation->prix, 0, ',', ' ') }} FCFA</span>

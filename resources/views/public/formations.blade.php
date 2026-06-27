@@ -39,10 +39,10 @@
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-3">
                         <span class="badge badge-green">
-                            {{ ucfirst($formation->niveau) }}
+                            Durée de la formation
                         </span>
                         @if($formation->duree)
-                        <span class="text-xs" style="color: var(--edc-text-muted);">⏱ {{ $formation->duree }}</span>
+                        <span class="text-xs" style="color: var(--edc-text-muted);">⏱ {{ $formation->duree }} semaine(s)</span>
                         @endif
                     </div>
                     <h3 class="text-lg font-bold mb-2" style="color: var(--edc-text-primary);">{{ $formation->titre }}</h3>
