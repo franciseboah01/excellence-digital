@@ -20,7 +20,8 @@
                 <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden"
                     style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
                     @if(auth()->user()->avatar)
-                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}?t={{ auth()->user()->updated_at->timestamp }}" 
+                            alt="Avatar" class="w-full h-full object-cover">
                     @else
                         {{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
                     @endif

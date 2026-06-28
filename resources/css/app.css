@@ -963,7 +963,8 @@ body {
    SECTION 21 — FIX : .hidden doit surclasser les boutons
    ============================================================ */
 
-.hidden {
+/* Utilisez des classes personnalisées plutôt que de surcharger .hidden */
+.mon-hidden {
     display: none !important;
 }
 

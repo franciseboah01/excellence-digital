@@ -255,24 +255,26 @@ class ClientController extends Controller
     {
         $user = auth()->user();
 
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path;
-        }
-
-        $user->update([
+        $data = [
             'nom'       => $request->nom,
             'prenom'    => $request->prenom,
             'telephone' => $request->telephone,
-            'avatar'    => $user->avatar,
-        ]);
+        ];
+
+        if ($request->hasFile('avatar')) {
+            // Supprime l'ancien avatar s'il existe
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            
+            // Stocke le nouveau
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->update($data);
 
         return back()->with('success', 'Profil mis à jour avec succès !');
     }
-
     public function passwordUpdate(Request $request)
     {
         $request->validate([
