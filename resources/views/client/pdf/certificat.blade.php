@@ -110,6 +110,16 @@
             color: {{ $fontColor ?? '#FFFFFF' }};
             font-family: 'DejaVu Sans', sans-serif;
         }
+
+        .cert-mention {
+            position: absolute;
+            top: {{ $positions['performance']['y'] + 25 }}px;
+            left: {{ $positions['performance']['x'] }}px;
+            font-size: 14px;
+            color: {{ $fontColor ?? '#FFFFFF' }};
+            font-weight: bold;
+            font-family: 'DejaVu Sans', sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -128,26 +138,30 @@
 
         {{-- Nom de l'apprenant --}}
         <div class="cert-nom">
-            {{ $certificat->user->prenom }} {{ strtoupper($certificat->user->nom) }}
+            {{ $certificat->user->prenom ?? '' }} {{ strtoupper($certificat->user->nom ?? '') }}
         </div>
 
         {{-- Formation --}}
         <div class="cert-formation">
-            {{ $certificat->formation->titre }}
+            {{ $certificat->formation->titre ?? '' }}
         </div>
 
-        {{-- Performance (Note + Mention) --}}
+        {{-- Performance (Note) --}}
         @if($showNote)
         <div class="cert-performance">
-            Note : {{ number_format($certificat->note_obtenue, 1) }}/20 
-            @if($showMention)
-            | Mention : {{ $certificat->mention }}
-            @endif
+            Note : {{ number_format($certificat->note_obtenue ?? 0, 1) }}/20
+        </div>
+        @endif
+
+        {{-- Mention --}}
+        @if($showMention && isset($certificat->mention))
+        <div class="cert-mention">
+            Mention : {{ $certificat->mention }}
         </div>
         @endif
 
         {{-- QR Code --}}
-        @if($showQrCode)
+        @if($showQrCode && $qrCodeDataUri)
         <div class="cert-qr">
             <img src="{{ $qrCodeDataUri }}" alt="QR Code">
         </div>
@@ -155,7 +169,7 @@
 
         {{-- Date et Lieu --}}
         <div class="cert-date-lieu">
-            Délivré le {{ $certificat->delivre_le->format('d/m/Y') }}
+            Délivré le {{ $certificat->delivre_le ? $certificat->delivre_le->format('d/m/Y') : '—' }}
         </div>
 
     </div>

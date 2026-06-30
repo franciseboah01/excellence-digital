@@ -10,7 +10,7 @@
 
 @section('content')
 
-<div class="grid grid-cols-3 gap-4 mt-6">
+<div class="grid grid-cols-4 gap-4 mt-6">
     @foreach([
         ['total', '🏆 Total certificats', 'var(--edc-accent-gold)'],
         ['ce_mois', '📅 Ce mois-ci', 'var(--edc-secondary)'],
@@ -75,7 +75,7 @@
 
                     <td>
                         @if(!$cert->telecharge)
-                            <span style="color: var(--edc-secondary);">✅ Non</span>
+                            <span style="color: var(--edc-secondary);">❌ Non</span>
                         @else
                             <span style="color: var(--edc-text-muted);">✅ Oui</span>
                         @endif
@@ -88,65 +88,46 @@
                     <td>
                         <div class="flex items-center gap-3 whitespace-nowrap flex-wrap">
 
-                            {{-- Télécharger le certificat --}}
-                            <a href="{{ route('certificats.telecharger', ['certificat' => $cert, 'format' => 'pdf']) }}"
+                            {{-- ===== TÉLÉCHARGER LE CERTIFICAT ===== --}}
+                            <a href="{{ route('admin.certificats.telecharger', ['certificat' => $cert, 'format' => 'pdf']) }}"
                                 class="text-xs font-medium hover:underline"
                                 style="color: var(--edc-primary-light);">
                                 📄 PDF
                             </a>
 
+                            {{-- JPG uniquement si non téléchargé (admin peut forcer) --}}
                             @if(!$cert->telecharge)
-                                <a href="{{ route('certificats.telecharger', ['certificat' => $cert, 'format' => 'jpg']) }}"
+                                <a href="{{ route('admin.certificats.telecharger', ['certificat' => $cert, 'format' => 'jpg']) }}"
                                     class="text-xs font-medium hover:underline"
                                     style="color: #6B7280;">
                                     🖼️ JPG
                                 </a>
                             @endif
 
-                            {{-- Générer manuellement un duplicata (admin direct) --}}
+                            {{-- ===== BOUTON DUPLICATA ADMIN (DIRECT) ===== --}}
                             @if(!str_ends_with($cert->numero_certificat, '-DUP'))
-                                <form method="POST"
-                                    action="{{ route('admin.certificats.duplicata', $cert) }}"
-                                    class="inline"
-                                    onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir générer un duplicata officiel pour cet apprenant ?');">
-                                    @csrf
-                                    <button type="submit"
-                                            class="text-xs font-medium hover:underline"
-                                            style="color: var(--edc-accent-gold); cursor:pointer; background:none; border:none; padding:0;">
-                                        🔄 Duplicata
-                                    </button>
-                                </form>
-                            @endif
-
-                            {{-- Valider un duplicata payé en attente --}}
-                            @if(str_ends_with($cert->numero_certificat, '-DUP') && $cert->telecharge)
                                 @php
-                                    $demande = DemandeDuplicata::where('certificat_id', $cert->parent_id)
-                                        ->where('statut', 'en_attente')
-                                        ->first();
+                                    $demandeExistante = DemandeDuplicata::where('certificat_id', $cert->id)
+                                        ->whereIn('statut', ['en_attente', 'paye', 'valide'])
+                                        ->exists();
                                 @endphp
-                                @if($demande)
-                                    <form action="{{ route('admin.duplicatas.valider', $demande) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" 
-                                                class="text-xs font-medium hover:underline text-emerald-500 hover:text-emerald-600" 
-                                                style="cursor:pointer; background:none; border:none; padding:0;">
-                                            ✅ Valider
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('admin.duplicatas.rejeter', $demande) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" 
-                                                class="text-xs font-medium hover:underline text-red-500 hover:text-red-600" 
-                                                style="cursor:pointer; background:none; border:none; padding:0;"
-                                                onclick="return confirm('⚠️ Confirmer le rejet de cette demande ?');">
-                                            ❌ Rejeter
-                                        </button>
-                                    </form>
+
+                                @if($demandeExistante)
+                                    <span class="text-xs text-yellow-500" title="Une demande existe déjà pour ce certificat">
+                                        ⏳ Demande en cours
+                                    </span>
                                 @else
-                                    <span class="text-xs text-slate-500">✅ Validé</span>
+                                    <form method="POST"
+                                        action="{{ route('admin.certificats.duplicata', $cert) }}"
+                                        class="inline"
+                                        onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir générer un duplicata officiel pour cet apprenant ?');">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-xs font-medium hover:underline"
+                                                style="color: var(--edc-accent-gold); cursor:pointer; background:none; border:none; padding:0;">
+                                            🔄 Duplicata
+                                        </button>
+                                    </form>
                                 @endif
                             @endif
 

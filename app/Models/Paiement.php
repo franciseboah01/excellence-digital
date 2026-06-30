@@ -12,13 +12,14 @@ class Paiement extends Model
         'service_id',
         'demande_id',
         'certificat_id',
+        'type',              // ← AJOUTÉ : formation, service, duplicata
         'montant_total',
         'montant_paye',
         'statut',
         'mode_paiement',
         'reference',
         'notes',
-        'enregistre_par', // ← CONFIRMÉ
+        'enregistre_par',
         'date_paiement',
     ];
 
@@ -100,6 +101,14 @@ class Paiement extends Model
         return $this->statut === 'complete' && $this->montant_restant <= 0;
     }
 
+    /**
+     * Vérifier si c'est un paiement pour duplicata
+     */
+    public function getEstPourDuplicataAttribute(): bool
+    {
+        return $this->type === 'duplicata' || $this->certificat_id !== null;
+    }
+
     // ===== SCOPES =====
 
     /**
@@ -145,8 +154,8 @@ class Paiement extends Model
         if ($type === 'service') {
             return $query->whereNotNull('service_id');
         }
-        if ($type === 'certificat') {
-            return $query->whereNotNull('certificat_id');
+        if ($type === 'duplicata') {
+            return $query->where('type', 'duplicata')->orWhereNotNull('certificat_id');
         }
         return $query;
     }

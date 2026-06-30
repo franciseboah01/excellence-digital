@@ -1,139 +1,77 @@
 @extends('layouts.client')
-@section('title', 'QCMs & Certificats')
-
-@php
-    use App\Models\DemandeDuplicata;
-    use App\Models\Certificat;
-    use App\Models\Configuration;
-@endphp
+@section('title', 'Mes QCMs')
 
 @section('content')
 <div class="max-w-3xl mx-auto">
     <div class="mb-8 text-center">
-        <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">🎓 QCMs & Certificats</h1>
+        <h1 class="text-xl sm:text-2xl font-extrabold" style="color: var(--edc-text-primary);">📝 Mes QCMs</h1>
         <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">
-            Testez vos connaissances et obtenez vos certificats
+            Testez vos connaissances et suivez votre progression
         </p>
     </div>
 
-    {{-- CERTIFICATS OBTENUS --}}
-    @if($certificats->count())
-    <div class="edc-card p-6 mb-6">
-        <h2 class="text-lg font-bold mb-4" style="color: var(--edc-text-primary);">🏆 Mes Certificats obtenus</h2>
-        <div class="space-y-3">
-            @foreach($certificats as $certificat)
-            <div class="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-                style="background-color: var(--edc-bg-base); border: 1px solid var(--edc-border);">
-                <div class="min-w-0">
-                    <p class="font-bold truncate" style="color: var(--edc-text-primary);">{{ $certificat->formation->titre }}</p>
-                    <p class="text-xs mt-0.5" style="color: var(--edc-text-muted);">
-                        N° {{ $certificat->numero_certificat }}
-                        @if(str_ends_with($certificat->numero_certificat, '-DUP'))
-                            <span class="badge badge-warning text-[10px] ml-1" style="background: #F59E0B; color: #1a1a1a; padding: 1px 8px; border-radius: 9999px; font-weight: 600;">Duplicata</span>
-                        @else
-                            <span class="badge badge-primary text-[10px] ml-1" style="background: #3B82F6; color: white; padding: 1px 8px; border-radius: 9999px; font-weight: 600;">Original</span>
-                        @endif
-                        •
-                        {{ $certificat->delivre_le->format('d/m/Y') }} •
-                        Note : {{ $certificat->note_obtenue }}/20
-                    </p>
-                </div>
-
-                {{-- STATUT TÉLÉCHARGEMENT --}}
-                <div class="flex flex-col items-end gap-2">
-                    @if(!$certificat->telecharge)
-                        <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">✅ Téléchargeable</span>
-                    @else
-                        <span class="badge badge-danger text-xs" style="background: #EF4444; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">❌ Déjà téléchargé</span>
-                    @endif
-                </div>
-
-                {{-- ACTIONS --}}
-                <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
-                    @if(!$certificat->telecharge)
-                        {{-- Téléchargement PDF --}}
-                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'pdf']) }}"
-                            class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
-                            style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;"
-                            onmouseover="this.style.filter='brightness(1.1)'"
-                            onmouseout="this.style.filter='brightness(1)'">
-                            📄 PDF
-                        </a>
-                        {{-- Téléchargement JPG --}}
-                        <a href="{{ route('client.certificats.telecharger', ['certificat' => $certificat, 'format' => 'jpg']) }}"
-                            class="btn-xs rounded-lg text-xs font-bold transition px-3 py-1.5"
-                            style="background: linear-gradient(135deg, #6B7280, #4B5563); color: white;"
-                            onmouseover="this.style.filter='brightness(1.1)'"
-                            onmouseout="this.style.filter='brightness(1)'">
-                            🖼️ JPG
-                        </a>
-
-                    @elseif(!str_ends_with($certificat->numero_certificat, '-DUP'))
-                        {{-- Original déjà téléchargé : Demander duplicata --}}
-                        @php
-                            $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
-                                ->whereIn('statut', ['en_attente', 'valide'])
-                                ->exists();
-                            $duplicataExistant = Certificat::where('parent_id', $certificat->id)
-                                ->where('telecharge', false)
-                                ->exists();
-                            $prixDuplicata = Configuration::get('duplicata_prix', 1000);
-                        @endphp
-
-                        @if(!$demandeExistante && !$duplicataExistant)
-                            <form method="POST" action="{{ route('client.certificats.demande-duplicata', $certificat) }}" class="inline">
-                                @csrf
-                                <button type="submit" 
-                                    class="text-xs font-bold hover:underline px-3 py-1.5 rounded-lg transition"
-                                    style="color: var(--edc-accent-gold); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);"
-                                    onmouseover="this.style.background='rgba(245,158,11,0.2)'"
-                                    onmouseout="this.style.background='rgba(245,158,11,0.1)'">
-                                    🔄 Duplicata ({{ number_format($prixDuplicata, 0, ',', ' ') }} FCFA)
-                                </button>
-                            </form>
-                        @elseif($demandeExistante)
-                            <span class="badge badge-info text-xs" style="background: #3B82F6; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">⏳ Demande en cours</span>
-                        @elseif($duplicataExistant)
-                            <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">✅ Duplicata disponible</span>
-                        @endif
-
-                    @else
-                        {{-- Duplicata déjà téléchargé --}}
-                        <span class="text-xs" style="color: var(--edc-text-muted);">Téléchargé</span>
-                    @endif
-                </div>
-            </div>
-            @endforeach
+    {{-- STATISTIQUES --}}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div class="edc-card p-3 text-center">
+            <p class="text-2xl font-bold" style="color: var(--edc-primary-light);">{{ $stats['total'] }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">Total QCMs</p>
+        </div>
+        <div class="edc-card p-3 text-center">
+            <p class="text-2xl font-bold" style="color: var(--edc-secondary);">{{ $stats['reussis'] }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">✅ Réussis</p>
+        </div>
+        <div class="edc-card p-3 text-center">
+            <p class="text-2xl font-bold" style="color: #F59E0B;">{{ $stats['en_cours'] }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">🔄 En cours</p>
+        </div>
+        <div class="edc-card p-3 text-center">
+            <p class="text-2xl font-bold" style="color: var(--edc-text-muted);">{{ $stats['non_tentes'] }}</p>
+            <p class="text-xs" style="color: var(--edc-text-muted);">⏳ Non tentés</p>
         </div>
     </div>
-    @endif
 
-    {{-- QCMS DISPONIBLES --}}
+    {{-- LISTE DES QCMs --}}
     <div class="space-y-5">
         @forelse($qcms as $qcm)
         <div class="edc-card overflow-hidden">
             <div class="p-5">
-                <div class="flex justify-between items-start mb-3">
-                    <span class="badge badge-blue">
-                        🎓 {{ $qcm->formation->titre }}
-                    </span>
-                    @if($qcm->deja_reussi)
-                    <span class="badge badge-green font-bold">
-                        🏆 Réussi !
-                    </span>
-                    @elseif($qcm->tentatives_faites > 0)
-                    <span class="badge badge-gold">
-                        🔄 {{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }} tentatives
-                    </span>
-                    @endif
+                {{-- EN-TÊTE --}}
+                <div class="flex flex-wrap justify-between items-start mb-3 gap-2">
+                    <div>
+                        <span class="badge badge-blue text-xs">
+                            🎓 {{ $qcm->formation->titre }}
+                        </span>
+                        @if($qcm->niveau)
+                        <span class="badge badge-gray text-xs ml-1">
+                            {{ $qcm->niveau->nom }}
+                        </span>
+                        @endif
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        @if($qcm->deja_reussi)
+                        <span class="badge badge-green font-bold">
+                            🏆 Réussi !
+                        </span>
+                        @elseif($qcm->tentatives_faites > 0)
+                        <span class="badge badge-gold">
+                            🔄 {{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }} tentatives
+                        </span>
+                        @else
+                        <span class="badge badge-gray">
+                            ⏳ Non tenté
+                        </span>
+                        @endif
+                    </div>
                 </div>
 
+                {{-- TITRE --}}
                 <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $qcm->titre }}</h3>
-                @if($qcm->niveau)
-                <p class="text-xs" style="color: var(--edc-text-muted);">📂 {{ $qcm->niveau->nom }}</p>
+                @if($qcm->description)
+                <p class="text-sm mb-2" style="color: var(--edc-text-secondary);">{{ $qcm->description }}</p>
                 @endif
 
-                <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                {{-- STATISTIQUES QCM --}}
+                <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3 text-center">
                     <div class="rounded-lg p-2" style="background-color: rgba(59,130,246,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Questions</p>
                         <p class="font-bold" style="color: var(--edc-primary-light);">{{ $qcm->questions_count }}</p>
@@ -146,12 +84,21 @@
                         <p class="text-xs" style="color: var(--edc-text-muted);">Durée/Q</p>
                         <p class="font-bold" style="color: var(--edc-accent-gold);">{{ $qcm->duree_par_question }}s</p>
                     </div>
+                    <div class="rounded-lg p-2" style="background-color: rgba(139,92,246,0.06);">
+                        <p class="text-xs" style="color: var(--edc-text-muted);">Meilleure note</p>
+                        <p class="font-bold" style="color: #8B5CF6;">{{ $qcm->meilleure_note ?: '-' }}/20</p>
+                    </div>
+                    <div class="rounded-lg p-2" style="background-color: rgba(236,72,153,0.06);">
+                        <p class="text-xs" style="color: var(--edc-text-muted);">Tentatives</p>
+                        <p class="font-bold" style="color: #EC4899;">{{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }}</p>
+                    </div>
                 </div>
 
+                {{-- BARRE DE PROGRESSION --}}
                 @if($qcm->meilleure_note)
                 <div class="mt-3">
                     <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
-                        <span>Meilleure note</span>
+                        <span>Progression</span>
                         <span>{{ $qcm->meilleure_note }}/20</span>
                     </div>
                     <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
@@ -162,13 +109,57 @@
                     </div>
                 </div>
                 @endif
+
+                {{-- HISTORIQUE DES TENTATIVES (SI DÉJÀ TENTÉ) --}}
+                @if($qcm->tentatives_faites > 0)
+                <details class="mt-3">
+                    <summary class="text-xs cursor-pointer" style="color: var(--edc-text-muted);">
+                        📋 Voir l'historique ({{ $qcm->tentatives_faites }} tentatives)
+                    </summary>
+                    <div class="mt-2 space-y-1.5">
+                        @foreach($qcm->mes_sessions as $session)
+                        <div class="flex items-center justify-between text-xs p-2 rounded-lg" 
+                            style="background-color: var(--edc-bg-base); border: 1px solid var(--edc-border);">
+                            <div class="flex items-center gap-2">
+                                <span>#{{ $session->tentative }}</span>
+                                <span class="text-xs" style="color: var(--edc-text-muted);">
+                                    {{ $session->created_at->format('d/m/Y H:i') }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold {{ $session->reussi ? 'text-green-500' : 'text-red-500' }}">
+                                    {{ $session->note }}/20
+                                </span>
+                                @if($session->reussi)
+                                <span class="text-green-500">✅</span>
+                                @else
+                                <span class="text-red-500">❌</span>
+                                @endif
+                                <a href="{{ route('client.qcms.resultat', $session) }}" 
+                                    class="text-blue-400 hover:underline">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </details>
+                @endif
             </div>
 
+            {{-- BOUTON D'ACTION --}}
             <div class="px-5 py-3" style="border-top: 1px solid var(--edc-border); background-color: var(--edc-bg-base);">
-                @if($qcm->deja_reussi)
-                <p class="text-center text-sm font-semibold" style="color: var(--edc-secondary);">
-                    🎓 Certificat obtenu !
-                </p>
+                @if($qcm->deja_reussi && $qcm->certificat)
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold" style="color: var(--edc-secondary);">
+                        🎓 Certificat obtenu !
+                    </p>
+                    <a href="{{ route('client.certificats.index') }}" 
+                        class="text-xs font-bold px-3 py-1.5 rounded-lg transition"
+                        style="background: rgba(16,185,129,0.1); color: #10B981; border: 1px solid rgba(16,185,129,0.3);">
+                        Voir mon certificat →
+                    </a>
+                </div>
                 @elseif($qcm->peut_repasser)
                 <a href="{{ route('client.qcms.demarrer', $qcm) }}"
                     class="btn-primary btn-sm w-full text-center">
@@ -177,6 +168,11 @@
                 @else
                 <p class="text-center text-sm" style="color: var(--edc-danger);">
                     ❌ Tentatives épuisées ({{ $qcm->tentatives_max }}/{{ $qcm->tentatives_max }})
+                    @if($qcm->meilleure_note)
+                    <span class="block text-xs" style="color: var(--edc-text-muted);">
+                        Meilleure note : {{ $qcm->meilleure_note }}/20 (min. {{ $qcm->note_minimale }}/20)
+                    </span>
+                    @endif
                 </p>
                 @endif
             </div>

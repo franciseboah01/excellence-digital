@@ -28,7 +28,8 @@ use App\Http\Controllers\FichierController;
 use App\Http\Controllers\Admin\ConfigurationController;
 use App\Http\Controllers\Enseignant\QcmController as EnseignantQcmController;
 use App\Http\Controllers\Client\QcmController as ClientQcmController;
-use App\Http\Controllers\CertificatController;
+use App\Http\Controllers\Admin\CertificatController as AdminCertificatController;
+use App\Http\Controllers\Client\CertificatController as ClientCertificatController;
 use App\Http\Controllers\Admin\QcmController as AdminQcmController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\ModuleController;
@@ -133,9 +134,22 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::get('/temoignages', [ClientTemoignageController::class, 'index'])->name('temoignages.index');
         Route::post('/temoignages', [ClientTemoignageController::class, 'store'])->name('temoignages.store');
         Route::delete('/temoignages/{temoignage}', [ClientTemoignageController::class, 'destroy'])->name('temoignages.destroy');
+
+        
+        
+        
+    
+        // ===== QCMs =====
         Route::get('/qcms', [ClientQcmController::class, 'index'])->name('qcms.index');
         Route::get('/qcms/{qcm}/demarrer', [ClientQcmController::class, 'demarrer'])->name('qcms.demarrer');
         Route::post('/qcms/{qcm}/soumettre', [ClientQcmController::class, 'soumettre'])->name('qcms.soumettre');
+        Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
+
+       // Certificats
+        Route::get('/certificats', [ClientCertificatController::class, 'index'])->name('certificats.index');
+        Route::get('/certificats/{certificat}/telecharger/{format?}', [ClientCertificatController::class, 'telecharger'])->name('certificats.telecharger');
+        Route::post('/certificats/{certificat}/demande-duplicata', [ClientCertificatController::class, 'demandeDuplicata'])->name('certificats.demande-duplicata');  
+
         Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
         Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
         Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
@@ -144,8 +158,6 @@ Route::middleware(['auth', 'verified', 'role:client'])
         Route::post('/paiement/process', [ClientController::class, 'paiementProcess'])->name('paiement.process');
         Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
         Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
-        Route::post('/certificats/{certificat}/demande-duplicata', [CertificatController::class, 'demandeDuplicata'])->name('certificats.demande-duplicata');
-        Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('certificats.telecharger');
     });
 
 // ===== ENSEIGNANT =====
@@ -301,15 +313,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::delete('/qcms/{qcm}', [AdminQcmController::class, 'destroy'])->name('qcms.destroy');
         
        // ===== CERTIFICATS & DUPLICATAS =====
-        Route::get('/certificats', [CertificatController::class, 'index'])->name('certificats.index');  
-        Route::post('/certificats/{certificat}/duplicata', [CertificatController::class, 'duplicata'])->name('certificats.duplicata');
-        Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('client.certificats.telecharger');
-
+        Route::get('/certificats', [AdminCertificatController::class, 'index'])->name('certificats.index');  
+        Route::post('/certificats/{certificat}/duplicata', [AdminCertificatController::class, 'duplicata'])->name('certificats.duplicata');
+        Route::get('/certificats/{certificat}/telecharger', [AdminCertificatController::class, 'telecharger'])->name('certificats.telecharger');
 
         // Demandes de duplicata
-        Route::get('/duplicatas/demandes', [CertificatController::class, 'demandesDuplicata'])->name('duplicatas.demandes');
-        Route::patch('/duplicatas/{demande}/valider', [CertificatController::class, 'validerDuplicata'])->name('duplicatas.valider');
-        Route::patch('/duplicatas/{demande}/rejeter', [CertificatController::class, 'rejeterDuplicata'])->name('duplicatas.rejeter');
+        Route::get('/duplicatas/demandes', [AdminCertificatController::class, 'demandesDuplicata'])->name('duplicatas.demandes');
+        Route::patch('/duplicatas/{demande}/valider', [AdminCertificatController::class, 'validerDuplicata'])->name('duplicatas.valider');
+        Route::patch('/duplicatas/{demande}/rejeter', [AdminCertificatController::class, 'rejeterDuplicata'])->name('duplicatas.rejeter');
 
         // Catégories de services
         Route::get('/categories', [CategorieController::class, 'index'])->name('categories.index');
@@ -324,7 +335,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
 
          // Spécimen certificat
-        Route::get('/configurations/certificat/specimen', [CertificatController::class, 'specimen'])->name('configurations.specimen');
+        Route::get('/configurations/certificat/specimen', [AdminCertificatController::class, 'specimen'])->name('configurations.specimen');
      });        
 
 // ===== PROFIL =====

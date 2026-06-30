@@ -10,7 +10,7 @@ class DemandeDuplicata extends Model
         'certificat_id',
         'user_id',
         'paiement_id',
-        'statut',
+        'statut',        // en_attente, paye, valide, rejete
         'paye',
         'montant_paye',
         'motif_rejet',
@@ -60,6 +60,14 @@ class DemandeDuplicata extends Model
     }
 
     /**
+     * Vérifier si la demande est payée
+     */
+    public function getEstPayeAttribute(): bool
+    {
+        return $this->statut === 'paye';
+    }
+
+    /**
      * Vérifier si la demande est validée
      */
     public function getEstValideAttribute(): bool
@@ -86,6 +94,14 @@ class DemandeDuplicata extends Model
     }
 
     /**
+     * Scope : Demandes payées
+     */
+    public function scopePayees($query)
+    {
+        return $query->where('statut', 'paye');
+    }
+
+    /**
      * Scope : Demandes validées
      */
     public function scopeValidees($query)
@@ -102,9 +118,9 @@ class DemandeDuplicata extends Model
     }
 
     /**
-     * Scope : Demandes payées
+     * Scope : Demandes payées (boolean)
      */
-    public function scopePayees($query)
+    public function scopePaye($query)
     {
         return $query->where('paye', true);
     }
@@ -124,7 +140,8 @@ class DemandeDuplicata extends Model
      */
     public function valider(): bool
     {
-        if ($this->statut !== 'en_attente') {
+        // ✅ Accepter 'en_attente' ET 'paye'
+        if (!in_array($this->statut, ['en_attente', 'paye'])) {
             return false;
         }
 
@@ -141,7 +158,8 @@ class DemandeDuplicata extends Model
      */
     public function rejeter(string $motif): bool
     {
-        if ($this->statut !== 'en_attente') {
+        // ✅ Accepter 'en_attente' ET 'paye'
+        if (!in_array($this->statut, ['en_attente', 'paye'])) {
             return false;
         }
 
@@ -154,13 +172,28 @@ class DemandeDuplicata extends Model
     }
 
     /**
+     * Marquer comme payée
+     */
+    public function marquerPayee(int $montant, int $paiementId): bool
+    {
+        $this->update([
+            'statut' => 'paye',
+            'paye' => true,
+            'montant_paye' => $montant,
+            'paiement_id' => $paiementId,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Vérifier si un utilisateur peut demander un duplicata
      */
     public static function peutDemander(Certificat $certificat): bool
     {
-        // Vérifier si une demande existe déjà
+        // Vérifier si une demande existe déjà (inclure 'paye')
         $demandeExistante = self::where('certificat_id', $certificat->id)
-            ->whereIn('statut', ['en_attente', 'valide'])
+            ->whereIn('statut', ['en_attente', 'paye', 'valide'])
             ->exists();
 
         if ($demandeExistante) {

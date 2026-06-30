@@ -45,6 +45,7 @@
                         ['client.demandes', '📋', 'Demandes'],
                         ['client.formations', '🎓', 'Formations'],
                         ['client.qcms.index', '📝', 'QCMs'],
+                        ['client.certificats.index', '🏆', 'Certificats'],
                         ['messages.index', '💬', 'Messages'],
                         ['client.paiements', '💰', 'Paiements'],
                     ] as $item)
@@ -186,7 +187,8 @@
                     ['client.dashboard', '🏠', 'Tableau de bord'],
                     ['client.demandes', '📋', 'Mes demandes'],
                     ['client.formations', '🎓', 'Mes formations'],
-                    ['client.qcms.index', '📝', 'QCMs & Certificats'],
+                    ['client.qcms.index', '📝', 'QCMs'],
+                    ['client.certificats.index', '🏆', 'Certificats'],
                     ['messages.index', '💬', 'Messagerie'],
                     ['client.temoignages.index', '⭐', 'Mes avis'],
                     ['client.paiements', '💰', 'Paiements'],

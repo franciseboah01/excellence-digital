@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Certificat;
 use App\Models\Configuration;
 use App\Models\DemandeDuplicata;
@@ -17,11 +18,34 @@ class CertificatController extends Controller
 {
     /**
      * ============================================================
-     * 1. TÉLÉCHARGER (PDF / JPG / PNG)
+     * 1. LISTE ADMIN - Tous les certificats
+     * ============================================================
+     */
+    public function index()
+    {
+        $certificats = Certificat::with(['user', 'formation'])
+            ->latest()
+            ->paginate(10);
+
+        $stats = [
+            'total'   => Certificat::count(),
+            'ce_mois' => Certificat::whereMonth('created_at', now()->month)->count(),
+            'moyenne' => round(Certificat::avg('note_obtenue'), 2),
+            'duplicatas' => Certificat::whereNotNull('parent_id')->count(),
+        ];
+
+        return view('admin.certificats.index', compact('certificats', 'stats'));
+    }
+
+    /**
+     * ============================================================
+     * 2. TÉLÉCHARGER (ADMIN)
      * ============================================================
      */
     public function telecharger(Request $request, Certificat $certificat)
     {
+        abort_unless(auth()->user()->hasRole('admin'), 403);
+
         $format = $request->input('format', 'pdf');
         $formatsAutorises = ['pdf', 'jpg', 'jpeg', 'png'];
         
@@ -29,48 +53,13 @@ class CertificatController extends Controller
             $format = 'pdf';
         }
 
-        // ===== ADMIN =====
-        if (auth()->user()->hasRole('admin')) {
-            $certificat->load(['user', 'formation', 'session.qcm.niveau']);
-            return $this->genererSortie($certificat, $format);
-        }
-
-        // ===== CLIENT =====
-        abort_if($certificat->user_id !== auth()->id(), 403);
-
-        $estDuplicata = str_ends_with($certificat->numero_certificat, '-DUP');
-
-        // --- ORIGINAL ---
-        if (!$estDuplicata) {
-            if ($certificat->telecharge) {
-                return redirect()->route('client.certificats.demande-duplicata', $certificat)
-                    ->with('error', 'Vous avez déjà téléchargé ce certificat. Souhaitez-vous demander un duplicata ?');
-            }
-        }
-        // --- DUPLICATA ---
-        else {
-            if ($certificat->telecharge) {
-                return back()->with('error', 'Ce duplicata a déjà été téléchargé.');
-            }
-            if (!$certificat->delivre_le) {
-                return back()->with('error', 'Ce duplicata n\'a pas encore été validé par l\'administration.');
-            }
-        }
-
-        // Marquer comme téléchargé
-        if (!$certificat->telecharge) {
-            $certificat->update(['telecharge' => true]);
-        }
-
-        $certificat->refresh();
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
-
         return $this->genererSortie($certificat, $format);
     }
 
     /**
      * ============================================================
-     * 2. APERÇU
+     * 3. APERÇU
      * ============================================================
      */
     public function apercu(Certificat $certificat)
@@ -84,7 +73,6 @@ class CertificatController extends Controller
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
         $certificat->mention = $this->calculerMention($certificat->note_obtenue ?? 0);
 
-        // ✅ Récupérer TOUTES les configurations
         $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
         $backgroundImage = asset('storage/' . $backgroundPath);
 
@@ -121,7 +109,6 @@ class CertificatController extends Controller
         $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
         $qrSize = (int) Configuration::get('certificat_qr_size', 100);
 
-        // Générer le QR Code pour l'aperçu
         $qrCodeDataUri = null;
         if ($showQrCode) {
             $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);
@@ -142,27 +129,6 @@ class CertificatController extends Controller
 
     /**
      * ============================================================
-     * 3. LISTE ADMIN
-     * ============================================================
-     */
-    public function index()
-    {
-        $certificats = Certificat::with(['user', 'formation'])
-            ->latest()
-            ->paginate(10);
-
-        $stats = [
-            'total'   => Certificat::count(),
-            'ce_mois' => Certificat::whereMonth('created_at', now()->month)->count(),
-            'moyenne' => round(Certificat::avg('note_obtenue'), 2),
-            'duplicatas' => Certificat::whereNotNull('parent_id')->count(),
-        ];
-
-        return view('admin.certificats.index', compact('certificats', 'stats'));
-    }
-
-    /**
-     * ============================================================
      * 4. CRÉER UN DUPLICATA (ADMIN - Direct)
      * ============================================================
      */
@@ -170,7 +136,20 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
+        // ✅ Vérifier qu'il n'y a pas une demande déjà traitée
+        $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
+            ->whereIn('statut', ['en_attente', 'paye', 'valide'])
+            ->exists();
+
+        if ($demandeExistante) {
+            return back()->with('error', 'Une demande de duplicata est déjà en cours pour ce certificat.');
+        }
+
         $duplicata = $this->creerDuplicata($certificat);
+        $duplicata->update([
+            'delivre_le' => now(),
+            'telecharge' => false,
+        ]);
 
         return back()->with('success', 'Duplicata créé : ' . $duplicata->numero_certificat);
     }
@@ -184,22 +163,24 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
-        if ($demande->statut !== 'en_attente') {
+        // ✅ Accepter 'en_attente' et 'paye'
+        if (!in_array($demande->statut, ['en_attente', 'paye'])) {
             return back()->with('error', 'Cette demande a déjà été traitée.');
         }
 
         $certificatOriginal = $demande->certificat;
-        
-        // Créer le duplicata
         $duplicata = $this->creerDuplicata($certificatOriginal);
 
-        // Marquer la demande comme validée
         $demande->update([
             'statut' => 'valide',
             'valide_le' => now(),
         ]);
 
-        // Notifier le client
+        $duplicata->update([
+            'delivre_le' => now(),
+            'telecharge' => false,
+        ]);
+
         Notification::create([
             'user_id' => $demande->user_id,
             'titre'   => '✅ Duplicata disponible !',
@@ -248,13 +229,16 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
-        $demandes = DemandeDuplicata::with(['certificat.formation', 'user'])
+        // ✅ Inclure 'paye' dans la liste des statuts
+        $demandes = DemandeDuplicata::with(['certificat.formation', 'user', 'paiement'])
+            ->whereIn('statut', ['en_attente', 'paye', 'valide'])
             ->latest()
             ->paginate(15);
 
         $stats = [
             'total' => DemandeDuplicata::count(),
             'en_attente' => DemandeDuplicata::where('statut', 'en_attente')->count(),
+            'paye' => DemandeDuplicata::where('statut', 'paye')->count(),  // ← AJOUT
             'valide' => DemandeDuplicata::where('statut', 'valide')->count(),
             'rejete' => DemandeDuplicata::where('statut', 'rejete')->count(),
         ];
@@ -264,52 +248,7 @@ class CertificatController extends Controller
 
     /**
      * ============================================================
-     * 8. DEMANDE DE DUPLICATA (CLIENT)
-     * ============================================================
-     */
-    public function demandeDuplicata(Certificat $certificat)
-    {
-        abort_if($certificat->user_id !== auth()->id(), 403);
-
-        // Vérifier que le certificat est bien un original déjà téléchargé
-        if (!$certificat->telecharge) {
-            return back()->with('error', 'Vous n\'avez pas encore téléchargé ce certificat original.');
-        }
-
-        if (str_ends_with($certificat->numero_certificat, '-DUP')) {
-            return back()->with('error', 'Ce certificat est déjà un duplicata.');
-        }
-
-        // Vérifier qu'il n'y a pas déjà une demande en cours
-        $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
-            ->whereIn('statut', ['en_attente', 'valide'])
-            ->exists();
-
-        if ($demandeExistante) {
-            return back()->with('error', 'Une demande de duplicata est déjà en cours pour ce certificat.');
-        }
-
-        // Vérifier si un duplicata existe déjà (non téléchargé)
-        $duplicataExistant = Certificat::where('parent_id', $certificat->id)
-            ->where('telecharge', false)
-            ->exists();
-
-        if ($duplicataExistant) {
-            return back()->with('error', 'Un duplicata est déjà disponible. Vérifiez votre espace certificats.');
-        }
-
-        // Sauvegarde en session pour le paiement
-        session(['certificat_id' => $certificat->id]);
-
-        return redirect()->route('client.paiement.form', [
-            'type' => 'service',
-            'id' => 'duplicata'
-        ]);
-    }
-
-    /**
-     * ============================================================
-     * 9. VÉRIFICATION PUBLIQUE (Jeton)
+     * 8. VÉRIFICATION PUBLIQUE (Jeton)
      * ============================================================
      */
     public function verification(string $token)
@@ -326,7 +265,6 @@ class CertificatController extends Controller
             ]);
         }
 
-        // Déterminer la souche
         $estDuplicata = str_ends_with($certificat->numero_certificat, '-DUP');
         $soucheId = $estDuplicata ? $certificat->parent_id : $certificat->id;
 
@@ -344,145 +282,52 @@ class CertificatController extends Controller
 
     /**
      * ============================================================
-     * 10. GÉNÉRER L'IMAGE DU CERTIFICAT (JPG)
+     * 9. GÉNÉRER UN CERTIFICAT SPÉCIMEN (ADMIN)
      * ============================================================
      */
-    public function genererFichierCertificat(Certificat $certificat)
+    public function specimen()
     {
-        // 1. Image de fond
-        $bgRelativePath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $bgRelativePath = str_replace(['..', '\\'], '', $bgRelativePath);
-        $bgPath = storage_path('app/public/' . $bgRelativePath);
-
-        if (!file_exists($bgPath)) {
-            $defaultBg = storage_path('app/public/certificats/default_bg.jpg');
-            $bgPath = file_exists($defaultBg) ? $defaultBg : null;
-        }
-
-        if (!$bgPath || !file_exists($bgPath)) {
-            abort(404, "Image de fond de la maquette introuvable.");
-        }
-
-        $image = imagecreatefromjpeg($bgPath);
-
-        // 2. Police
-        $fontPaths = [
-            storage_path('fonts/Inter-Bold.ttf'),
-            storage_path('fonts/arial.ttf'),
-            public_path('fonts/Inter-Bold.ttf'),
+        $certificat = new Certificat();
+        $certificat->id = 0;
+        $certificat->numero_certificat = 'SPECIMEN-' . strtoupper(\Illuminate\Support\Str::random(8));
+        $certificat->verification_token = 'specimen-' . \Illuminate\Support\Str::uuid();
+        $certificat->note_obtenue = 18.5;
+        $certificat->delivre_le = now();
+        $certificat->created_at = now();
+        $certificat->telecharge = false;
+        
+        $certificat->user = (object) [
+            'prenom' => 'Yao Jean-Marc',
+            'nom'    => 'KOUASSI',
+            'name'   => 'KOUASSI Yao Jean-Marc',
+            'email'  => 'specimen@excellencedigital.ci',
         ];
-        $fontPath = null;
-        foreach ($fontPaths as $path) {
-            if (file_exists($path)) {
-                $fontPath = $path;
-                break;
-            }
-        }
-        if (!$fontPath) {
-            $fontPath = 5; // Police GD système
-        }
-
-        // 3. Couleur du texte
-        $hexColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
-        list($r, $g, $b) = sscanf($hexColor, '#%02x%02x%02x');
-        $couleurTexte = imagecolorallocate($image, $r, $g, $b);
-
-        // 4. Positions
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
+        
+        $certificat->formation = (object) [
+            'titre' => 'Développement Web Full Stack',
+        ];
+        
+        $certificat->session = (object) [
+            'qcm' => (object) [
+                'niveau' => (object) ['nom' => 'Niveau Expert'],
             ],
         ];
+        
+        $certificat->mention = $this->calculerMention($certificat->note_obtenue);
 
-        // 5. Écrire les textes
-        $this->ecrireTexte($image, $certificat->numero_certificat, $positions['numero'], $fontPath, $couleurTexte);
-        $this->ecrireTexte($image, strtoupper($certificat->user->name ?? 'Utilisateur'), $positions['name'], $fontPath, $couleurTexte);
-        $this->ecrireTexte($image, $certificat->formation->titre ?? 'Formation', $positions['formation'], $fontPath, $couleurTexte);
-
-        // 6. Performance (note + mention)
-        if (Configuration::get('certificat_show_note', 1)) {
-            $note = $certificat->note_obtenue ?? 0;
-            $mention = $this->calculerMention($note);
-            $performanceTxt = "Note : " . number_format($note, 1) . "/20 | Mention : " . $mention;
-            $this->ecrireTexte($image, $performanceTxt, $positions['performance'], $fontPath, $couleurTexte);
-        }
-
-        // 7. QR Code
-        if (Configuration::get('certificat_show_qrcode', 1)) {
-            $this->ajouterQrCode($image, $certificat);
-        }
-
-        // 8. Sauvegarde
-        $nomFichier = 'sorties/certificat_' . $certificat->verification_token . '.jpg';
-        $cheminSortie = storage_path('app/public/' . $nomFichier);
-        $dossier = dirname($cheminSortie);
-        if (!is_dir($dossier)) {
-            mkdir($dossier, 0755, true);
-        }
-
-        imagejpeg($image, $cheminSortie, 95);
-        imagedestroy($image);
-
-        return $nomFichier;
-    }
-
-    /**
-     * ============================================================
-     * 11. MÉTHODES PRIVÉES (Helpers)
-     * ============================================================
-     */
-
-    /**
-     * Générer le QR Code en Data URI pour le PDF
-     */
-    private function genererQrCodeDataUri(Certificat $certificat): ?string
-    {
-        try {
-            $urlVerification = route('certificat.verification', ['token' => $certificat->verification_token]);
-            $qrSize = (int) Configuration::get('certificat_qr_size', 100);
-
-            $qrCodePngRaw = QrCode::format('png')
-                ->size($qrSize)
-                ->margin(1)
-                ->errorCorrection('H')
-                ->generate($urlVerification);
-
-            return 'data:image/png;base64,' . base64_encode($qrCodePngRaw);
-        } catch (\Exception $e) {
-            Log::error('Erreur génération QR Code Data URI: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Générer la sortie du certificat (PDF, JPG ou PNG)
-     */
-    private function genererSortie(Certificat $certificat, string $format)
-    {
-        $nomFichier = 'certificat-' . $certificat->numero_certificat;
-
-        // ===== DONNÉES COMMUNES POUR PDF ET IMAGE =====
         $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $backgroundImage = asset('storage/' . $backgroundPath);
+        $bgFullPath = storage_path('app/public/' . $backgroundPath);
+        
+        if (file_exists($bgFullPath)) {
+            $mime = mime_content_type($bgFullPath);
+            $backgroundImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgFullPath));
+        } else {
+            $defaultBgPath = storage_path('app/public/certificats/default_bg.jpg');
+            $backgroundImage = file_exists($defaultBgPath) 
+                ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($defaultBgPath))
+                : null;
+        }
 
-        // Récupérer toutes les positions
         $positions = [
             'numero' => [
                 'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
@@ -516,13 +361,11 @@ class CertificatController extends Controller
         $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
         $qrSize = (int) Configuration::get('certificat_qr_size', 100);
 
-        // ===== GÉNÉRER LE QR CODE EN DATA URI POUR LE PDF =====
         $qrCodeDataUri = null;
         if ($showQrCode) {
             $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);
         }
 
-        // ===== DONNÉES POUR LA VUE =====
         $data = [
             'certificat' => $certificat,
             'backgroundImage' => $backgroundImage,
@@ -535,14 +378,100 @@ class CertificatController extends Controller
             'qrCodeDataUri' => $qrCodeDataUri,
         ];
 
-        // ===== PDF =====
+        $pdf = Pdf::loadView('client.pdf.certificat', $data)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('specimen-certificat.pdf');
+    }
+
+    /**
+     * ============================================================
+     * 10. MÉTHODES PRIVÉES (Helpers)
+     * ============================================================
+     */
+
+    private function genererQrCodeDataUri(Certificat $certificat): ?string
+    {
+        try {
+            $urlVerification = route('certificat.verification', ['token' => $certificat->verification_token]);
+            $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+
+            $qrCodePngRaw = QrCode::format('png')
+                ->size($qrSize)
+                ->margin(1)
+                ->errorCorrection('H')
+                ->generate($urlVerification);
+
+            return 'data:image/png;base64,' . base64_encode($qrCodePngRaw);
+        } catch (\Exception $e) {
+            Log::error('Erreur génération QR Code Data URI: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function genererSortie(Certificat $certificat, string $format)
+    {
+        $nomFichier = 'certificat-' . $certificat->numero_certificat;
+
+        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
+        $backgroundImage = asset('storage/' . $backgroundPath);
+
+        $positions = [
+            'numero' => [
+                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
+                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
+                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
+            ],
+            'name' => [
+                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
+                'size' => (int) Configuration::get('certificat_font_size_name', 28),
+            ],
+            'formation' => [
+                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
+                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
+            ],
+            'performance' => [
+                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
+                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
+            ],
+            'metadata' => [
+                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
+                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
+            ],
+        ];
+
+        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
+        $showNote = (bool) Configuration::get('certificat_show_note', 1);
+        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
+        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
+        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+
+        $qrCodeDataUri = null;
+        if ($showQrCode) {
+            $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);
+        }
+
+        $data = [
+            'certificat' => $certificat,
+            'backgroundImage' => $backgroundImage,
+            'positions' => $positions,
+            'fontColor' => $fontColor,
+            'showNote' => $showNote,
+            'showMention' => $showMention,
+            'showQrCode' => $showQrCode,
+            'qrSize' => $qrSize,
+            'qrCodeDataUri' => $qrCodeDataUri,
+        ];
+
         if ($format === 'pdf') {
             $pdf = Pdf::loadView('client.pdf.certificat', $data)
                 ->setPaper('a4', 'landscape');
             return $pdf->download($nomFichier . '.pdf');
         }
 
-        // ===== JPG / PNG =====
         try {
             $imagePath = $this->genererFichierCertificat($certificat);
             $fullPath = storage_path('app/public/' . $imagePath);
@@ -564,10 +493,6 @@ class CertificatController extends Controller
         }
     }
 
-    /**
-     * Créer un duplicata (logique centralisée)
-     */
-    // Dans CertificatController, méthode creerDuplicata()
     private function creerDuplicata(Certificat $original): Certificat
     {
         return Certificat::create([
@@ -577,15 +502,100 @@ class CertificatController extends Controller
             'numero_certificat' => Certificat::genererNumero() . '-DUP',
             'note_obtenue'      => $original->note_obtenue,
             'delivre_le'        => null,
-            'telecharge'        => true,
+            'telecharge'        => false,
             'parent_id'         => $original->id,
-            'verification_token' => \Illuminate\Support\Str::uuid(), // ✅ Token unique
+            'verification_token' => \Illuminate\Support\Str::uuid(),
         ]);
     }
 
-    /**
-     * Écrire un texte sur l'image
-     */
+    private function genererFichierCertificat(Certificat $certificat)
+    {
+        $bgRelativePath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
+        $bgRelativePath = str_replace(['..', '\\'], '', $bgRelativePath);
+        $bgPath = storage_path('app/public/' . $bgRelativePath);
+
+        if (!file_exists($bgPath)) {
+            $defaultBg = storage_path('app/public/certificats/default_bg.jpg');
+            $bgPath = file_exists($defaultBg) ? $defaultBg : null;
+        }
+
+        if (!$bgPath || !file_exists($bgPath)) {
+            abort(404, "Image de fond de la maquette introuvable.");
+        }
+
+        $image = imagecreatefromjpeg($bgPath);
+
+        $fontPaths = [
+            storage_path('fonts/Inter-Bold.ttf'),
+            storage_path('fonts/arial.ttf'),
+            public_path('fonts/Inter-Bold.ttf'),
+        ];
+        $fontPath = null;
+        foreach ($fontPaths as $path) {
+            if (file_exists($path)) {
+                $fontPath = $path;
+                break;
+            }
+        }
+        if (!$fontPath) {
+            $fontPath = 5;
+        }
+
+        $hexColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
+        list($r, $g, $b) = sscanf($hexColor, '#%02x%02x%02x');
+        $couleurTexte = imagecolorallocate($image, $r, $g, $b);
+
+        $positions = [
+            'numero' => [
+                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
+                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
+                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
+            ],
+            'name' => [
+                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
+                'size' => (int) Configuration::get('certificat_font_size_name', 28),
+            ],
+            'formation' => [
+                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
+                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
+            ],
+            'performance' => [
+                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
+                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
+                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
+            ],
+        ];
+
+        $this->ecrireTexte($image, $certificat->numero_certificat, $positions['numero'], $fontPath, $couleurTexte);
+        $this->ecrireTexte($image, strtoupper($certificat->user->name ?? 'Utilisateur'), $positions['name'], $fontPath, $couleurTexte);
+        $this->ecrireTexte($image, $certificat->formation->titre ?? 'Formation', $positions['formation'], $fontPath, $couleurTexte);
+
+        if (Configuration::get('certificat_show_note', 1)) {
+            $note = $certificat->note_obtenue ?? 0;
+            $mention = $this->calculerMention($note);
+            $performanceTxt = "Note : " . number_format($note, 1) . "/20 | Mention : " . $mention;
+            $this->ecrireTexte($image, $performanceTxt, $positions['performance'], $fontPath, $couleurTexte);
+        }
+
+        if (Configuration::get('certificat_show_qrcode', 1)) {
+            $this->ajouterQrCode($image, $certificat);
+        }
+
+        $nomFichier = 'sorties/certificat_' . $certificat->verification_token . '.jpg';
+        $cheminSortie = storage_path('app/public/' . $nomFichier);
+        $dossier = dirname($cheminSortie);
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0755, true);
+        }
+
+        imagejpeg($image, $cheminSortie, 95);
+        imagedestroy($image);
+
+        return $nomFichier;
+    }
+
     private function ecrireTexte($image, string $texte, array $position, $fontPath, $couleur)
     {
         if (is_string($fontPath)) {
@@ -611,9 +621,6 @@ class CertificatController extends Controller
         }
     }
 
-    /**
-     * Ajouter le QR Code sur l'image
-     */
     private function ajouterQrCode($image, Certificat $certificat)
     {
         try {
@@ -640,132 +647,12 @@ class CertificatController extends Controller
         }
     }
 
-        /**
-         * Calculer la mention en fonction de la note
-         */
-        private function calculerMention(float $note): string
-        {
-            if ($note >= 18) return 'Très Bien';
-            if ($note >= 16) return 'Bien';
-            if ($note >= 14) return 'Assez Bien';
-            if ($note >= 12) return 'Passable';
-            return 'Insuffisant';
-        }
-
-    /**
-     * ============================================================
-     * GÉNÉRER UN CERTIFICAT SPÉCIMEN (ADMIN)
-     * ============================================================
-     */
-    public function specimen()
+    private function calculerMention(float $note): string
     {
-        // Créer un certificat factice pour le spécimen
-        $certificat = new Certificat();
-        $certificat->id = 0;
-        $certificat->numero_certificat = 'SPECIMEN-' . strtoupper(\Illuminate\Support\Str::random(8));
-        $certificat->verification_token = 'specimen-' . \Illuminate\Support\Str::uuid();
-        $certificat->note_obtenue = 18.5;
-        $certificat->delivre_le = now();
-        $certificat->created_at = now();
-        $certificat->telecharge = false;
-        
-        // ✅ Utilisateur factice (propriétés séparées)
-        $certificat->user = (object) [
-            'prenom' => 'Yao Jean-Marc',
-            'nom'    => 'KOUASSI',
-            'name'   => 'KOUASSI Yao Jean-Marc',
-            'email'  => 'specimen@excellencedigital.ci',
-        ];
-        
-        // ✅ Formation factice
-        $certificat->formation = (object) [
-            'titre' => 'Développement Web Full Stack',
-        ];
-        
-        // Session factice
-        $certificat->session = (object) [
-            'qcm' => (object) [
-                'niveau' => (object) [
-                    'nom' => 'Niveau Expert',
-                ],
-            ],
-        ];
-        
-        // Mention
-        $certificat->mention = $this->calculerMention($certificat->note_obtenue);
-        
-        // ✅ CORRECTION : Image de fond en base64 pour DomPDF
-        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $bgFullPath = storage_path('app/public/' . $backgroundPath);
-        
-        if (file_exists($bgFullPath)) {
-            $mime = mime_content_type($bgFullPath);
-            $backgroundImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgFullPath));
-        } else {
-            // Fallback : image par défaut
-            $defaultBgPath = storage_path('app/public/certificats/default_bg.jpg');
-            if (file_exists($defaultBgPath)) {
-                $backgroundImage = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($defaultBgPath));
-            } else {
-                $backgroundImage = null;
-            }
-        }
-
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
-            ],
-            'metadata' => [
-                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
-                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
-            ],
-        ];
-
-        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
-        $showNote = (bool) Configuration::get('certificat_show_note', 1);
-        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
-        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
-        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
-
-        // QR Code spécimen
-        $qrCodeDataUri = null;
-        if ($showQrCode) {
-            $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);
-        }
-
-        $data = [
-            'certificat' => $certificat,
-            'backgroundImage' => $backgroundImage,
-            'positions' => $positions,
-            'fontColor' => $fontColor,
-            'showNote' => $showNote,
-            'showMention' => $showMention,
-            'showQrCode' => $showQrCode,
-            'qrSize' => $qrSize,
-            'qrCodeDataUri' => $qrCodeDataUri,
-        ];
-
-        // Générer le PDF
-        $pdf = Pdf::loadView('client.pdf.certificat', $data)
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download('specimen-certificat.pdf');
+        if ($note >= 18) return 'Très Bien';
+        if ($note >= 16) return 'Bien';
+        if ($note >= 14) return 'Assez Bien';
+        if ($note >= 12) return 'Passable';
+        return 'Insuffisant';
     }
 }

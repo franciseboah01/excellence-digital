@@ -27,98 +27,52 @@ class ConfigurationController extends Controller
          * 2. METTRE À JOUR LES CONFIGURATIONS
          * ============================================================
          */
-        public function update(Request $request)
+        // Dans App\Http\Controllers\Admin\ConfigurationController.php
+
+    public function update(Request $request)
     {
         // Récupérer la taille max pour la validation
         $maxUploadSize = $request->input('upload_image_taille_max_mb', 2);
 
         // ===== VALIDATION =====
         $validated = $request->validate([
+            // ... (gardez vos validations existantes) ...
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 0 : 🏢 Identité Institutionnelle & Coordonnées
+            // 📊 Stats & Arguments (TABLEAUX)
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_nom'          => 'required|string|max:150',
-            'site_slogan'       => 'required|string|max:255',
-            'site_description'  => 'required|string|max:500',
-            'site_devise'       => 'required|string|max:150',
-            'site_adresse'      => 'required|string|max:255',
-            'site_ville'        => 'required|string|max:100',
-            'site_pays'         => 'required|string|max:100',
-            'site_contact'      => 'required|string|max:50',
-            'site_whatsapp'     => 'required|string|max:20',
-            'site_email'        => 'required|email|max:100',
-            'site_web'          => 'required|string|max:100',
-            'site_copyright'    => 'required|string|max:255',
+            'site_stats'         => 'nullable|array',
+            'site_stats.*.valeur' => 'nullable|string|max:50',
+            'site_stats.*.description' => 'nullable|string|max:255',
+            
+            'site_pourquoi_nous' => 'nullable|array',
+            'site_pourquoi_nous.*.icone' => 'nullable|string|max:10',
+            'site_pourquoi_nous.*.titre' => 'nullable|string|max:100',
+            'site_pourquoi_nous.*.description' => 'nullable|string|max:255',
+
+            'site_galeries'      => 'nullable|array',
+            'site_galeries.*.titre' => 'nullable|string|max:255',
+            'site_galeries.*.image' => 'nullable|string|max:255',
+
+            'site_mission'       => 'nullable|array',
+            'site_mission.*.icone' => 'nullable|string|max:10',
+            'site_mission.*.titre' => 'nullable|string|max:100',
+            'site_mission.*.description' => 'nullable|string|max:255',
+
+            'site_valeurs'       => 'nullable|array',
+            'site_valeurs.*.icone' => 'nullable|string|max:10',
+            'site_valeurs.*.titre' => 'nullable|string|max:100',
+            'site_valeurs.*.description' => 'nullable|string|max:255',
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 1 : 📁 Stockage & Fichiers
+            // Google Maps Embed (reste une chaîne)
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'upload_taille_max_mb'       => 'required|integer|min:1|max:100',
-            'upload_types_autorises'     => 'required|string|max:255',
-            'upload_image_taille_max_mb' => 'required|integer|min:1|max:10',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 2 : 🔐 Sécurité & QCM
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'url_signee_expiration_minutes' => 'required|integer|min:5|max:1440',
-            'qcm_note_minimale'             => 'required|integer|min:0|max:20',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 3 : 📜 Maquette & Certificats
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'certificat_background_file'   => 'nullable|image|mimes:jpeg,png,jpg|max:' . ($maxUploadSize * 1024),
-            'certificat_font_color_name'   => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'certificat_axis_x_numero'     => 'required|integer|min:0|max:2000',
-            'certificat_axis_y_numero'     => 'required|integer|min:0|max:2000',
-            'certificat_font_size_numero'  => 'required|integer|min:8|max:40',
-            'certificat_axis_x_name'       => 'required|integer|min:0|max:2000',
-            'certificat_axis_y_name'       => 'required|integer|min:0|max:2000',
-            'certificat_font_size_name'    => 'required|integer|min:8|max:72',
-            'certificat_axis_x_formation'  => 'required|integer|min:0|max:2000',
-            'certificat_axis_y_formation'  => 'required|integer|min:0|max:2000',
-            'certificat_font_size_formation' => 'required|integer|min:8|max:50',
-            'certificat_axis_x_performance' => 'required|integer|min:0|max:2000',
-            'certificat_axis_y_performance' => 'required|integer|min:0|max:2000',
-            'certificat_font_size_perf'    => 'required|integer|min:8|max:30',
-            'certificat_axis_x_metadata'   => 'required|integer|min:0|max:2000',
-            'certificat_axis_y_metadata'   => 'required|integer|min:0|max:2000',
-            'certificat_qr_size'           => 'required|integer|min:40|max:200',
-            'certificat_duplicata_active'  => 'nullable|boolean',
-            'certificat_show_note'         => 'nullable|boolean',
-            'certificat_show_mention'      => 'nullable|boolean',
-            'certificat_show_qrcode'       => 'nullable|boolean',
-            'duplicata_prix'               => 'required|integer|min:500|max:10000',
-            'duplicata_delai_jours'        => 'required|integer|min:1|max:30',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 4 : 📊 Stats & Arguments
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_stats'         => 'nullable|string',
-            'site_pourquoi_nous' => 'nullable|string',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Onglet 5 : 🖼️ Galerie
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_galeries'      => 'nullable|string',
-            'galerie_files'      => 'nullable',
-            'galerie_files.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Miscellaneous : Mission, Valeurs & Google Maps Embed
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_mission'    => 'nullable|string',
-            'site_valeurs'    => 'nullable|string',
             'site_maps_embed' => 'nullable|string',
 
+            // ... gardez le reste ...
         ]);
 
-        // ===== 1. GESTION DE L'IMAGE DE FOND =====
-        if ($request->hasFile('certificat_background_file')) {
-            $this->gererImageFond($request->file('certificat_background_file'));
-        }
-
-        // ===== 2. GESTION DES TOGGLES (Checkbox) =====
+        // ===== GESTION DES TOGGLES =====
         $toggles = [
             'certificat_duplicata_active',
             'certificat_show_note',
@@ -129,30 +83,41 @@ class ConfigurationController extends Controller
             Configuration::set($toggle, $request->has($toggle) ? 1 : 0);
         }
 
-        // ===== 3. GESTION DES AUTRES CHAMPS =====
-        $champsExclure = array_merge(['_token', '_method', 'certificat_background_file', 'galerie_files'], $toggles);
-        foreach ($request->except($champsExclure) as $cle => $valeur) {
-            if (!in_array($cle, $toggles)) {
-                Configuration::set($cle, $valeur);
-            }
+        // ===== 1. GESTION DE L'IMAGE DE FOND =====
+        if ($request->hasFile('certificat_background_file')) {
+            $this->gererImageFond($request->file('certificat_background_file'));
         }
 
-        // ===== 4. GESTION UPLOAD GALERIE =====
+        // ===== 2. GESTION DES CHAMPS (SIMPLES ET TABLEAUX) =====
+        $champsExclure = array_merge(['_token', '_method', 'certificat_background_file', 'galerie_files'], $toggles);
+
+        foreach ($request->except($champsExclure) as $cle => $valeur) {
+            if (in_array($cle, $toggles)) {
+                continue; // déjà traité
+            }
+
+            // SI C'EST UN TABLEAU, ON LE CONVERTIT EN JSON
+            if (is_array($valeur)) {
+                $valeur = json_encode($valeur);
+            }
+
+            Configuration::set($cle, $valeur);
+        }
+
+        // ===== 3. GESTION UPLOAD GALERIE =====
         if ($request->hasFile('galerie_files')) {
             $galeries = [];
-            
             foreach ($request->file('galerie_files') as $file) {
                 $path = $file->store('galerie', 'public');
                 $galeries[] = ['titre' => '', 'image' => $path];
             }
-            
             Configuration::set('site_galeries', json_encode($galeries));
         }
 
-        // ===== 5. VIDER LE CACHE =====
+        // ===== 4. VIDER LE CACHE =====
         Cache::flush();
 
-        // ===== 6. LOG =====
+        // ===== 5. LOG =====
         Log::info('Configurations mises à jour par ' . auth()->user()->email);
 
         return back()->with('success', '✅ Toutes les configurations ont été mises à jour !');

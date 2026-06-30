@@ -6,10 +6,11 @@
 
 @section('content')
 
-<div class="grid grid-cols-3 gap-4 mt-6">
+<div class="grid grid-cols-5 gap-4 mt-6">
     @foreach([
         ['total', '📊 Total demandes', 'var(--edc-primary)'],
-        ['en_attente', '⏳ En attente', 'var(--edc-accent-gold)'],
+        ['en_attente', '⏳ En attente de paiement', 'var(--edc-accent-gold)'],
+        ['paye', '💰 Payées', 'var(--edc-secondary)'],
         ['valide', '✅ Validées', 'var(--edc-secondary)'],
         ['rejete', '❌ Rejetées', 'var(--edc-danger)'],
     ] as $stat)
@@ -72,7 +73,11 @@
                     <td>
                         @if($demande->statut === 'en_attente')
                             <span class="badge badge-warning text-xs" style="background: #F59E0B; color: #1a1a1a; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">
-                                ⏳ En attente
+                                ⏳ En attente de paiement
+                            </span>
+                        @elseif($demande->statut === 'paye')
+                            <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">
+                                💰 Payé
                             </span>
                         @elseif($demande->statut === 'valide')
                             <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">
@@ -99,7 +104,8 @@
 
                     <td>
                         <div class="flex items-center gap-2 whitespace-nowrap flex-wrap">
-                            @if($demande->statut === 'en_attente')
+                            {{-- ===== ACTIONS POUR DEMANDES PAYÉES OU EN ATTENTE ===== --}}
+                            @if($demande->statut === 'paye' || $demande->statut === 'en_attente')
                                 {{-- Valider --}}
                                 <form action="{{ route('admin.duplicatas.valider', $demande) }}" method="POST" class="inline">
                                     @csrf
@@ -131,7 +137,7 @@
                                             Veuillez indiquer le motif du rejet pour la demande de 
                                             <strong>{{ $demande->user?->prenom }} {{ $demande->user?->nom }}</strong>.
                                         </p>
-                                        <form action="{{ route('admin.duplicatas.rejeter', $demande) }}" method="POST">
+                                        <form action="{{ route('admin.duplicatas.rejeter', $demande) }}" method="POST" id="rejetForm{{ $demande->id }}">
                                             @csrf
                                             @method('PATCH')
                                             <div class="mb-4">
@@ -149,7 +155,8 @@
                                                     Annuler
                                                 </button>
                                                 <button type="submit" 
-                                                        class="btn-danger btn-sm flex-1">
+                                                        class="btn-danger btn-sm flex-1"
+                                                        onclick="return confirm('⚠️ Confirmer le rejet de cette demande ?');">
                                                     Confirmer le rejet
                                                 </button>
                                             </div>

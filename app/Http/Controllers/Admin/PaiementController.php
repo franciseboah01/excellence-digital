@@ -12,6 +12,8 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaiementRequest;
+use App\Models\DemandeDuplicata;  // ← AJOUTER
+use App\Models\Certificat;        // ← AJOUTER
 
 class PaiementController extends Controller
 {
@@ -79,7 +81,6 @@ class PaiementController extends Controller
     // ===== ENREGISTRER =====
     public function store(StorePaiementRequest $request)
     {
-        // Validation automatique
         $montantPaye = min($request->montant_paye, $request->montant_total);
 
         $statut = 'en_attente';
@@ -102,9 +103,48 @@ class PaiementController extends Controller
             'notes'         => $request->notes,
             'enregistre_par'=> auth()->id(),
             'date_paiement' => $request->date_paiement ?? now(),
+            'certificat_id' => $request->certificat_id ?? null,  // ← AJOUTER
+            'type'          => $request->type ?? 'formation',     // ← AJOUTER
         ]);
 
-        // Notifier le client
+        // ===== SI PAIEMENT POUR DUPLICATA =====
+        if ($request->type === 'duplicata' && $request->certificat_id) {
+            $certificat = Certificat::find($request->certificat_id);
+            
+            if ($certificat && $statut === 'complete') {
+                // Créer la demande de duplicata avec statut 'paye'
+                $demande = DemandeDuplicata::create([
+                    'certificat_id' => $certificat->id,
+                    'user_id' => $request->user_id,
+                    'paiement_id' => $paiement->id,
+                    'statut' => 'paye',  // ✅ Statut payé
+                    'paye' => true,
+                    'montant_paye' => $montantPaye,
+                ]);
+
+                // Notifier l'admin
+                Notification::create([
+                    'user_id' => 1, // Admin
+                    'titre' => '💰 Demande de duplicata payée',
+                    'message' => User::find($request->user_id)?->prenom . ' ' . User::find($request->user_id)?->nom . ' a payé un duplicata pour ' . $certificat->formation?->titre,
+                    'type' => 'info',
+                    'lien' => route('admin.duplicatas.demandes'),
+                ]);
+
+                // Notifier le client
+                Notification::create([
+                    'user_id' => $request->user_id,
+                    'titre' => '✅ Paiement du duplicata confirmé',
+                    'message' => 'Votre paiement pour le duplicata a été confirmé. En attente de validation par l\'administration.',
+                    'type' => 'success',
+                ]);
+
+                return redirect()->route('client.certificats.index')
+                    ->with('success', '✅ Paiement effectué ! Demande de duplicata en attente de validation.');
+            }
+        }
+
+        // ===== NOTIFICATION STANDARD =====
         $client = User::find($request->user_id);
         $sujet  = match($statut) {
             'complete' => "✅ Paiement complété — {$paiement->reference}",

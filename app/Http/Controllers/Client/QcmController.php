@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class QcmController extends Controller
 {
-    // ===== LISTE QCMs DISPONIBLES =====
+    // ===== LISTE QCMs AVEC HISTORIQUE =====
     public function index()
     {
         $user = auth()->user();
@@ -28,26 +28,46 @@ class QcmController extends Controller
             ->withCount('questions')
             ->get()
             ->map(function ($qcm) use ($user) {
+                // ===== RÉCUPÉRER TOUTES LES SESSIONS =====
                 $sessions = SessionQcm::where('qcm_id', $qcm->id)
                     ->where('user_id', $user->id)
                     ->orderByDesc('tentative')
                     ->get();
 
+                // ===== STATISTIQUES =====
                 $qcm->mes_sessions      = $sessions;
                 $qcm->tentatives_faites = $sessions->count();
                 $qcm->meilleure_note    = $sessions->max('note');
+                $qcm->derniere_note     = $sessions->first()?->note;
+                $qcm->derniere_tentative = $sessions->first()?->created_at;
+                
+                // ===== STATUT =====
                 $qcm->deja_reussi       = $sessions->where('reussi', true)->count() > 0;
                 $qcm->peut_repasser     = $sessions->count() < $qcm->tentatives_max
                                           && !$qcm->deja_reussi;
+                
+                // ===== SI RÉUSSI, RÉCUPÉRER LE CERTIFICAT =====
+                if ($qcm->deja_reussi) {
+                    $sessionReussie = $sessions->where('reussi', true)->first();
+                    $qcm->certificat = Certificat::where('session_qcm_id', $sessionReussie?->id)
+                        ->where('user_id', $user->id)
+                        ->first();
+                } else {
+                    $qcm->certificat = null;
+                }
+
                 return $qcm;
             });
 
-        $certificats = Certificat::where('user_id', $user->id)
-            ->with('formation')
-            ->latest()
-            ->get();
+        // ===== STATISTIQUES GLOBALES =====
+        $stats = [
+            'total' => $qcms->count(),
+            'reussis' => $qcms->filter(fn($q) => $q->deja_reussi)->count(),
+            'en_cours' => $qcms->filter(fn($q) => !$q->deja_reussi && $q->tentatives_faites > 0)->count(),
+            'non_tentes' => $qcms->filter(fn($q) => $q->tentatives_faites == 0)->count(),
+        ];
 
-        return view('client.qcms.index', compact('qcms', 'certificats'));
+        return view('client.qcms.index', compact('qcms', 'stats'));
     }
 
     // ===== DÉMARRER LE QCM =====
@@ -187,13 +207,19 @@ class QcmController extends Controller
             );
     }
 
-    // ===== RÉSULTAT D'UNE SESSION =====
+    // ===== RÉSULTAT D'UNE SESSION AVEC HISTORIQUE =====
     public function resultat(SessionQcm $session)
     {
         abort_if($session->user_id !== auth()->id(), 403);
 
         $session->load(['qcm.questions.reponses', 'qcm.formation', 'certificat']);
 
-        return view('client.qcms.resultat', compact('session'));
+        // Récupérer l'historique des tentatives pour ce QCM
+        $historique = SessionQcm::where('qcm_id', $session->qcm_id)
+            ->where('user_id', auth()->id())
+            ->orderByDesc('tentative')
+            ->get();
+
+        return view('client.qcms.resultat', compact('session', 'historique'));
     }
 }
