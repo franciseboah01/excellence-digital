@@ -1,90 +1,26 @@
+{{-- ═══════════════════════════════════════ --}}
+{{-- CONFIGURATIONS GLOBALES --}}
+{{-- ═══════════════════════════════════════ --}}
+@php
+    $siteNom  = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
+    $initiales = collect(explode(' ', $siteNom))
+        ->map(fn($mot) => strtoupper(substr($mot, 0, 1)))
+        ->take(3)
+        ->implode('') ?: 'EDC';
+@endphp
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Espace Enseignant — EDC')</title>
+    <title>@yield('title', 'Espace Enseignant — ' . $siteNom)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233B82F6'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='40' font-weight='bold' fill='white'>{{ $initiales }}</text></svg>">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="font-sans antialiased" style="background-color: var(--edc-bg-deep); color: var(--edc-text-primary);">
-
-{{-- SCRIPT NOTIFICATIONS --}}
-<script>
-    function mettreAJourCloche() {
-        fetch('{{ route("notifications.non-lues") }}', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            document.querySelectorAll('.notif-badge').forEach(badge => {
-                if (data.count > 0) {
-                    badge.textContent = data.count > 9 ? '9+' : data.count;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-            });
-        })
-        .catch(() => {});
-    }
-
-    mettreAJourCloche();
-    setInterval(mettreAJourCloche, 30000);
-
-    function toggleNotifDropdown() {
-        const dropdown = document.getElementById('notifDropdown');
-        if (dropdown.classList.contains('hidden')) {
-            chargerDernieresNotifs();
-            dropdown.classList.remove('hidden');
-        } else {
-            dropdown.classList.add('hidden');
-        }
-    }
-
-    function chargerDernieresNotifs() {
-        const container = document.getElementById('notifContainer');
-        container.innerHTML = '<p class="text-center text-xs py-3" style="color: var(--edc-text-muted);">Chargement...</p>';
-
-        fetch('{{ route("notifications.dernieres") }}', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(notifs => {
-            if (!notifs.length) {
-                container.innerHTML = '<p class="text-center text-xs py-4" style="color: var(--edc-text-muted);">Aucune notification</p>';
-                return;
-            }
-            const icones = { info: '📢', success: '✅', warning: '⚠️', error: '❌' };
-            container.innerHTML = notifs.map(n => `
-                <div class="flex items-start space-x-2 p-3" style="border-bottom: 1px solid var(--edc-border);">
-                    <span>${icones[n.type] || '📢'}</span>
-                    <div class="flex-1">
-                        <p class="text-xs font-semibold" style="color: var(--edc-text-primary);">${n.titre}</p>
-                        <p class="text-xs" style="color: var(--edc-text-secondary);">${n.message}</p>
-                    </div>
-                </div>
-            `).join('');
-            fetch('{{ route("notifications.marquer-lu") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            }).then(() => mettreAJourCloche());
-        });
-    }
-
-    document.addEventListener('click', function (e) {
-        const dropdown = document.getElementById('notifDropdown');
-        const btn = document.getElementById('notifBtn');
-        if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.classList.add('hidden');
-        }
-    });
-</script>
 
 {{-- ========== NAVBAR ========== --}}
 <nav class="edc-navbar sticky top-0 z-50" x-data="{ menuOpen: false }">
@@ -95,7 +31,7 @@
             <a href="{{ route('enseignant.dashboard') }}" class="flex items-center space-x-2.5 flex-shrink-0">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
                      style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
-                    EDC
+                    {{ $initiales }}
                 </div>
                 <span class="font-extrabold text-sm hidden sm:block" style="color: var(--edc-text-primary);">
                     Espace Enseignant
@@ -113,7 +49,7 @@
                 <a href="{{ route($item[0]) }}"
                     class="nav-link {{ request()->routeIs($item[0]) ? 'active' : '' }}">
                     <span>{{ $item[1] }}</span>
-                    <span class="ml-1.5">{{ $item[2] }}</span>
+                    <span class="ml-1.5 hidden lg:inline">{{ $item[2] }}</span>
                 </a>
                 @endforeach
             </div>
@@ -123,7 +59,7 @@
 
                 {{-- Bouton Voir le site --}}
                 <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
-                    class="btn-tertiary btn-xs hidden sm:inline-flex">
+                    class="btn-tertiary btn-xs hidden lg:inline-flex">
                     🌐 Voir le site
                 </a>
 
@@ -138,7 +74,7 @@
                         </svg>
                         @php $notifCount = auth()->user()->notifications()->where('lu', false)->count(); @endphp
                         @if($notifCount > 0)
-                        <span class="notif-badge absolute -top-1 -right-1 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                        <span class="notif-badge absolute top-1 right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"
                             style="background-color: var(--edc-danger);">
                             {{ $notifCount > 9 ? '9+' : $notifCount }}
                         </span>
@@ -146,13 +82,13 @@
                     </button>
 
                     <div id="notifDropdown"
-                        class="hidden absolute right-0 mt-2 w-72 rounded-xl shadow-2xl z-50 overflow-hidden"
+                        class="hidden absolute right-0 mt-1 w-72 rounded-xl shadow-2xl z-50 overflow-hidden"
                         style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
-                        <div class="px-4 py-3" style="border-bottom: 1px solid var(--edc-border);">
-                            <p class="font-semibold text-sm" style="color: var(--edc-text-primary);">🔔 Notifications</p>
+                        <div class="flex justify-between items-center px-4 py-2.5" style="border-bottom: 1px solid var(--edc-border);">
+                            <p class="font-semibold text-xs" style="color: var(--edc-text-primary);">🔔 Notifications</p>
                         </div>
-                        <div id="notifContainer" class="max-h-64 overflow-y-auto">
-                            <p class="text-center text-xs py-4" style="color: var(--edc-text-muted);">Cliquez pour charger</p>
+                        <div id="notifContainer" class="max-h-60 overflow-y-auto">
+                            <p class="text-center text-xs py-3" style="color: var(--edc-text-muted);">Chargement...</p>
                         </div>
                     </div>
                 </div>
@@ -166,10 +102,8 @@
                     </svg>
                     @php $msgCount = \App\Models\Message::where('destinataire_id', auth()->id())->where('lu', false)->count(); @endphp
                     @if($msgCount > 0)
-                    <span class="absolute -top-1 -right-1 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                        style="background-color: var(--edc-success);">
-                        {{ $msgCount > 9 ? '9+' : $msgCount }}
-                    </span>
+                    <span class="absolute top-1 right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"
+                        style="background-color: var(--edc-success);">{{ $msgCount }}</span>
                     @endif
                 </a>
 
@@ -185,13 +119,13 @@
                                 {{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
                             @endif
                         </div>
-                        <span class="hidden md:block text-xs font-medium" style="color: var(--edc-text-secondary);">
+                        <span class="text-xs font-medium hidden sm:inline max-w-16 truncate" style="color: var(--edc-text-secondary);">
                             {{ auth()->user()->prenom }}
                         </span>
                     </button>
 
                     <div x-show="open" @click.away="open = false"
-                        class="absolute right-0 mt-2 w-48 rounded-xl shadow-2xl py-1 z-50"
+                        class="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl py-1 z-50"
                         style="background-color: var(--edc-bg-card); border: 1px solid var(--edc-border);">
                         <a href="{{ route('enseignant.profil') }}"
                             class="flex items-center space-x-2 px-4 py-2.5 text-xs transition"
@@ -243,9 +177,7 @@
                 class="flex items-center space-x-3 px-4 py-3 text-sm font-semibold rounded-xl transition"
                 style="{{ request()->routeIs($item[0])
                     ? 'background-color: rgba(59,130,246,0.15); color: #60A5FA;'
-                    : 'color: #E2E8F0;' }}"
-                onmouseover="if(this.style.color!='#60A5FA'){this.style.backgroundColor='rgba(255,255,255,0.05)';}"
-                onmouseout="if(this.style.color!='#60A5FA'){this.style.backgroundColor='transparent';}">
+                    : 'color: #E2E8F0;' }}">
                 <span>{{ $item[1] }}</span>
                 <span>{{ $item[2] }}</span>
             </a>
@@ -253,10 +185,8 @@
             <div class="px-4 pt-3 mt-2" style="border-top: 1px solid var(--edc-border);">
                 <a href="{{ route('home') }}" target="_blank" rel="noopener noreferrer"
                     class="block w-full text-center py-3 rounded-xl text-sm font-bold transition"
-                    style="background-color: var(--edc-bg-elevated); color: var(--edc-text-secondary); border: 1px solid var(--edc-border);"
-                    onmouseover="this.style.backgroundColor='var(--edc-bg-card)'; this.style.color='#F1F5F9'; this.style.borderColor='#3B82F6';"
-                    onmouseout="this.style.backgroundColor='var(--edc-bg-elevated)'; this.style.color='#94A3B8'; this.style.borderColor='var(--edc-border)';">
-                    🌐 Voir le site public
+                    style="background-color: rgba(59,130,246,0.12); color: #60A5FA; border: 1px solid rgba(59,130,246,0.30);">
+                    🌐 Voir le site
                 </a>
             </div>
         </div>
@@ -265,26 +195,62 @@
 
 {{-- MAIN --}}
 <main class="max-w-7xl mx-auto px-4 py-6">
-
     @if(session('success'))
-    <div class="alert alert-success mb-4">
-        <span>✅</span><span>{{ session('success') }}</span>
-    </div>
+    <div class="alert alert-success mb-4"><span>✅</span><span>{{ session('success') }}</span></div>
     @endif
-
     @if(session('error'))
-    <div class="alert alert-error mb-4">
-        <span>❌</span><span>{{ session('error') }}</span>
-    </div>
+    <div class="alert alert-error mb-4"><span>❌</span><span>{{ session('error') }}</span></div>
     @endif
-
     @yield('content')
-
 </main>
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-@stack('scripts')
+{{-- SCRIPT NOTIFICATIONS --}}
+<script>
+function mettreAJourCloche() {
+    fetch('{{ route("notifications.non-lues") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(r => r.json()).then(data => {
+        document.querySelectorAll('.notif-badge').forEach(b => {
+            if (data.count > 0) { b.textContent = data.count > 9 ? '9+' : data.count; b.classList.remove('hidden'); }
+            else { b.classList.add('hidden'); }
+        });
+    }).catch(() => {});
+}
+mettreAJourCloche(); setInterval(mettreAJourCloche, 30000);
 
+function toggleNotifDropdown() {
+    const d = document.getElementById('notifDropdown');
+    if (d.classList.contains('hidden')) { chargerNotifs(); d.classList.remove('hidden'); }
+    else { d.classList.add('hidden'); }
+}
+function chargerNotifs() {
+    const c = document.getElementById('notifContainer');
+    c.innerHTML = '<p class="text-center text-xs py-3" style="color: var(--edc-text-muted);">Chargement...</p>';
+    fetch('{{ route("notifications.dernieres") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(r => r.json()).then(notifs => {
+        if (!notifs.length) { c.innerHTML = '<p class="text-center text-xs py-4" style="color: var(--edc-text-muted);">Aucune notification</p>'; return; }
+        const icons = { info:'📢', success:'✅', warning:'⚠️', error:'❌' };
+        c.innerHTML = notifs.map(n => `
+            <div class="flex items-start space-x-2 p-3" style="border-bottom: 1px solid rgba(42,53,82,0.5);">
+                <span class="text-sm flex-shrink-0">${icons[n.type]||'📢'}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold truncate" style="color: #F1F5F9;">${n.titre}</p>
+                    <p class="text-xs mt-0.5 truncate" style="color: #64748B;">${n.message}</p>
+                </div>
+            </div>`).join('');
+        fetch('{{ route("notifications.marquer-lu") }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '', 'Content-Type': 'application/json' }
+        }).then(() => mettreAJourCloche());
+    }).catch(() => { c.innerHTML = '<p class="text-center text-xs py-3" style="color: #EF4444;">Erreur</p>'; });
+}
+document.addEventListener('click', function(e) {
+    const d = document.getElementById('notifDropdown'), b = document.getElementById('notifBtn');
+    if (d && b && !b.contains(e.target) && !d.contains(e.target)) d.classList.add('hidden');
+});
+</script>
+
+@stack('scripts')
 </body>
 </html>

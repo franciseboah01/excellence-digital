@@ -1,6 +1,6 @@
 @php
     $siteNom      = \App\Models\Configuration::get('site_nom', 'Excellence Digital Center');
-    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250748746140');
+    $siteWhatsapp = \App\Models\Configuration::get('site_whatsapp', '2250700000000');
     
     $initiales = collect(explode(' ', $siteNom))
         ->map(fn($mot) => strtoupper(substr($mot, 0, 1)))

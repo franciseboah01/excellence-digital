@@ -60,7 +60,7 @@
                 </a>
 
                 {{-- LIENS DESKTOP --}}
-                <div class="hidden lg:flex items-center space-x-6">
+                <div class="hidden lg:flex items-center space-x-1">
                     @foreach([
                         ['home', 'Accueil'],
                         ['services.index', 'Services'],
