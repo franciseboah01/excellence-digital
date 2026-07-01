@@ -12,8 +12,8 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaiementRequest;
-use App\Models\DemandeDuplicata;  // ← AJOUTER
-use App\Models\Certificat;        // ← AJOUTER
+use App\Models\DemandeDuplicata;
+use App\Models\Certificat;
 
 class PaiementController extends Controller
 {
@@ -103,33 +103,51 @@ class PaiementController extends Controller
             'notes'         => $request->notes,
             'enregistre_par'=> auth()->id(),
             'date_paiement' => $request->date_paiement ?? now(),
-            'certificat_id' => $request->certificat_id ?? null,  // ← AJOUTER
-            'type'          => $request->type ?? 'formation',     // ← AJOUTER
+            'certificat_id' => $request->certificat_id ?? null,
+            'type'          => $request->type ?? 'formation',
         ]);
 
         // ===== SI PAIEMENT POUR DUPLICATA =====
         if ($request->type === 'duplicata' && $request->certificat_id) {
             $certificat = Certificat::find($request->certificat_id);
-            
-            if ($certificat && $statut === 'complete') {
-                // Créer la demande de duplicata avec statut 'paye'
-                $demande = DemandeDuplicata::create([
-                    'certificat_id' => $certificat->id,
-                    'user_id' => $request->user_id,
-                    'paiement_id' => $paiement->id,
-                    'statut' => 'paye',  // ✅ Statut payé
-                    'paye' => true,
-                    'montant_paye' => $montantPaye,
-                ]);
 
-                // Notifier l'admin
-                Notification::create([
-                    'user_id' => 1, // Admin
-                    'titre' => '💰 Demande de duplicata payée',
-                    'message' => User::find($request->user_id)?->prenom . ' ' . User::find($request->user_id)?->nom . ' a payé un duplicata pour ' . $certificat->formation?->titre,
-                    'type' => 'info',
-                    'lien' => route('admin.duplicatas.demandes'),
-                ]);
+            if ($certificat && $statut === 'complete') {
+                // ✅ CORRECTION CRITIQUE : on cherche la DemandeDuplicata créée par le
+                // client (statut 'en_attente') au lieu d'en créer une nouvelle.
+                // L'ancien code créait systématiquement une 2e ligne, laissant la
+                // demande d'origine bloquée éternellement en 'en_attente' en base.
+                $demande = DemandeDuplicata::where('certificat_id', $certificat->id)
+                    ->where('statut', 'en_attente')
+                    ->latest()
+                    ->first();
+
+                if ($demande) {
+                    $demande->marquerPayee($montantPaye, $paiement->id);
+                } else {
+                    // Fallback : aucune demande préalable (paiement enregistré
+                    // directement par l'admin sans passage du client par "Mes Certificats")
+                    $demande = DemandeDuplicata::create([
+                        'certificat_id' => $certificat->id,
+                        'user_id'       => $request->user_id,
+                        'paiement_id'   => $paiement->id,
+                        'statut'        => 'paye',
+                        'paye'          => true,
+                        'montant_paye'  => $montantPaye,
+                    ]);
+                }
+
+                // ✅ Notifier TOUS les admins (au lieu d'un user_id=1 codé en dur)
+                $admins = User::role('admin')->get();
+                $client = User::find($request->user_id);
+                foreach ($admins as $admin) {
+                    Notification::create([
+                        'user_id' => $admin->id,
+                        'titre' => '💰 Demande de duplicata payée',
+                        'message' => ($client?->prenom . ' ' . $client?->nom) . ' a payé un duplicata pour ' . $certificat->formation?->titre,
+                        'type' => 'info',
+                        'lien' => route('admin.duplicatas.demandes'),
+                    ]);
+                }
 
                 // Notifier le client
                 Notification::create([
@@ -196,6 +214,22 @@ class PaiementController extends Controller
             'enregistre_par' => auth()->id(),
             'date_paiement'  => now(),
         ]);
+
+        // ✅ Si ce paiement concerne un duplicata et qu'il vient d'être complété
+        // ici (mise à jour d'un paiement partiel existant), on synchronise aussi
+        // la DemandeDuplicata associée pour ne pas la laisser bloquée.
+        if ($statut === 'complete' && $paiement->getEstPourDuplicataAttribute()) {
+            $demande = DemandeDuplicata::where('paiement_id', $paiement->id)
+                ->orWhere(function ($q) use ($paiement) {
+                    $q->where('certificat_id', $paiement->certificat_id)
+                      ->where('statut', 'en_attente');
+                })
+                ->first();
+
+            if ($demande && $demande->statut !== 'paye' && $demande->statut !== 'valide') {
+                $demande->marquerPayee($montantPaye, $paiement->id);
+            }
+        }
 
         // Notifier si complété
         if ($statut === 'complete') {

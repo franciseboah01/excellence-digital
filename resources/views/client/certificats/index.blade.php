@@ -46,18 +46,32 @@
 
                 {{-- ===== DEMANDE DUPLICATA (Original déjà téléchargé) ===== --}}
                 @if(!$certificat->est_duplicata && $certificat->telecharge)
+                    @php
+                        // On récupère la demande active (si elle existe) pour distinguer
+                        // "en attente de paiement" de "payé, en attente de validation admin".
+                        $demandeActive = $certificat->demandesDuplicata->first();
+                    @endphp
+
                     @if(!$certificat->demande_existante && !$certificat->duplicata_existant)
                         <form method="POST" action="{{ route('client.certificats.demande-duplicata', $certificat) }}" class="inline">
                             @csrf
-                            <button type="submit" 
+                            <button type="submit"
                                 class="text-xs font-bold px-3 py-1.5 rounded-lg transition"
                                 style="color: var(--edc-accent-gold); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);"
                                 onclick="return confirm('⚠️ Confirmer la demande de duplicata ? Un paiement de {{ number_format($certificat->prix_duplicata, 0, ',', ' ') }} FCFA sera requis.');">
                                 🔄 Duplicata ({{ number_format($certificat->prix_duplicata, 0, ',', ' ') }} FCFA)
                             </button>
                         </form>
-                    @elseif($certificat->demande_existante)
-                        <span class="badge badge-info text-xs" style="background: #3B82F6; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">⏳ Demande en cours</span>
+                    @elseif($demandeActive && $demandeActive->statut === 'en_attente')
+                        {{-- Demande créée mais paiement pas encore effectué : proposer de reprendre le paiement.
+                             ✅ L'ID du certificat est passé directement dans l'URL (plus de session),
+                             donc ce lien fonctionne même après une longue absence ou une session perdue. --}}
+                        <a href="{{ route('client.paiement.form', ['type' => 'duplicata', 'id' => $certificat->id]) }}"
+                           class="badge badge-warning text-xs" style="background: #F59E0B; color: #1a1a1a; padding: 2px 12px; border-radius: 9999px; font-weight: 600; text-decoration: none;">
+                            💳 Finaliser le paiement
+                        </a>
+                    @elseif($demandeActive && $demandeActive->statut === 'paye')
+                        <span class="badge badge-info text-xs" style="background: #3B82F6; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">⏳ Payé, en attente de validation</span>
                     @elseif($certificat->duplicata_existant)
                         <span class="badge badge-success text-xs" style="background: #10B981; color: white; padding: 2px 12px; border-radius: 9999px; font-weight: 600;">✅ Duplicata disponible</span>
                     @endif

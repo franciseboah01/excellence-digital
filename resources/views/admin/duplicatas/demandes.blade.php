@@ -104,66 +104,43 @@
 
                     <td>
                         <div class="flex items-center gap-2 whitespace-nowrap flex-wrap">
-                            {{-- ===== ACTIONS POUR DEMANDES PAYÉES OU EN ATTENTE ===== --}}
-                            @if($demande->statut === 'paye' || $demande->statut === 'en_attente')
-                                {{-- Valider --}}
+
+                            {{-- ===== CAS 1 : PAYÉ → Le bouton Valider n'existe QUE dans ce cas ===== --}}
+                            @if($demande->statut === 'paye')
                                 <form action="{{ route('admin.duplicatas.valider', $demande) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" 
-                                            class="text-xs font-medium hover:underline text-emerald-500 hover:text-emerald-600" 
+                                    <button type="submit"
+                                            class="text-xs font-medium hover:underline text-emerald-500 hover:text-emerald-600"
                                             style="cursor:pointer; background:none; border:none; padding:0;"
                                             onclick="return confirm('✅ Confirmer la validation de cette demande ? Le duplicata sera généré automatiquement.');">
                                         ✅ Valider
                                     </button>
                                 </form>
 
-                                {{-- Rejeter --}}
-                                <button type="button" 
-                                        class="text-xs font-medium hover:underline text-red-500 hover:text-red-600" 
+                                <button type="button"
+                                        class="text-xs font-medium hover:underline text-red-500 hover:text-red-600"
                                         style="cursor:pointer; background:none; border:none; padding:0;"
                                         onclick="document.getElementById('rejetModal{{ $demande->id }}').classList.remove('hidden');">
                                     ❌ Rejeter
                                 </button>
 
-                                {{-- Modal Rejet --}}
-                                <div id="rejetModal{{ $demande->id }}" 
-                                     class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-                                    <div class="bg-slate-900 rounded-xl p-6 max-w-md w-full border border-slate-800">
-                                        <h3 class="text-lg font-bold mb-4" style="color: var(--edc-text-primary);">
-                                            ❌ Rejeter la demande
-                                        </h3>
-                                        <p class="text-sm mb-4" style="color: var(--edc-text-secondary);">
-                                            Veuillez indiquer le motif du rejet pour la demande de 
-                                            <strong>{{ $demande->user?->prenom }} {{ $demande->user?->nom }}</strong>.
-                                        </p>
-                                        <form action="{{ route('admin.duplicatas.rejeter', $demande) }}" method="POST" id="rejetForm{{ $demande->id }}">
-                                            @csrf
-                                            @method('PATCH')
-                                            <div class="mb-4">
-                                                <label class="text-xs font-semibold text-slate-400 block mb-2">Motif du rejet</label>
-                                                <textarea name="motif" 
-                                                          class="edc-input w-full" 
-                                                          rows="3" 
-                                                          placeholder="Ex: Paiement non confirmé, certificat original non valide..."
-                                                          required></textarea>
-                                            </div>
-                                            <div class="flex gap-3">
-                                                <button type="button" 
-                                                        class="btn-secondary btn-sm flex-1"
-                                                        onclick="document.getElementById('rejetModal{{ $demande->id }}').classList.add('hidden');">
-                                                    Annuler
-                                                </button>
-                                                <button type="submit" 
-                                                        class="btn-danger btn-sm flex-1"
-                                                        onclick="return confirm('⚠️ Confirmer le rejet de cette demande ?');">
-                                                    Confirmer le rejet
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
+                                @include('admin.duplicatas.partials.modal-rejet', ['demande' => $demande])
 
+                            {{-- ===== CAS 2 : EN ATTENTE DE PAIEMENT → Pas de bouton Valider, juste Rejeter ===== --}}
+                            @elseif($demande->statut === 'en_attente')
+                                <span class="text-xs" style="color: var(--edc-text-muted);">⏳ En attente du paiement client</span>
+
+                                <button type="button"
+                                        class="text-xs font-medium hover:underline text-red-500 hover:text-red-600"
+                                        style="cursor:pointer; background:none; border:none; padding:0;"
+                                        onclick="document.getElementById('rejetModal{{ $demande->id }}').classList.remove('hidden');">
+                                    ❌ Rejeter
+                                </button>
+
+                                @include('admin.duplicatas.partials.modal-rejet', ['demande' => $demande])
+
+                            {{-- ===== CAS 3 : DÉJÀ TRAITÉE ===== --}}
                             @elseif($demande->statut === 'valide')
                                 <span class="text-xs text-emerald-500">✅ Traitée</span>
                             @elseif($demande->statut === 'rejete')

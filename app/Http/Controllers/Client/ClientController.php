@@ -253,14 +253,13 @@ class ClientController extends Controller
 
     public function profilUpdate(UpdateProfilRequest $request)
     {
-        // Validation automatique
         $user = auth()->user();
 
         if ($request->hasFile('avatar')) {
             if ($user->avatar) Storage::disk('public')->delete($user->avatar);
             $user->avatar = $request->file('avatar')->store('avatars', 'public');
         }
-            
+
         $user->update([
             'nom'       => $request->nom,
             'prenom'    => $request->prenom,
@@ -271,7 +270,7 @@ class ClientController extends Controller
         return back()->with('success', 'Profil mis à jour avec succès !');
     }
 
-    
+
     public function passwordUpdate(Request $request)
     {
         $request->validate([
@@ -320,9 +319,25 @@ class ClientController extends Controller
             $item = Formation::findOrFail($id);
             $montant = $item->prix ?? 0;
             $description = $item->titre;
-        } elseif ($type === 'service' && $id === 'duplicata') {
-            $montant = (int) Configuration::get('duplicata_prix', 1000);
-            $description = 'Duplicata de certificat';
+        } elseif ($type === 'duplicata') {
+            // ✅ L'ID dans l'URL est directement le certificat_id (plus de session).
+            $certificat = \App\Models\Certificat::findOrFail($id);
+            abort_if($certificat->user_id !== auth()->id(), 403);
+
+            $demande = DemandeDuplicata::where('certificat_id', $certificat->id)
+                ->where('user_id', auth()->id())
+                ->where('statut', 'en_attente')
+                ->latest()
+                ->first();
+
+            if (!$demande) {
+                return redirect()->route('client.certificats.index')
+                    ->with('error', 'Aucune demande de duplicata en attente de paiement pour ce certificat. Merci de relancer la demande depuis "Mes Certificats".');
+            }
+
+            $item = $certificat;
+            $montant = (int) ($demande->montant_paye ?? Configuration::get('duplicata_prix', 1000));
+            $description = 'Duplicata de certificat — ' . ($certificat->formation->titre ?? $certificat->numero_certificat);
         } elseif ($type === 'service') {
             $item = Service::findOrFail($id);
             $montant = $item->prix ?? 0;
@@ -343,7 +358,7 @@ class ClientController extends Controller
     {
         $request->validate([
             'type'          => 'required|in:formation,service,duplicata',
-            'id'            => 'required|string',
+            'id'            => 'required',
             'montant'       => 'required|numeric|min:100',
             'mode_paiement' => 'required|in:orange_money,mtn_money,moov_money,visa,mastercard',
             'telephone'     => 'nullable|string|max:20',
@@ -361,8 +376,17 @@ class ClientController extends Controller
         if ($request->type === 'formation') {
             $formationId = $request->id;
             $notes = "Inscription à la formation — " . $modePropre;
-        } elseif ($request->type === 'service' && $request->id === 'duplicata') {
-            $certificatId = session('certificat_id');
+        } elseif ($request->type === 'duplicata') {
+            // ✅ L'ID est directement le certificat_id transmis dans l'URL/formulaire,
+            // plus de dépendance à la session (source du bug précédent).
+            $certificat = \App\Models\Certificat::find($request->id);
+
+            if (!$certificat || $certificat->user_id !== auth()->id()) {
+                return redirect()->route('client.certificats.index')
+                    ->with('error', 'Certificat introuvable pour cette demande de duplicata.');
+            }
+
+            $certificatId = $certificat->id;
             $notes = "Achat de duplicata de certificat — " . $modePropre;
         } elseif ($request->type === 'service') {
             $serviceId = $request->id;
@@ -375,6 +399,7 @@ class ClientController extends Controller
             'formation_id'   => $formationId,
             'service_id'     => $serviceId,
             'certificat_id'  => $certificatId,
+            'type'           => $request->type,
             'montant_total'  => $request->montant,
             'montant_paye'   => $request->montant,
             'statut'         => 'complete',
@@ -386,15 +411,14 @@ class ClientController extends Controller
         ]);
 
         // ===== SERVICE CLASSIQUE =====
-        if ($request->type === 'service' && $request->id !== 'duplicata' && session('demande_data')) {
+        if ($request->type === 'service' && session('demande_data')) {
             $this->enregistrerDemande();
             session()->forget('demande_data');
         }
 
         // ===== DUPLICATA =====
-        if ($request->type === 'service' && $request->id === 'duplicata' && $certificatId) {
+        if ($request->type === 'duplicata' && $certificatId) {
             $this->traiterDemandeDuplicata($certificatId, $paiement);
-            session()->forget('certificat_id');
 
             return redirect()->route('client.paiements')
                 ->with('success', '✅ Paiement effectué ! Votre demande de duplicata est en attente de validation par l\'administration.');
@@ -425,7 +449,6 @@ class ClientController extends Controller
      */
     public function inscrireFormation(Formation $formation)
     {
-        // Vérifier si déjà inscrit
         $dejaInscrit = InscriptionFormation::where('user_id', auth()->id())
             ->where('formation_id', $formation->id)
             ->exists();
@@ -434,7 +457,6 @@ class ClientController extends Controller
             return back()->with('error', 'Vous êtes déjà inscrit à cette formation.');
         }
 
-        // Vérifier si la formation est complète
         if ($formation->places_max && $formation->places_max > 0) {
             $inscriptions = InscriptionFormation::where('formation_id', $formation->id)
                 ->where('statut', 'valide')
@@ -452,9 +474,9 @@ class ClientController extends Controller
             'date_inscription' => now(),
         ]);
 
-        // Notifier l'admin
-        $admin = User::role('admin')->first();
-        if ($admin) {
+        // Notifier tous les admins
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
             Notification::create([
                 'user_id' => $admin->id,
                 'titre'   => '📝 Nouvelle inscription en attente',
@@ -476,6 +498,14 @@ class ClientController extends Controller
 
     /**
      * Traiter une demande de duplicata après paiement
+     *
+     * ✅ CORRECTION CRITIQUE : on récupère la DemandeDuplicata déjà créée
+     * (statut 'en_attente') au moment du clic du client sur "Mes Certificats",
+     * et on la marque payée — au lieu d'en créer une nouvelle.
+     * L'ancien code vérifiait l'existence d'une demande 'en_attente' et,
+     * la trouvant, abandonnait silencieusement (juste un log) sans jamais
+     * la faire passer à 'paye'. Résultat : le bouton "Valider" de l'admin
+     * ne s'activait jamais, même après paiement réel du client.
      */
     private function traiterDemandeDuplicata(int $certificatId, Paiement $paiement)
     {
@@ -486,29 +516,40 @@ class ClientController extends Controller
             return;
         }
 
-        // Vérifier qu'il n'y a pas déjà une demande en cours
-        $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
-            ->whereIn('statut', ['en_attente', 'valide'])
-            ->exists();
+        $demande = DemandeDuplicata::where('certificat_id', $certificat->id)
+            ->where('user_id', auth()->id())
+            ->where('statut', 'en_attente')
+            ->latest()
+            ->first();
 
-        if ($demandeExistante) {
-            Log::warning('Demande de duplicata déjà existante', ['certificat_id' => $certificat->id]);
-            return;
+        if ($demande) {
+            $demande->marquerPayee((int) $paiement->montant_paye, $paiement->id);
+        } else {
+            // Fallback défensif : aucune demande préalable trouvée (paiement initié
+            // sans passer par "Mes Certificats"). On évite tout doublon si une
+            // demande payée/validée existe déjà pour ce certificat.
+            $demandeDejaTraitee = DemandeDuplicata::where('certificat_id', $certificat->id)
+                ->whereIn('statut', ['paye', 'valide'])
+                ->exists();
+
+            if ($demandeDejaTraitee) {
+                Log::warning('Demande de duplicata déjà payée/validée, paiement ignoré pour la création', ['certificat_id' => $certificat->id]);
+                return;
+            }
+
+            $demande = DemandeDuplicata::create([
+                'certificat_id' => $certificat->id,
+                'user_id'       => auth()->id(),
+                'paiement_id'   => $paiement->id,
+                'statut'        => 'paye',
+                'paye'          => true,
+                'montant_paye'  => $paiement->montant_paye,
+            ]);
         }
 
-        // Créer la demande de duplicata
-        DemandeDuplicata::create([
-            'certificat_id' => $certificat->id,
-            'user_id'       => auth()->id(),
-            'paiement_id'   => $paiement->id,
-            'statut'        => 'en_attente',
-            'paye'          => true,
-            'montant_paye'  => $paiement->montant_paye,
-        ]);
-
-        // Notifier l'admin
-        $admin = User::role('admin')->first();
-        if ($admin) {
+        // Notifier TOUS les admins (au lieu d'un seul via ->first())
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
             Notification::create([
                 'user_id' => $admin->id,
                 'titre'   => '📄 Demande de duplicata - Paiement reçu',
@@ -518,7 +559,8 @@ class ClientController extends Controller
             ]);
         }
 
-        Log::info('Demande de duplicata créée', [
+        Log::info('Demande de duplicata marquée payée', [
+            'demande_id' => $demande->id,
             'certificat_id' => $certificat->id,
             'user_id' => auth()->id(),
             'paiement_id' => $paiement->id,

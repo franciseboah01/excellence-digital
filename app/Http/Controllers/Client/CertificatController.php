@@ -7,6 +7,7 @@ use App\Models\Certificat;
 use App\Models\Configuration;
 use App\Models\DemandeDuplicata;
 use App\Models\Notification;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,24 +21,21 @@ class CertificatController extends Controller
         $user = auth()->user();
 
         $certificats = Certificat::where('user_id', $user->id)
-            ->with(['formation', 'demandesDuplicata' => function($query) {
-                $query->whereIn('statut', ['en_attente', 'valide']);
+            ->with(['formation', 'demandesDuplicata' => function ($query) {
+                $query->whereIn('statut', ['en_attente', 'paye', 'valide']);
             }])
             ->latest('delivre_le')
             ->get();
 
-        // Ajouter les propriétés calculées
+        // Propriétés calculées NON couvertes par les accessors du modèle Certificat.
+        // (est_duplicata, est_telechargeable, mention sont déjà fournis automatiquement
+        // par le modèle via getEstDuplicataAttribute / getEstTelechargeableAttribute / getMentionAttribute)
         foreach ($certificats as $certificat) {
             $certificat->prix_duplicata = Configuration::get('duplicata_prix', 1000);
             $certificat->demande_existante = $certificat->demandesDuplicata->isNotEmpty();
             $certificat->duplicata_existant = Certificat::where('parent_id', $certificat->id)
                 ->where('telecharge', false)
                 ->exists();
-            
-            // ✅ AJOUT : Propriétés manquantes
-            $certificat->est_duplicata = str_ends_with($certificat->numero_certificat, '-DUP');
-            $certificat->est_telechargeable = $this->estTelechargeable($certificat);
-            $certificat->mention = $this->calculerMention($certificat->note_obtenue ?? 0);
         }
 
         return view('client.certificats.index', compact('certificats'));
@@ -49,8 +47,8 @@ class CertificatController extends Controller
         abort_if($certificat->user_id !== auth()->id(), 403);
         abort_if(!in_array($format, ['pdf', 'jpg']), 404);
 
-        // Vérifier si téléchargeable
-        if (!$this->estTelechargeable($certificat)) {
+        // Vérifier si téléchargeable (accessor du modèle)
+        if (!$certificat->est_telechargeable) {
             if ($certificat->est_duplicata) {
                 return back()->with('error', 'Ce duplicata n\'est pas encore disponible.');
             }
@@ -66,9 +64,6 @@ class CertificatController extends Controller
 
         // Charger les relations
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
-        
-        // Calculer la mention
-        $certificat->mention = $this->calculerMention($certificat->note_obtenue ?? 0);
 
         // Générer le PDF
         return $this->genererPDF($certificat);
@@ -80,21 +75,26 @@ class CertificatController extends Controller
         abort_if($certificat->user_id !== auth()->id(), 403);
         abort_if($certificat->est_duplicata, 403, 'Impossible de faire un duplicata d\'un duplicata.');
 
-        // Vérifier si une demande existe déjà
-        $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
-            ->whereIn('statut', ['en_attente', 'valide'])
-            ->exists();
+        // ✅ Si une demande 'en_attente' existe déjà pour ce certificat (le client
+        // a cliqué une première fois mais n'a jamais terminé le paiement — session
+        // perdue, navigateur fermé...), on relance simplement le paiement au lieu
+        // de le bloquer définitivement avec une erreur.
+        $demandeEnAttente = DemandeDuplicata::where('certificat_id', $certificat->id)
+            ->where('user_id', auth()->id())
+            ->where('statut', 'en_attente')
+            ->latest()
+            ->first();
 
-        abort_if($demandeExistante, 403, 'Une demande de duplicata est déjà en cours.');
+        if ($demandeEnAttente) {
+            session(['certificat_id' => $certificat->id]);
+            return redirect()->route('client.paiement.form', ['type' => 'service', 'id' => 'duplicata']);
+        }
 
-        // Vérifier si un duplicata a déjà été généré
-        $duplicataExistant = Certificat::where('parent_id', $certificat->id)
-            ->where('telecharge', false)
-            ->exists();
+        if (!DemandeDuplicata::peutDemander($certificat)) {
+            return back()->with('error', 'Une demande de duplicata est déjà payée (en attente de validation), ou un duplicata est déjà disponible pour ce certificat.');
+        }
 
-        abort_if($duplicataExistant, 403, 'Un duplicata est déjà disponible.');
-
-        // Créer la demande
+        // Créer la demande (en attente de paiement)
         $demande = DemandeDuplicata::create([
             'certificat_id' => $certificat->id,
             'user_id' => auth()->id(),
@@ -103,49 +103,32 @@ class CertificatController extends Controller
             'montant_paye' => Configuration::get('duplicata_prix', 1000),
         ]);
 
-        // Notification admin
-        Notification::create([
-            'user_id' => 1, // Admin
-            'titre' => '📄 Demande de duplicata',
-            'message' => auth()->user()->prenom . ' ' . auth()->user()->nom . ' a demandé un duplicata pour ' . $certificat->formation->titre,
-            'type' => 'info',
-            'lien' => route('admin.duplicatas.demandes'),
-        ]);
+        // Notifier TOUS les administrateurs (au lieu d'un user_id=1 codé en dur)
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'titre' => '📄 Demande de duplicata',
+                'message' => auth()->user()->prenom . ' ' . auth()->user()->nom . ' a demandé un duplicata pour ' . $certificat->formation->titre,
+                'type' => 'info',
+                'lien' => route('admin.duplicatas.demandes'),
+            ]);
+        }
 
-        return back()->with('success', '✅ Demande de duplicata envoyée avec succès !');
+        // ✅ Rediriger vers la page de paiement avec l'ID du certificat directement
+        // dans l'URL (type='duplicata', id=certificat réel). On évite volontairement
+        // de faire transiter cette information par la session : une session perdue
+        // (expiration, changement d'onglet, redémarrage serveur) rendait auparavant
+        // le paiement impossible à finaliser sans revenir depuis "Mes Certificats".
+        return redirect()
+            ->route('client.paiement.form', ['type' => 'duplicata', 'id' => $certificat->id])
+            ->with('info', '✅ Demande créée. Merci de procéder au paiement de ' . number_format($demande->montant_paye, 0, ',', ' ') . ' FCFA pour finaliser votre duplicata.');
     }
 
     // ===== MÉTHODES PRIVÉES =====
 
-    private function estTelechargeable(Certificat $certificat): bool
-    {
-        $estDuplicata = str_ends_with($certificat->numero_certificat, '-DUP');
-        
-        // Original non encore téléchargé
-        if (!$estDuplicata && !$certificat->telecharge) {
-            return true;
-        }
-
-        // Duplicata validé et non encore téléchargé
-        if ($estDuplicata && !$certificat->telecharge && $certificat->delivre_le) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private function calculerMention(float $note): string
-    {
-        if ($note >= 18) return 'Très Bien';
-        if ($note >= 16) return 'Bien';
-        if ($note >= 14) return 'Assez Bien';
-        if ($note >= 12) return 'Passable';
-        return 'Insuffisant';
-    }
-
     private function genererPDF(Certificat $certificat)
     {
-        // Récupérer les configurations
         $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
         $backgroundImage = asset('storage/' . $backgroundPath);
 
@@ -182,7 +165,6 @@ class CertificatController extends Controller
         $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
         $qrSize = (int) Configuration::get('certificat_qr_size', 100);
 
-        // QR Code Data URI
         $qrCodeDataUri = null;
         if ($showQrCode) {
             $qrCodeDataUri = $this->genererQrCodeDataUri($certificat);

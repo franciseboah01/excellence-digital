@@ -48,7 +48,7 @@ class CertificatController extends Controller
 
         $format = $request->input('format', 'pdf');
         $formatsAutorises = ['pdf', 'jpg', 'jpeg', 'png'];
-        
+
         if (!in_array($format, $formatsAutorises)) {
             $format = 'pdf';
         }
@@ -73,41 +73,9 @@ class CertificatController extends Controller
         $certificat->load(['user', 'formation', 'session.qcm.niveau']);
         $certificat->mention = $this->calculerMention($certificat->note_obtenue ?? 0);
 
-        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $backgroundImage = asset('storage/' . $backgroundPath);
+        $backgroundImage = asset('storage/' . $this->getBackgroundPath());
 
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
-            ],
-            'metadata' => [
-                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
-                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
-            ],
-        ];
-
-        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
-        $showNote = (bool) Configuration::get('certificat_show_note', 1);
-        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
-        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
-        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+        extract($this->getRenderingConfig());
 
         $qrCodeDataUri = null;
         if ($showQrCode) {
@@ -115,8 +83,8 @@ class CertificatController extends Controller
         }
 
         return view('client.pdf.certificat', compact(
-            'certificat', 
-            'positions', 
+            'certificat',
+            'positions',
             'backgroundImage',
             'fontColor',
             'showNote',
@@ -129,14 +97,17 @@ class CertificatController extends Controller
 
     /**
      * ============================================================
-     * 4. CRÉER UN DUPLICATA (ADMIN - Direct)
+     * 4. CRÉER UN DUPLICATA (ADMIN - Direct, sans paiement)
      * ============================================================
+     * ⚠️ Override administratif explicite (perte, cas exceptionnel).
+     * Ne suit pas le flux de paiement standard du client. À réserver
+     * aux admins de confiance (déjà protégé par hasRole('admin')).
      */
     public function duplicata(Certificat $certificat)
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
-        // ✅ Vérifier qu'il n'y a pas une demande déjà traitée
+        // Vérifier qu'il n'y a pas une demande déjà en cours ou traitée
         $demandeExistante = DemandeDuplicata::where('certificat_id', $certificat->id)
             ->whereIn('statut', ['en_attente', 'paye', 'valide'])
             ->exists();
@@ -151,6 +122,15 @@ class CertificatController extends Controller
             'telecharge' => false,
         ]);
 
+        // ✅ Notifier le client (manquait dans la version précédente)
+        Notification::create([
+            'user_id' => $certificat->user_id,
+            'titre'   => '✅ Duplicata disponible !',
+            'message' => 'Un duplicata pour la formation "' . ($certificat->formation->titre ?? '') . '" a été généré par l\'administration et est disponible. Téléchargez-le maintenant.',
+            'type'    => 'success',
+            'lien'    => route('client.certificats.telecharger', ['certificat' => $duplicata->id, 'format' => 'pdf']),
+        ]);
+
         return back()->with('success', 'Duplicata créé : ' . $duplicata->numero_certificat);
     }
 
@@ -163,9 +143,11 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
-        // ✅ Accepter 'en_attente' et 'paye'
-        if (!in_array($demande->statut, ['en_attente', 'paye'])) {
-            return back()->with('error', 'Cette demande a déjà été traitée.');
+        // ✅ Le paiement est OBLIGATOIRE avant toute validation.
+        // Le bouton "Valider" ne doit même pas être visible côté vue
+        // tant que statut !== 'paye' (cf. demandes.blade.php).
+        if ($demande->statut !== 'paye') {
+            return back()->with('error', 'Cette demande ne peut pas être validée : le paiement n\'a pas encore été effectué.');
         }
 
         $certificatOriginal = $demande->certificat;
@@ -201,6 +183,12 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
+        // Le rejet reste possible avant ET après paiement
+        // (ex: certificat invalide détecté avant même le paiement).
+        if (!in_array($demande->statut, ['en_attente', 'paye'])) {
+            return back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+
         $request->validate([
             'motif' => 'required|string|max:500',
         ]);
@@ -229,7 +217,6 @@ class CertificatController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
-        // ✅ Inclure 'paye' dans la liste des statuts
         $demandes = DemandeDuplicata::with(['certificat.formation', 'user', 'paiement'])
             ->whereIn('statut', ['en_attente', 'paye', 'valide'])
             ->latest()
@@ -238,7 +225,7 @@ class CertificatController extends Controller
         $stats = [
             'total' => DemandeDuplicata::count(),
             'en_attente' => DemandeDuplicata::where('statut', 'en_attente')->count(),
-            'paye' => DemandeDuplicata::where('statut', 'paye')->count(),  // ← AJOUT
+            'paye' => DemandeDuplicata::where('statut', 'paye')->count(),
             'valide' => DemandeDuplicata::where('statut', 'valide')->count(),
             'rejete' => DemandeDuplicata::where('statut', 'rejete')->count(),
         ];
@@ -295,71 +282,39 @@ class CertificatController extends Controller
         $certificat->delivre_le = now();
         $certificat->created_at = now();
         $certificat->telecharge = false;
-        
+
         $certificat->user = (object) [
             'prenom' => 'Yao Jean-Marc',
             'nom'    => 'KOUASSI',
             'name'   => 'KOUASSI Yao Jean-Marc',
             'email'  => 'specimen@excellencedigital.ci',
         ];
-        
+
         $certificat->formation = (object) [
             'titre' => 'Développement Web Full Stack',
         ];
-        
+
         $certificat->session = (object) [
             'qcm' => (object) [
                 'niveau' => (object) ['nom' => 'Niveau Expert'],
             ],
         ];
-        
+
         $certificat->mention = $this->calculerMention($certificat->note_obtenue);
 
-        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $bgFullPath = storage_path('app/public/' . $backgroundPath);
-        
+        $bgFullPath = storage_path('app/public/' . $this->getBackgroundPath());
+
         if (file_exists($bgFullPath)) {
             $mime = mime_content_type($bgFullPath);
             $backgroundImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgFullPath));
         } else {
             $defaultBgPath = storage_path('app/public/certificats/default_bg.jpg');
-            $backgroundImage = file_exists($defaultBgPath) 
+            $backgroundImage = file_exists($defaultBgPath)
                 ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($defaultBgPath))
                 : null;
         }
 
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
-            ],
-            'metadata' => [
-                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
-                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
-            ],
-        ];
-
-        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
-        $showNote = (bool) Configuration::get('certificat_show_note', 1);
-        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
-        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
-        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+        extract($this->getRenderingConfig());
 
         $qrCodeDataUri = null;
         if ($showQrCode) {
@@ -390,6 +345,56 @@ class CertificatController extends Controller
      * ============================================================
      */
 
+    /**
+     * Chemin de fond configuré (relatif à storage/app/public)
+     */
+    private function getBackgroundPath(): string
+    {
+        return Configuration::get('certificat_background', 'certificats/default_bg.jpg');
+    }
+
+    /**
+     * Config centralisée des positions/styles du certificat.
+     * Évite de dupliquer ce bloc dans apercu(), specimen(), genererSortie()
+     * et genererFichierCertificat() — une seule source de vérité.
+     */
+    private function getRenderingConfig(): array
+    {
+        return [
+            'positions' => [
+                'numero' => [
+                    'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
+                    'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
+                    'size' => (int) Configuration::get('certificat_font_size_numero', 12),
+                ],
+                'name' => [
+                    'x' => (int) Configuration::get('certificat_axis_x_name', 148),
+                    'y' => (int) Configuration::get('certificat_axis_y_name', 105),
+                    'size' => (int) Configuration::get('certificat_font_size_name', 28),
+                ],
+                'formation' => [
+                    'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
+                    'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
+                    'size' => (int) Configuration::get('certificat_font_size_formation', 20),
+                ],
+                'performance' => [
+                    'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
+                    'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
+                    'size' => (int) Configuration::get('certificat_font_size_perf', 12),
+                ],
+                'metadata' => [
+                    'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
+                    'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
+                ],
+            ],
+            'fontColor' => Configuration::get('certificat_font_color_name', '#FFFFFF'),
+            'showNote' => (bool) Configuration::get('certificat_show_note', 1),
+            'showMention' => (bool) Configuration::get('certificat_show_mention', 1),
+            'showQrCode' => (bool) Configuration::get('certificat_show_qrcode', 1),
+            'qrSize' => (int) Configuration::get('certificat_qr_size', 100),
+        ];
+    }
+
     private function genererQrCodeDataUri(Certificat $certificat): ?string
     {
         try {
@@ -412,42 +417,9 @@ class CertificatController extends Controller
     private function genererSortie(Certificat $certificat, string $format)
     {
         $nomFichier = 'certificat-' . $certificat->numero_certificat;
+        $backgroundImage = asset('storage/' . $this->getBackgroundPath());
 
-        $backgroundPath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
-        $backgroundImage = asset('storage/' . $backgroundPath);
-
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
-            ],
-            'metadata' => [
-                'x' => (int) Configuration::get('certificat_axis_x_metadata', 40),
-                'y' => (int) Configuration::get('certificat_axis_y_metadata', 185),
-            ],
-        ];
-
-        $fontColor = Configuration::get('certificat_font_color_name', '#FFFFFF');
-        $showNote = (bool) Configuration::get('certificat_show_note', 1);
-        $showMention = (bool) Configuration::get('certificat_show_mention', 1);
-        $showQrCode = (bool) Configuration::get('certificat_show_qrcode', 1);
-        $qrSize = (int) Configuration::get('certificat_qr_size', 100);
+        extract($this->getRenderingConfig());
 
         $qrCodeDataUri = null;
         if ($showQrCode) {
@@ -510,7 +482,7 @@ class CertificatController extends Controller
 
     private function genererFichierCertificat(Certificat $certificat)
     {
-        $bgRelativePath = Configuration::get('certificat_background', 'certificats/default_bg.jpg');
+        $bgRelativePath = $this->getBackgroundPath();
         $bgRelativePath = str_replace(['..', '\\'], '', $bgRelativePath);
         $bgPath = storage_path('app/public/' . $bgRelativePath);
 
@@ -523,7 +495,19 @@ class CertificatController extends Controller
             abort(404, "Image de fond de la maquette introuvable.");
         }
 
-        $image = imagecreatefromjpeg($bgPath);
+        // ✅ Détection dynamique du format au lieu d'un imagecreatefromjpeg()
+        // figé qui plantait silencieusement si l'admin uploadait un PNG/WebP.
+        $mimeType = mime_content_type($bgPath);
+        $image = match ($mimeType) {
+            'image/png'  => imagecreatefrompng($bgPath),
+            'image/webp' => function_exists('imagecreatefromwebp') ? imagecreatefromwebp($bgPath) : null,
+            'image/jpeg' => imagecreatefromjpeg($bgPath),
+            default      => null,
+        };
+
+        if (!$image) {
+            abort(500, "Format d'image de fond non supporté (JPEG, PNG ou WebP uniquement).");
+        }
 
         $fontPaths = [
             storage_path('fonts/Inter-Bold.ttf'),
@@ -545,28 +529,8 @@ class CertificatController extends Controller
         list($r, $g, $b) = sscanf($hexColor, '#%02x%02x%02x');
         $couleurTexte = imagecolorallocate($image, $r, $g, $b);
 
-        $positions = [
-            'numero' => [
-                'x' => (int) Configuration::get('certificat_axis_x_numero', 240),
-                'y' => (int) Configuration::get('certificat_axis_y_numero', 20),
-                'size' => (int) Configuration::get('certificat_font_size_numero', 12),
-            ],
-            'name' => [
-                'x' => (int) Configuration::get('certificat_axis_x_name', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_name', 105),
-                'size' => (int) Configuration::get('certificat_font_size_name', 28),
-            ],
-            'formation' => [
-                'x' => (int) Configuration::get('certificat_axis_x_formation', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_formation', 135),
-                'size' => (int) Configuration::get('certificat_font_size_formation', 20),
-            ],
-            'performance' => [
-                'x' => (int) Configuration::get('certificat_axis_x_performance', 148),
-                'y' => (int) Configuration::get('certificat_axis_y_performance', 155),
-                'size' => (int) Configuration::get('certificat_font_size_perf', 12),
-            ],
-        ];
+        $config = $this->getRenderingConfig();
+        $positions = $config['positions'];
 
         $this->ecrireTexte($image, $certificat->numero_certificat, $positions['numero'], $fontPath, $couleurTexte);
         $this->ecrireTexte($image, strtoupper($certificat->user->name ?? 'Utilisateur'), $positions['name'], $fontPath, $couleurTexte);
