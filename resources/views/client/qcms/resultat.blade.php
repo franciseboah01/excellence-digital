@@ -27,7 +27,7 @@
         {{-- Barre de score --}}
         <div class="mt-5 rounded-full h-4 max-w-sm mx-auto" style="background-color: rgba(255,255,255,0.3);">
             <div class="h-4 rounded-full bg-white transition-all duration-1000"
-                style="width: {{ ($session->note / 20) * 100 }}%">
+                style="width: {{ $session->qcm->bareme > 0 ? ($session->note / $session->qcm->bareme) * 100 : 0 }}%">
             </div>
         </div>
 

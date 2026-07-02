@@ -93,7 +93,7 @@
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(16,185,129,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Note min.</p>
-                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/20</p>
+                        <p class="font-bold" style="color: var(--edc-secondary);">{{ $qcm->note_minimale }}/{{ $qcm->bareme }}</p>
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(245,158,11,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Durée/Q</p>
@@ -101,7 +101,7 @@
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(139,92,246,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Meilleure note</p>
-                        <p class="font-bold" style="color: #8B5CF6;">{{ $qcm->meilleure_note ?: '-' }}/20</p>
+                        <p class="font-bold" style="color: #8B5CF6;">{{ $qcm->meilleure_note ?: '-' }}/{{ $qcm->bareme }}</p>
                     </div>
                     <div class="rounded-lg p-2" style="background-color: rgba(236,72,153,0.06);">
                         <p class="text-xs" style="color: var(--edc-text-muted);">Tentatives</p>
@@ -114,11 +114,11 @@
                 <div class="mt-3">
                     <div class="flex justify-between text-xs mb-1" style="color: var(--edc-text-muted);">
                         <span>Progression</span>
-                        <span>{{ $qcm->meilleure_note }}/20</span>
+                        <span>{{ $qcm->meilleure_note }}/{{ $qcm->bareme }}</span>
                     </div>
                     <div class="w-full rounded-full h-2" style="background-color: var(--edc-bg-elevated);">
                         <div class="h-2 rounded-full transition-all"
-                            style="width: {{ ($qcm->meilleure_note / 20) * 100 }}%;
+                            style="width: {{ $qcm->bareme > 0 ? ($qcm->meilleure_note / $qcm->bareme) * 100 : 0 }}%;
                             {{ $qcm->deja_reussi ? 'background: linear-gradient(135deg, #10B981, #059669);' : 'background: linear-gradient(135deg, #3B82F6, #1D4ED8);' }}">
                         </div>
                     </div>
@@ -143,7 +143,7 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="font-bold {{ $session->reussi ? 'text-green-500' : 'text-red-500' }}">
-                                    {{ $session->note }}/20
+                                    {{ $session->note }}/{{ $qcm->bareme }}
                                 </span>
                                 @if($session->reussi)
                                 <span class="text-green-500">✅</span>

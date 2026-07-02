@@ -168,7 +168,11 @@ class QcmController extends Controller
             ];
         }
 
-        $note   = $scoreMax > 0 ? round(($score / $scoreMax) * 20, 2) : 0;
+        // ✅ La note finale est calculée sur le barème choisi par l'enseignant
+        // (20, 50 ou 100), et non plus toujours sur 20. Avant cette correction,
+        // un QCM avec bareme=100 et note_minimale=70 ne pouvait JAMAIS être
+        // réussi, car la note était plafonnée à 20 quel que soit le barème.
+        $note   = $scoreMax > 0 ? round(($score / $scoreMax) * $qcm->bareme, 2) : 0;
         $reussi = $note >= $qcm->note_minimale;
 
         $tentative = SessionQcm::where('qcm_id', $qcm->id)
@@ -196,42 +200,47 @@ class QcmController extends Controller
                 Notification::create([
                     'user_id' => $user->id,
                     'titre'   => '✅ Niveau validé !',
-                    'message' => "Vous avez validé le niveau \"{$qcm->niveau->nom}\" de la formation \"{$qcm->formation->titre}\" avec {$note}/20. Vous pouvez désormais accéder au niveau suivant.",
+                    'message' => "Vous avez validé le niveau \"{$qcm->niveau->nom}\" de la formation \"{$qcm->formation->titre}\" avec {$note}/{$qcm->bareme}. Vous pouvez désormais accéder au niveau suivant.",
                     'type'    => 'success',
                 ]);
 
-                $messageSucces = "🎉 Niveau validé avec {$note}/20 ! Vous pouvez accéder au niveau suivant.";
+                $messageSucces = "🎉 Niveau validé avec {$note}/{$qcm->bareme} ! Vous pouvez accéder au niveau suivant.";
             } else {
                 // ===== QCM FORMATION ENTIÈRE =====
                 if ($qcm->formation->est_payante) {
-                    // Certificat uniquement pour les formations payantes
+                    // ✅ La note du certificat est toujours normalisée sur 20,
+                    // quel que soit le barème du QCM (le certificat, sa mention
+                    // et son PDF sont câblés sur une échelle /20 dans tout le
+                    // reste du système).
+                    $noteSur20 = $qcm->bareme > 0 ? round(($note / $qcm->bareme) * 20, 2) : $note;
+
                     $certificat = Certificat::create([
                         'user_id'           => $user->id,
                         'formation_id'      => $qcm->formation_id,
                         'session_qcm_id'    => $session->id,
                         'numero_certificat' => Certificat::genererNumero(),
-                        'note_obtenue'      => $note,
+                        'note_obtenue'      => $noteSur20,
                         'delivre_le'        => now(),
                     ]);
 
                     Notification::create([
                         'user_id' => $user->id,
                         'titre'   => '🎓 Certificat obtenu !',
-                        'message' => "Félicitations ! Vous avez obtenu votre certificat pour \"{$qcm->formation->titre}\" avec une note de {$note}/20.",
+                        'message' => "Félicitations ! Vous avez obtenu votre certificat pour \"{$qcm->formation->titre}\" avec une note de {$noteSur20}/20.",
                         'type'    => 'success',
                     ]);
 
-                    $messageSucces = "🎉 Félicitations ! Vous avez réussi avec {$note}/20 et obtenu votre certificat !";
+                    $messageSucces = "🎉 Félicitations ! Vous avez réussi avec {$note}/{$qcm->bareme} et obtenu votre certificat !";
                 } else {
                     // Formation gratuite : réussite enregistrée, mais pas de certificat
                     Notification::create([
                         'user_id' => $user->id,
                         'titre'   => '✅ Formation validée !',
-                        'message' => "Vous avez réussi le QCM final de \"{$qcm->formation->titre}\" avec {$note}/20. Cette formation étant gratuite, elle ne donne pas droit à un certificat.",
+                        'message' => "Vous avez réussi le QCM final de \"{$qcm->formation->titre}\" avec {$note}/{$qcm->bareme}. Cette formation étant gratuite, elle ne donne pas droit à un certificat.",
                         'type'    => 'success',
                     ]);
 
-                    $messageSucces = "🎉 Bravo, vous avez réussi avec {$note}/20 ! Cette formation gratuite ne donne cependant pas droit à un certificat.";
+                    $messageSucces = "🎉 Bravo, vous avez réussi avec {$note}/{$qcm->bareme} ! Cette formation gratuite ne donne cependant pas droit à un certificat.";
                 }
             }
         }
@@ -240,7 +249,7 @@ class QcmController extends Controller
             ->with($reussi ? 'success' : 'error',
                 $reussi
                     ? $messageSucces
-                    : "❌ Score insuffisant : {$note}/20. Note minimale : {$qcm->note_minimale}/20."
+                    : "❌ Score insuffisant : {$note}/{$qcm->bareme}. Note minimale : {$qcm->note_minimale}/{$qcm->bareme}."
             );
     }
 
