@@ -23,9 +23,20 @@
                 <h3 class="font-bold mt-2" style="color: var(--edc-text-primary);">{{ $formation->titre }}</h3>
                 <p class="text-xs mt-1" style="color: var(--edc-text-secondary);">{{ Str::limit($formation->description, 80) }}</p>
                 <div class="flex items-center justify-between mt-3">
-                    <span class="text-sm font-bold" style="color: var(--edc-primary-light);">
-                        {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
-                    </span>
+                    {{-- ✅ CORRECTION : on utilise l'accessor est_payante (qui vérifie prix > 0)
+                         au lieu de tester $formation->prix brut. Un prix stocké comme "0.00"
+                         (cast decimal:2) est une chaîne non vide donc "truthy" en PHP, ce qui
+                         faisait afficher "0 FCFA" au lieu de "Gratuit" pour les formations
+                         gratuites. --}}
+                    @if($formation->est_payante)
+                        <span class="text-sm font-bold" style="color: var(--edc-primary-light);">
+                            {{ number_format($formation->prix, 0, ',', ' ') }} FCFA
+                        </span>
+                    @else
+                        <span class="text-sm font-bold badge-success" style="color: #10B981;">
+                            🆓 Gratuit
+                        </span>
+                    @endif
                     <span class="text-xs" style="color: var(--edc-text-muted);">⏱ {{ $formation->duree ?? '—' }}</span>
                 </div>
                 <form method="POST" action="{{ route('client.formations.inscrire', $formation) }}" class="mt-3">

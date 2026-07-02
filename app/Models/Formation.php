@@ -12,7 +12,7 @@ class Formation extends Model
         'module_id',
         'duree',
         'prix',
-        'places_max', // ← AJOUTÉ
+        'places_max',
         'image',
         'statut'
     ];
@@ -54,6 +54,11 @@ class Formation extends Model
         return $this->hasMany(Certificat::class);
     }
 
+    public function qcms()
+    {
+        return $this->hasMany(Qcm::class);
+    }
+
     // ===== ACCESSORS =====
 
     /**
@@ -90,17 +95,11 @@ class Formation extends Model
 
     // ===== SCOPES =====
 
-    /**
-     * Scope : Formations publiées uniquement
-     */
     public function scopePublie($query)
     {
         return $query->where('statut', 'publie');
     }
 
-    /**
-     * Scope : Formations avec places disponibles
-     */
     public function scopeAvecPlaces($query)
     {
         return $query->where(function ($q) {
@@ -109,9 +108,6 @@ class Formation extends Model
         });
     }
 
-    /**
-     * Scope : Formations gratuites
-     */
     public function scopeGratuites($query)
     {
         return $query->where(function ($q) {
@@ -119,9 +115,6 @@ class Formation extends Model
         });
     }
 
-    /**
-     * Scope : Formations payantes
-     */
     public function scopePayantes($query)
     {
         return $query->where('prix', '>', 0);
@@ -129,9 +122,6 @@ class Formation extends Model
 
     // ===== MÉTHODES =====
 
-    /**
-     * Vérifier si un utilisateur est inscrit
-     */
     public function estInscrit($userId): bool
     {
         return $this->inscriptions()
@@ -140,14 +130,27 @@ class Formation extends Model
             ->exists();
     }
 
-    /**
-     * Vérifier si un utilisateur a payé
-     */
     public function aPaye($userId): bool
     {
         return $this->paiements()
             ->where('user_id', $userId)
             ->where('statut', 'complete')
             ->exists();
+    }
+
+    /**
+     * ✅ Tous les niveaux de la formation sont-ils validés par cet utilisateur ?
+     * Condition requise pour accéder au QCM final de la formation
+     * (celui qui donne droit au certificat).
+     */
+    public function toutesNiveauxValidesPar(int $userId): bool
+    {
+        foreach ($this->niveaux()->orderBy('ordre')->get() as $niveau) {
+            if (!$niveau->estValidePar($userId)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

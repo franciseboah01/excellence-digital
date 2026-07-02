@@ -169,7 +169,7 @@ class ClientController extends Controller
             ->firstOrFail();
 
         // Vérifier paiement pour formations payantes
-        if ($formation->prix && $formation->prix > 0) {
+        if ($formation->est_payante) {
             $aPaye = Paiement::where('user_id', auth()->id())
                 ->where('formation_id', $formation->id)
                 ->where('statut', 'complete')
@@ -181,12 +181,23 @@ class ClientController extends Controller
             }
         }
 
+        // ✅ Progression par niveau : chaque niveau se voit attacher son statut
+        // (validé / accessible) pour que la vue puisse afficher ou masquer ses
+        // ressources en conséquence. Logique centralisée dans le modèle
+        // NiveauFormation (estValidePar / estAccessiblePar) pour rester
+        // cohérente avec Client\QcmController qui applique la même règle
+        // pour le verrouillage des QCMs.
         $niveaux = $formation->niveaux()
             ->with(['ressources' => function ($q) {
                 $q->where('actif', true)->orderBy('created_at', 'desc');
             }])
             ->orderBy('ordre')
             ->get();
+
+        foreach ($niveaux as $niveau) {
+            $niveau->est_valide = $niveau->estValidePar(auth()->id());
+            $niveau->est_accessible = $niveau->estAccessiblePar(auth()->id());
+        }
 
         $ressources_generales = Ressource::where('formation_id', $formation->id)
             ->whereNull('niveau_id')
@@ -207,6 +218,17 @@ class ClientController extends Controller
             ->where('formation_id', $ressource->formation_id)
             ->where('statut', 'valide')
             ->firstOrFail();
+
+        // ✅ Empêche de contourner le verrouillage de niveau en accédant
+        // directement à l'URL d'une ressource dont le niveau n'est pas
+        // encore débloqué (le niveau précédent n'a pas été validé).
+        if ($ressource->niveau_id) {
+            $niveau = $ressource->niveau ?? \App\Models\NiveauFormation::find($ressource->niveau_id);
+
+            if ($niveau && !$niveau->estAccessiblePar(auth()->id())) {
+                abort(403, 'Vous devez d\'abord valider le niveau précédent pour accéder à cette ressource.');
+            }
+        }
 
         if (!$ressource->fichier_path) {
             return back()->with('error', 'Aucun fichier associé à cette ressource.');

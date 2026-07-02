@@ -14,8 +14,10 @@
         <h1 class="text-3xl font-extrabold mb-2">
             {{ $session->reussi ? 'Félicitations !' : 'Essayez encore !' }}
         </h1>
+        {{-- ✅ CORRECTION : $certificat n'existe pas dans cette vue (jamais transmis
+             par le contrôleur). $session->qcm->bareme est déjà disponible. --}}
         <p class="text-xl font-bold mb-1">
-            Note : {{ $session->note }}/{{ $certificat->session->qcm->bareme ?? 20 }}
+            Note : {{ $session->note }}/{{ $session->qcm->bareme ?? 20 }}
         </p>
         <p class="text-sm" style="opacity: 0.8;">
             Score : {{ $session->score }} / {{ $session->score_max }} points •
@@ -31,11 +33,11 @@
 
         @if($session->reussi)
         <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
-            ✅ Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }} — Objectif atteint !
+            ✅ Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $session->qcm->bareme ?? 20 }} — Objectif atteint !
         </p>
         @else
         <p class="mt-4 text-sm" style="color: rgba(255,255,255,0.8);">
-            Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}
+            Note minimale requise : {{ $session->qcm->note_minimale }}/{{ $session->qcm->bareme ?? 20 }}
             @if($session->tentative < $session->qcm->tentatives_max)
             — Il vous reste {{ $session->qcm->tentatives_max - $session->tentative }} tentative(s).
             @endif
@@ -43,26 +45,46 @@
         @endif
     </div>
 
-    {{-- CERTIFICAT SI RÉUSSI --}}
+    {{-- ✅ SUITE APRÈS RÉUSSITE — 3 cas distincts --}}
     @if($session->reussi && $session->certificat)
-    <div class="rounded-2xl p-6 mb-6 text-center"
-        style="background-color: rgba(251,191,36,0.08); border: 2px solid var(--edc-accent-gold);">
-        <p class="text-4xl mb-3">🏆</p>
-        <h2 class="text-xl font-bold mb-2" style="color: var(--edc-accent-gold);">Certificat disponible !</h2>
-        <p class="text-sm mb-4" style="color: var(--edc-text-secondary);">
-            N° {{ $session->certificat->numero_certificat }}
-        </p>
-        <div class="flex flex-col sm:flex-row justify-center gap-3">
-            <a href="{{ route('certificats.telecharger', $session->certificat) }}"
-                class="btn-primary btn-sm" style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;">
-                📄 Télécharger le certificat PDF
-            </a>
-            <a href="{{ route('certificats.apercu', $session->certificat) }}" target="_blank"
-                class="btn-secondary btn-sm" style="border-color: var(--edc-accent-gold); color: var(--edc-accent-gold);">
-                👁 Aperçu
+        {{-- Cas 1 : QCM final réussi, formation payante → certificat --}}
+        <div class="rounded-2xl p-6 mb-6 text-center"
+            style="background-color: rgba(251,191,36,0.08); border: 2px solid var(--edc-accent-gold);">
+            <p class="text-4xl mb-3">🏆</p>
+            <h2 class="text-xl font-bold mb-2" style="color: var(--edc-accent-gold);">Certificat disponible !</h2>
+            <p class="text-sm mb-4" style="color: var(--edc-text-secondary);">
+                N° {{ $session->certificat->numero_certificat }}
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <a href="{{ route('client.certificats.telecharger', ['certificat' => $session->certificat, 'format' => 'pdf']) }}"
+                    class="btn-primary btn-sm" style="background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1a1a1a;">
+                    📄 Télécharger le certificat PDF
+                </a>
+            </div>
+        </div>
+    @elseif($session->reussi && $session->qcm->niveau_id !== null)
+        {{-- Cas 2 : QCM de niveau réussi → jamais de certificat, juste validation --}}
+        <div class="rounded-2xl p-6 mb-6 text-center"
+            style="background-color: rgba(59,130,246,0.08); border: 2px solid var(--edc-primary);">
+            <p class="text-4xl mb-3">✅</p>
+            <h2 class="text-xl font-bold mb-2" style="color: var(--edc-primary-light);">Niveau validé !</h2>
+            <p class="text-sm" style="color: var(--edc-text-secondary);">
+                Vous pouvez maintenant accéder au niveau suivant de la formation.
+            </p>
+            <a href="{{ route('client.ressources', $session->qcm->formation) }}" class="btn-primary btn-sm mt-4 inline-block">
+                📚 Continuer vers le niveau suivant
             </a>
         </div>
-    </div>
+    @elseif($session->reussi)
+        {{-- Cas 3 : QCM final réussi mais formation gratuite → pas de certificat --}}
+        <div class="rounded-2xl p-6 mb-6 text-center"
+            style="background-color: rgba(245,158,11,0.08); border: 2px solid var(--edc-accent-gold);">
+            <p class="text-4xl mb-3">🎉</p>
+            <h2 class="text-xl font-bold mb-2" style="color: var(--edc-accent-gold);">Formation réussie !</h2>
+            <p class="text-sm" style="color: var(--edc-text-secondary);">
+                Cette formation étant gratuite, elle ne donne pas droit à un certificat.
+            </p>
+        </div>
     @endif
 
     {{-- CORRECTION DÉTAILLÉE --}}

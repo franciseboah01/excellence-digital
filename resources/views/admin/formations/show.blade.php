@@ -58,9 +58,16 @@
                 </li>
                 <li class="flex justify-between">
                     <span style="color: var(--edc-text-muted);">Prix</span>
-                    <span class="font-medium" style="color: var(--edc-primary-light);">
-                        {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
-                    </span>
+                    {{-- ✅ CORRECTION : est_payante (prix > 0) au lieu du prix brut.
+                         "0.00" (cast decimal:2) est "truthy" en PHP -> affichait "0 FCFA"
+                         au lieu de "Gratuit" pour une formation à prix nul. --}}
+                    @if($formation->est_payante)
+                        <span class="font-medium" style="color: var(--edc-primary-light);">
+                            {{ number_format($formation->prix, 0, ',', ' ') }} FCFA
+                        </span>
+                    @else
+                        <span class="font-medium" style="color: #34D399;">🆓 Gratuit</span>
+                    @endif
                 </li>
                 <li class="flex justify-between">
                     <span style="color: var(--edc-text-muted);">Statut</span>

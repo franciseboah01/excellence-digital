@@ -75,9 +75,18 @@
                         <span class="text-xs" style="color: var(--edc-text-muted);"> fichier(s)</span>
                     </td>
                     <td>
-                        <span class="font-semibold text-xs" style="color: var(--edc-primary-light);">
-                            {{ $formation->prix ? number_format($formation->prix, 0, ',', ' ') . ' FCFA' : 'Gratuit' }}
-                        </span>
+                        {{-- ✅ CORRECTION : est_payante (prix > 0) au lieu de tester $formation->prix
+                             brut. Un prix stocké "0.00" (cast decimal:2) est une chaîne "truthy"
+                             en PHP, ce qui affichait "0 FCFA" au lieu de "Gratuit". --}}
+                        @if($formation->est_payante)
+                            <span class="font-semibold text-xs" style="color: var(--edc-primary-light);">
+                                {{ number_format($formation->prix, 0, ',', ' ') }} FCFA
+                            </span>
+                        @else
+                            <span class="font-semibold text-xs" style="color: #34D399;">
+                                🆓 Gratuit
+                            </span>
+                        @endif
                     </td>
                     <td>
                         <span class="badge text-xs" style="{{ $formation->statut == 'publie'

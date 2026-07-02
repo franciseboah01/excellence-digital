@@ -14,10 +14,22 @@
                 <p class="text-sm mt-1" style="color: var(--edc-text-secondary);">{{ $qcm->formation->titre }}
                     @if($qcm->niveau) — {{ $qcm->niveau->nom }} @endif
                 </p>
+                {{-- ✅ Rappel du type de QCM et de ce qu'il donne (ou non) --}}
+                @if($qcm->niveau)
+                    <span class="badge text-xs mt-1 inline-block" style="background-color: rgba(59,130,246,0.12); color: #60A5FA;">
+                        📂 QCM de niveau — validation requise pour débloquer le niveau suivant
+                    </span>
+                @else
+                    <span class="badge text-xs mt-1 inline-block" style="background-color: rgba(251,191,36,0.15); color: #FBBF24;">
+                        🏁 QCM final {{ $qcm->formation->est_payante ? '— donne droit au certificat' : '— formation gratuite, pas de certificat' }}
+                    </span>
+                @endif
             </div>
             <div class="text-right flex-shrink-0">
                 <p class="text-xs" style="color: var(--edc-text-muted);">Tentative {{ $tentativesFaites + 1 }} / {{ $qcm->tentatives_max }}</p>
-                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Note minimale : <strong style="color: var(--edc-primary-light);">{{ $qcm->note_minimale }}/{{ $certificat->session->qcm->bareme ?? 20 }}</strong></p>
+                {{-- ✅ CORRECTION : $certificat n'existe pas dans cette vue (jamais transmis
+                     par le contrôleur). $qcm->bareme est déjà disponible directement. --}}
+                <p class="text-xs mt-1" style="color: var(--edc-text-muted);">Note minimale : <strong style="color: var(--edc-primary-light);">{{ $qcm->note_minimale }}/{{ $qcm->bareme ?? 20 }}</strong></p>
             </div>
         </div>
 

@@ -33,7 +33,7 @@
     {{-- LISTE DES QCMs --}}
     <div class="space-y-5">
         @forelse($qcms as $qcm)
-        <div class="edc-card overflow-hidden">
+        <div class="edc-card overflow-hidden {{ $qcm->est_verrouille ? 'opacity-60' : '' }}">
             <div class="p-5">
                 {{-- EN-TÊTE --}}
                 <div class="flex flex-wrap justify-between items-start mb-3 gap-2">
@@ -42,24 +42,32 @@
                             🎓 {{ $qcm->formation->titre }}
                         </span>
                         @if($qcm->niveau)
-                        <span class="badge badge-gray text-xs ml-1">
-                            {{ $qcm->niveau->nom }}
-                        </span>
+                            <span class="badge badge-gray text-xs ml-1">
+                                📂 {{ $qcm->niveau->nom }}
+                            </span>
+                        @else
+                            <span class="badge text-xs ml-1" style="background-color: rgba(251,191,36,0.15); color: #FBBF24;">
+                                🏁 QCM Final {{ $qcm->formation->est_payante ? '(certificat)' : '(sans certificat — formation gratuite)' }}
+                            </span>
                         @endif
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        @if($qcm->deja_reussi)
-                        <span class="badge badge-green font-bold">
-                            🏆 Réussi !
-                        </span>
+                        @if($qcm->est_verrouille)
+                            <span class="badge text-xs" style="background-color: rgba(148,163,184,0.15); color: #94A3B8;">
+                                🔒 Verrouillé
+                            </span>
+                        @elseif($qcm->deja_reussi)
+                            <span class="badge badge-green font-bold">
+                                {{ $qcm->niveau ? '✅ Niveau validé' : '🏆 Réussi !' }}
+                            </span>
                         @elseif($qcm->tentatives_faites > 0)
-                        <span class="badge badge-gold">
-                            🔄 {{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }} tentatives
-                        </span>
+                            <span class="badge badge-gold">
+                                🔄 {{ $qcm->tentatives_faites }}/{{ $qcm->tentatives_max }} tentatives
+                            </span>
                         @else
-                        <span class="badge badge-gray">
-                            ⏳ Non tenté
-                        </span>
+                            <span class="badge badge-gray">
+                                ⏳ Non tenté
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -68,6 +76,13 @@
                 <h3 class="font-bold mb-1" style="color: var(--edc-text-primary);">{{ $qcm->titre }}</h3>
                 @if($qcm->description)
                 <p class="text-sm mb-2" style="color: var(--edc-text-secondary);">{{ $qcm->description }}</p>
+                @endif
+
+                {{-- ✅ Message de verrouillage --}}
+                @if($qcm->est_verrouille)
+                <div class="rounded-lg p-3 mt-2 text-xs" style="background-color: rgba(148,163,184,0.08); color: var(--edc-text-muted);">
+                    🔒 {{ $qcm->niveau ? 'Validez le niveau précédent pour débloquer ce QCM.' : 'Validez tous les niveaux de la formation pour débloquer ce QCM final.' }}
+                </div>
                 @endif
 
                 {{-- STATISTIQUES QCM --}}
@@ -118,7 +133,7 @@
                     </summary>
                     <div class="mt-2 space-y-1.5">
                         @foreach($qcm->mes_sessions as $session)
-                        <div class="flex items-center justify-between text-xs p-2 rounded-lg" 
+                        <div class="flex items-center justify-between text-xs p-2 rounded-lg"
                             style="background-color: var(--edc-bg-base); border: 1px solid var(--edc-border);">
                             <div class="flex items-center gap-2">
                                 <span>#{{ $session->tentative }}</span>
@@ -135,7 +150,7 @@
                                 @else
                                 <span class="text-red-500">❌</span>
                                 @endif
-                                <a href="{{ route('client.qcms.resultat', $session) }}" 
+                                <a href="{{ route('client.qcms.resultat', $session) }}"
                                     class="text-blue-400 hover:underline">
                                     Voir
                                 </a>
@@ -150,30 +165,52 @@
             {{-- BOUTON D'ACTION --}}
             <div class="px-5 py-3" style="border-top: 1px solid var(--edc-border); background-color: var(--edc-bg-base);">
                 @if($qcm->deja_reussi && $qcm->certificat)
-                <div class="flex items-center justify-between">
-                    <p class="text-sm font-semibold" style="color: var(--edc-secondary);">
-                        🎓 Certificat obtenu !
+                    {{-- QCM final réussi, formation payante : certificat disponible --}}
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold" style="color: var(--edc-secondary);">
+                            🎓 Certificat obtenu !
+                        </p>
+                        <a href="{{ route('client.certificats.index') }}"
+                            class="text-xs font-bold px-3 py-1.5 rounded-lg transition"
+                            style="background: rgba(16,185,129,0.1); color: #10B981; border: 1px solid rgba(16,185,129,0.3);">
+                            Voir mon certificat →
+                        </a>
+                    </div>
+                @elseif($qcm->deja_reussi && $qcm->niveau)
+                    {{-- ✅ QCM de niveau réussi : jamais de certificat, juste validation --}}
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold" style="color: var(--edc-primary-light);">
+                            ✅ Niveau validé !
+                        </p>
+                        <a href="{{ route('client.ressources', $qcm->formation) }}"
+                            class="text-xs font-bold px-3 py-1.5 rounded-lg transition"
+                            style="background: rgba(59,130,246,0.1); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);">
+                            Continuer la formation →
+                        </a>
+                    </div>
+                @elseif($qcm->deja_reussi)
+                    {{-- ✅ QCM final réussi mais formation gratuite : pas de certificat --}}
+                    <p class="text-center text-sm font-semibold" style="color: var(--edc-accent-gold);">
+                        🎉 Formation réussie ! (formation gratuite — pas de certificat)
                     </p>
-                    <a href="{{ route('client.certificats.index') }}" 
-                        class="text-xs font-bold px-3 py-1.5 rounded-lg transition"
-                        style="background: rgba(16,185,129,0.1); color: #10B981; border: 1px solid rgba(16,185,129,0.3);">
-                        Voir mon certificat →
-                    </a>
-                </div>
+                @elseif($qcm->est_verrouille)
+                    <p class="text-center text-sm" style="color: var(--edc-text-muted);">
+                        🔒 QCM verrouillé pour le moment.
+                    </p>
                 @elseif($qcm->peut_repasser)
-                <a href="{{ route('client.qcms.demarrer', $qcm) }}"
-                    class="btn-primary btn-sm w-full text-center">
-                    {{ $qcm->tentatives_faites > 0 ? '🔄 Repasser le QCM' : '▶️ Commencer le QCM' }}
-                </a>
+                    <a href="{{ route('client.qcms.demarrer', $qcm) }}"
+                        class="btn-primary btn-sm w-full text-center">
+                        {{ $qcm->tentatives_faites > 0 ? '🔄 Repasser le QCM' : '▶️ Commencer le QCM' }}
+                    </a>
                 @else
-                <p class="text-center text-sm" style="color: var(--edc-danger);">
-                    ❌ Tentatives épuisées ({{ $qcm->tentatives_max }}/{{ $qcm->tentatives_max }})
-                    @if($qcm->meilleure_note)
-                    <span class="block text-xs" style="color: var(--edc-text-muted);">
-                        Meilleure note : {{ $qcm->meilleure_note }}/20 (min. {{ $qcm->note_minimale }}/20)
-                    </span>
-                    @endif
-                </p>
+                    <p class="text-center text-sm" style="color: var(--edc-danger);">
+                        ❌ Tentatives épuisées ({{ $qcm->tentatives_max }}/{{ $qcm->tentatives_max }})
+                        @if($qcm->meilleure_note)
+                        <span class="block text-xs" style="color: var(--edc-text-muted);">
+                            Meilleure note : {{ $qcm->meilleure_note }}/20 (min. {{ $qcm->note_minimale }}/20)
+                        </span>
+                        @endif
+                    </p>
                 @endif
             </div>
         </div>
