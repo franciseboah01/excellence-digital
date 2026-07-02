@@ -87,44 +87,30 @@ class ClientController extends Controller
 
         $service = Service::findOrFail($validated['service_id']);
 
-        // Stocker les données en session
-        session([
-            'demande_data' => [
-                'service_id'         => $service->id,
-                'telephone_visiteur' => $validated['telephone_visiteur'] ?? auth()->user()->telephone,
-                'message'            => $validated['message'] ?? null,
-            ]
+        // ✅ CHANGEMENT DE RÈGLE MÉTIER : la demande est désormais créée
+        // immédiatement, qu'elle soit gratuite ou payante — comme le service
+        // gratuit l'était déjà. Le paiement (partiel ou total) n'est plus
+        // exigé à la création : il devient la condition que l'admin doit
+        // vérifier avant de faire passer la demande à "en_cours"
+        // (cf. Admin\DemandeController::changerStatut()). Le client peut
+        // payer à tout moment depuis "Mes Paiements" une fois la demande créée.
+        $demande = DemandeService::create([
+            'user_id'            => auth()->id(),
+            'service_id'         => $service->id,
+            'nom_visiteur'       => auth()->user()->nom_complet,
+            'email_visiteur'     => auth()->user()->email,
+            'telephone_visiteur' => $validated['telephone_visiteur'] ?? auth()->user()->telephone,
+            'message'            => $validated['message'] ?? null,
+            'statut'             => 'en_attente',
         ]);
 
-        // Si le service est payant
         if ($service->prix && $service->prix > 0) {
-            return redirect()->route('client.paiement.form', ['type' => 'service', 'id' => $service->id]);
+            return redirect()->route('client.demandes')
+                ->with('success', '✅ Votre demande a été envoyée ! Un paiement (partiel ou total) sera nécessaire avant le démarrage du service — rendez-vous dans "Mes Paiements" pour régler.');
         }
-
-        // Service gratuit
-        $this->enregistrerDemande();
-        session()->forget('demande_data');
 
         return redirect()->route('client.demandes')
             ->with('success', 'Votre demande a été envoyée avec succès !');
-    }
-
-    private function enregistrerDemande()
-    {
-        $data = session('demande_data');
-        if (!$data) {
-            return;
-        }
-
-        DemandeService::create([
-            'user_id'            => auth()->id(),
-            'service_id'         => $data['service_id'],
-            'nom_visiteur'       => auth()->user()->nom_complet,
-            'email_visiteur'     => auth()->user()->email,
-            'telephone_visiteur' => $data['telephone_visiteur'],
-            'message'            => $data['message'],
-            'statut'             => 'en_attente',
-        ]);
     }
 
     /**
@@ -361,9 +347,21 @@ class ClientController extends Controller
             $montant = (int) ($demande->montant_paye ?? Configuration::get('duplicata_prix', 1000));
             $description = 'Duplicata de certificat — ' . ($certificat->formation->titre ?? $certificat->numero_certificat);
         } elseif ($type === 'service') {
-            $item = Service::findOrFail($id);
-            $montant = $item->prix ?? 0;
-            $description = $item->titre;
+            // ✅ CHANGEMENT : $id est désormais l'ID de la DemandeService précise
+            // (pas du service générique). Nécessaire pour savoir exactement quelle
+            // demande le paiement concerne, indispensable maintenant que le
+            // paiement est vérifié par demande_id avant de démarrer un service
+            // (cf. Admin\DemandeController::changerStatut()).
+            $demande = DemandeService::with('service')
+                ->where('id', $id)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+
+            abort_if(!$demande->service || !($demande->service->prix > 0), 404, 'Ce service ne nécessite aucun paiement.');
+
+            $item = $demande;
+            $montant = $demande->service->prix;
+            $description = $demande->service->titre;
         } else {
             abort(404, 'Type de paiement invalide.');
         }
@@ -393,6 +391,7 @@ class ClientController extends Controller
         $formationId = null;
         $serviceId = null;
         $certificatId = null;
+        $demandeId = null;
         $notes = '';
 
         if ($request->type === 'formation') {
@@ -411,8 +410,23 @@ class ClientController extends Controller
             $certificatId = $certificat->id;
             $notes = "Achat de duplicata de certificat — " . $modePropre;
         } elseif ($request->type === 'service') {
-            $serviceId = $request->id;
-            $notes = "Achat de service — " . $modePropre;
+            // ✅ CHANGEMENT : on retrouve la DemandeService précise pour lier
+            // le paiement via demande_id — indispensable pour qu'Admin\
+            // DemandeController::changerStatut() puisse vérifier qu'*cette*
+            // demande précise a bien été payée avant de démarrer le service.
+            $demande = DemandeService::with('service')
+                ->where('id', $request->id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$demande) {
+                return redirect()->route('client.demandes')
+                    ->with('error', 'Demande de service introuvable.');
+            }
+
+            $demandeId = $demande->id;
+            $serviceId = $demande->service_id;
+            $notes = "Paiement du service \"{$demande->service->titre}\" — " . $modePropre;
         }
 
         // ===== CRÉER LE PAIEMENT =====
@@ -420,6 +434,7 @@ class ClientController extends Controller
             'user_id'        => auth()->id(),
             'formation_id'   => $formationId,
             'service_id'     => $serviceId,
+            'demande_id'     => $demandeId,
             'certificat_id'  => $certificatId,
             'type'           => $request->type,
             'montant_total'  => $request->montant,
@@ -432,18 +447,18 @@ class ClientController extends Controller
             'notes'          => $notes,
         ]);
 
-        // ===== SERVICE CLASSIQUE =====
-        if ($request->type === 'service' && session('demande_data')) {
-            $this->enregistrerDemande();
-            session()->forget('demande_data');
-        }
-
         // ===== DUPLICATA =====
         if ($request->type === 'duplicata' && $certificatId) {
             $this->traiterDemandeDuplicata($certificatId, $paiement);
 
             return redirect()->route('client.paiements')
                 ->with('success', '✅ Paiement effectué ! Votre demande de duplicata est en attente de validation par l\'administration.');
+        }
+
+        // ===== SERVICE =====
+        if ($request->type === 'service' && $demandeId) {
+            return redirect()->route('client.demandes')
+                ->with('success', '✅ Paiement effectué ! Votre demande peut maintenant être prise en charge par notre équipe.');
         }
 
         return redirect()->route('client.paiements')

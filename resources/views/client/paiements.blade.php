@@ -27,15 +27,14 @@
                 <tr>
                     <td class="font-mono text-xs" style="color: var(--edc-primary-light);">{{ $p->reference }}</td>
                     <td style="color: var(--edc-text-primary);">
-                        {{-- CORRECTION : Prise en compte du duplicata via la relation certificat --}}
-                        @if($p->formation) 
+                        @if($p->formation)
                             🎓 {{ $p->formation->titre }}
-                        @elseif($p->service) 
+                        @elseif($p->service)
                             💼 {{ $p->service->titre }}
-                        @elseif($p->certificat) 
+                        @elseif($p->certificat)
                             🔄 Duplicata Certificat ({{ $p->certificat->formation?->titre ?? 'N° ' . $p->certificat->numero_certificat }})
-                        @else 
-                            — 
+                        @else
+                            —
                         @endif
                     </td>
                     <td class="font-semibold" style="color: var(--edc-text-primary);">{{ number_format($p->montant_paye, 0, ',', ' ') }} FCFA</td>
@@ -66,10 +65,16 @@
 
 {{-- FORMATIONS À PAYER --}}
 @php
+    // ✅ CORRECTION : on exclut désormais les formations gratuites (prix null/0).
+    // Avant cette correction, une formation gratuite n'ayant jamais de paiement
+    // associé (normal, puisqu'elle est gratuite) était systématiquement listée
+    // comme "à payer", proposant au client de payer 0 FCFA pour rien.
     $formationsAPayer = \App\Models\InscriptionFormation::with('formation')
         ->where('user_id', auth()->id())
         ->where('statut', 'valide')
-        // Optionnel : s'assurer qu'un paiement complet n'existe pas déjà pour cette formation
+        ->whereHas('formation', function($q) {
+            $q->where('prix', '>', 0);
+        })
         ->whereDoesntHave('formation.paiements', function($q) {
             $q->where('user_id', auth()->id())->where('statut', 'complete');
         })
@@ -90,19 +95,34 @@
 
 {{-- SERVICES À PAYER --}}
 @php
+    // ✅ CHANGEMENT DE RÈGLE MÉTIER : le paiement (partiel ou total) est
+    // désormais requis AVANT que l'admin démarre le service ("en_cours"),
+    // pas après qu'il soit "termine". On liste donc les demandes encore
+    // "en_attente", pour un service payant, sans paiement enregistré.
     $servicesAPayer = \App\Models\DemandeService::with('service')
         ->where('user_id', auth()->id())
-        ->where('statut', 'termine')
+        ->where('statut', 'en_attente')
+        ->whereHas('service', function($q) {
+            $q->where('prix', '>', 0);
+        })
+        ->whereNotIn('id', \App\Models\Paiement::whereNotNull('demande_id')
+            ->where('montant_paye', '>', 0)
+            ->pluck('demande_id')
+        )
         ->get();
 @endphp
 
 @if($servicesAPayer->count())
 <div class="edc-card p-6 mb-6">
-    <h3 class="font-bold mb-4" style="color: var(--edc-text-primary);">💼 Services terminés</h3>
+    <h3 class="font-bold mb-4" style="color: var(--edc-text-primary);">💼 Services en attente de paiement</h3>
+    <p class="text-xs mb-4" style="color: var(--edc-text-muted);">Un paiement (partiel ou total) est nécessaire avant que notre équipe puisse démarrer ces services.</p>
     @foreach($servicesAPayer as $demande)
     <div class="flex items-center justify-between py-3" style="border-bottom: 1px solid var(--edc-border);">
-        <span style="color: var(--edc-text-primary);">{{ $demande->service->titre }}</span>
-        <a href="{{ route('client.paiement.form', ['service', $demande->service->id]) }}" class="btn-primary btn-xs">💳 Payer</a>
+        <div>
+            <span style="color: var(--edc-text-primary);">{{ $demande->service->titre }}</span>
+            <span class="text-xs block" style="color: var(--edc-text-muted);">{{ number_format($demande->service->prix, 0, ',', ' ') }} FCFA</span>
+        </div>
+        <a href="{{ route('client.paiement.form', ['type' => 'service', 'id' => $demande->id]) }}" class="btn-primary btn-xs">💳 Payer</a>
     </div>
     @endforeach
 </div>
