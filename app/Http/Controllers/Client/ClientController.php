@@ -38,6 +38,7 @@ class ClientController extends Controller
             'demandes_annule'  => DemandeService::where('user_id', $user->id)->where('statut', 'annule')->count(),
             'formations'       => InscriptionFormation::where('user_id', $user->id)->count(),
             'notifications'    => Notification::where('user_id', $user->id)->where('lu', false)->count(),
+            'formations_total' => Inscription::where('client_id', $user->id)->count(),
         ];
 
         $dernieres_demandes = DemandeService::with('service')
