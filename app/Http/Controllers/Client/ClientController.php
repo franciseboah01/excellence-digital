@@ -135,16 +135,70 @@ class ClientController extends Controller
      */
     public function formations()
     {
-        $inscriptions = InscriptionFormation::with(['formation.niveaux'])
+        $inscriptions = InscriptionFormation::with(['formation.module'])
             ->where('user_id', auth()->id())
+            ->latest()
             ->get();
 
         return view('client.formations', compact('inscriptions'));
     }
+    
+    /**
+     * ============================================================
+     * 5. AFFICHER UNE FORMATION SPÉCIFIQUE AVEC SES RESSOURCES
+     * ============================================================
+     */
+    public function showFormation($id)
+    {
+        // Récupérer la formation avec ses relations
+        $formation = Formation::with(['module', 'niveaux.ressources'])
+            ->findOrFail($id);
+        
+        // Vérifier que l'utilisateur est inscrit et que l'inscription est valide
+        $inscription = InscriptionFormation::where('user_id', auth()->id())
+            ->where('formation_id', $formation->id)
+            ->where('statut', 'valide')
+            ->firstOrFail();
+        
+        // Vérifier paiement pour formations payantes
+        if ($formation->est_payante) {
+            $aPaye = Paiement::where('user_id', auth()->id())
+                ->where('formation_id', $formation->id)
+                ->where('statut', 'complete')
+                ->exists();
+
+            if (!$aPaye) {
+                return redirect()->route('client.paiement.form', ['type' => 'formation', 'id' => $formation->id])
+                    ->with('error', 'Vous devez payer cette formation avant d\'accéder aux ressources.');
+            }
+        }
+        
+        // Récupérer les ressources générales (non liées à un niveau)
+        $ressources_generales = Ressource::where('formation_id', $formation->id)
+            ->whereNull('niveau_id')
+            ->where('actif', true)
+            ->get();
+        
+        // Récupérer les niveaux avec leurs ressources
+        $niveaux = $formation->niveaux()
+            ->with(['ressources' => function($q) {
+                $q->where('actif', true)->orderBy('created_at', 'desc');
+            }])
+            ->orderBy('ordre')
+            ->get();
+
+        // Vérifier l'accessibilité et la validation des niveaux
+        foreach ($niveaux as $niveau) {
+            $niveau->est_valide = $niveau->estValidePar(auth()->id());
+            $niveau->est_accessible = $niveau->estAccessiblePar(auth()->id());
+        }
+
+        return view('client.formation-detail', compact('formation', 'ressources_generales', 'niveaux'));
+    }
 
     /**
      * ============================================================
-     * 5. RESSOURCES D'UNE FORMATION
+     * 6. RESSOURCES D'UNE FORMATION
      * ============================================================
      */
     public function ressources(Formation $formation)
@@ -195,7 +249,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 6. VISUALISER UN PDF
+     * 7. VISUALISER UN PDF
      * ============================================================
      */
     public function voirPdf(Ressource $ressource)
@@ -232,7 +286,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 7. NOTIFICATIONS
+     * 8. NOTIFICATIONS
      * ============================================================
      */
     public function notifications()
@@ -250,7 +304,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 8. PROFIL
+     * 9. PROFIL
      * ============================================================
      */
     public function profil()
@@ -299,7 +353,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 9. MES PAIEMENTS
+     * 10. MES PAIEMENTS
      * ============================================================
      */
     public function paiements()
@@ -314,7 +368,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 10. FORMULAIRE DE PAIEMENT
+     * 11. FORMULAIRE DE PAIEMENT
      * ============================================================
      */
     public function paiementForm(Request $request, $type, $id)
@@ -371,7 +425,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 11. TRAITEMENT DU PAIEMENT
+     * 12. TRAITEMENT DU PAIEMENT
      * ============================================================
      */
     public function paiementProcess(Request $request)
@@ -467,7 +521,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 12. FORMATIONS DISPONIBLES
+     * 13. FORMATIONS DISPONIBLES (Catalogue)
      * ============================================================
      */
     public function formationsDisponibles()
@@ -475,13 +529,20 @@ class ClientController extends Controller
         $formations = Formation::with('module')
             ->where('statut', 'publie')
             ->get();
+            
+        // Ajouter une propriété est_inscrit à chaque formation
+        foreach($formations as $formation) {
+            $formation->est_inscrit = InscriptionFormation::where('user_id', auth()->id())
+                ->where('formation_id', $formation->id)
+                ->exists();
+        }
 
         return view('client.formations-disponibles', compact('formations'));
     }
 
     /**
      * ============================================================
-     * 13. INSCRIPTION À UNE FORMATION
+     * 14. INSCRIPTION À UNE FORMATION
      * ============================================================
      */
     public function inscrireFormation(Formation $formation)
@@ -529,7 +590,7 @@ class ClientController extends Controller
 
     /**
      * ============================================================
-     * 14. MÉTHODES PRIVÉES
+     * 15. MÉTHODES PRIVÉES
      * ============================================================
      */
 

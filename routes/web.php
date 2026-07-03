@@ -122,42 +122,62 @@ Route::middleware(['auth', 'verified', 'role:client'])
     ->prefix('client')
     ->name('client.')
     ->group(function () {
+        
+        // ===== DASHBOARD =====
         Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
-        Route::get('/demandes', [ClientController::class, 'demandes'])->name('demandes');
-        Route::get('/formations', [ClientController::class, 'formations'])->name('formations');
-        Route::get('/formations/{formation}/ressources', [ClientController::class, 'ressources'])->name('ressources');
-        Route::get('/ressources/{ressource}/pdf', [ClientController::class, 'voirPdf'])->name('pdf');
-        Route::get('/notifications', [ClientController::class, 'notifications'])->name('notifications');
-        Route::get('/profil', [ClientController::class, 'profil'])->name('profil');
-        Route::post('/profil', [ClientController::class, 'profilUpdate'])->name('profil.update');
-        Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
-        Route::get('/temoignages', [ClientTemoignageController::class, 'index'])->name('temoignages.index');
-        Route::post('/temoignages', [ClientTemoignageController::class, 'store'])->name('temoignages.store');
-        Route::delete('/temoignages/{temoignage}', [ClientTemoignageController::class, 'destroy'])->name('temoignages.destroy');
 
+        // ===== DEMANDES DE SERVICE =====
+        Route::get('/demandes', [ClientController::class, 'demandes'])->name('demandes');
+        Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
+        Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
+
+        // ===== FORMATIONS =====
+        // Liste des formations de l'utilisateur (HUB)
+        Route::get('/formations', [ClientController::class, 'formations'])->name('formations');
         
+        // Détail d'une formation spécifique (ressources, niveaux, QCM)
+        Route::get('/formation/{id}', [ClientController::class, 'showFormation'])->name('formation.show');
         
+        // Catalogue des formations disponibles
+        Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
         
-    
+        // Inscription à une formation
+        Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
+        
+        // Ressources d'une formation (ancienne route, à conserver pour compatibilité)
+        Route::get('/formations/{formation}/ressources', [ClientController::class, 'ressources'])->name('ressources');
+        
+        // Visualisation de PDF
+        Route::get('/ressources/{ressource}/pdf', [ClientController::class, 'voirPdf'])->name('pdf');
+
         // ===== QCMs =====
         Route::get('/qcms', [ClientQcmController::class, 'index'])->name('qcms.index');
         Route::get('/qcms/{qcm}/demarrer', [ClientQcmController::class, 'demarrer'])->name('qcms.demarrer');
         Route::post('/qcms/{qcm}/soumettre', [ClientQcmController::class, 'soumettre'])->name('qcms.soumettre');
         Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
 
-       // Certificats
+        // ===== CERTIFICATS =====
         Route::get('/certificats', [ClientCertificatController::class, 'index'])->name('certificats.index');
         Route::get('/certificats/{certificat}/telecharger/{format?}', [ClientCertificatController::class, 'telecharger'])->name('certificats.telecharger');
-        Route::post('/certificats/{certificat}/demande-duplicata', [ClientCertificatController::class, 'demandeDuplicata'])->name('certificats.demande-duplicata');  
+        Route::post('/certificats/{certificat}/demande-duplicata', [ClientCertificatController::class, 'demandeDuplicata'])->name('certificats.demande-duplicata');
 
-        Route::get('/sessions/{session}/resultat', [ClientQcmController::class, 'resultat'])->name('qcms.resultat');
-        Route::get('/nouvelle-demande', [ClientController::class, 'demandeForm'])->name('demande.form');
-        Route::post('/nouvelle-demande', [ClientController::class, 'demandeStore'])->name('demande.store');
+        // ===== PAIEMENTS =====
         Route::get('/paiements', [ClientController::class, 'paiements'])->name('paiements');
         Route::get('/paiement/{type}/{id}', [ClientController::class, 'paiementForm'])->name('paiement.form');
         Route::post('/paiement/process', [ClientController::class, 'paiementProcess'])->name('paiement.process');
-        Route::get('/formations/disponibles', [ClientController::class, 'formationsDisponibles'])->name('formations.disponibles');
-        Route::post('/formations/{formation}/inscrire', [ClientController::class, 'inscrireFormation'])->name('formations.inscrire');
+
+        // ===== NOTIFICATIONS =====
+        Route::get('/notifications', [ClientController::class, 'notifications'])->name('notifications');
+
+        // ===== PROFIL =====
+        Route::get('/profil', [ClientController::class, 'profil'])->name('profil');
+        Route::post('/profil', [ClientController::class, 'profilUpdate'])->name('profil.update');
+        Route::post('/profil/password', [ClientController::class, 'passwordUpdate'])->name('password.update');
+
+        // ===== TÉMOIGNAGES =====
+        Route::get('/temoignages', [ClientTemoignageController::class, 'index'])->name('temoignages.index');
+        Route::post('/temoignages', [ClientTemoignageController::class, 'store'])->name('temoignages.store');
+        Route::delete('/temoignages/{temoignage}', [ClientTemoignageController::class, 'destroy'])->name('temoignages.destroy');
     });
 
 // ===== ENSEIGNANT =====
