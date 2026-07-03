@@ -1,5 +1,5 @@
 @extends('layouts.client')
-@section('title', 'Ressources — ' . $formation->titre)
+@section('title', 'Mes Formations')
 
 @section('content')
 <div class="max-w-4xl mx-auto">
