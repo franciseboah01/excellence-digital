@@ -39,37 +39,16 @@ class ConfigurationController extends Controller
             // ... (gardez vos validations existantes) ...
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // 📊 Stats & Arguments (TABLEAUX)
+            // 📱 APPLICATIONS MOBILES
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_stats'         => 'nullable|array',
-            'site_stats.*.valeur' => 'nullable|string|max:50',
-            'site_stats.*.description' => 'nullable|string|max:255',
-            
-            'site_pourquoi_nous' => 'nullable|array',
-            'site_pourquoi_nous.*.icone' => 'nullable|string|max:10',
-            'site_pourquoi_nous.*.titre' => 'nullable|string|max:100',
-            'site_pourquoi_nous.*.description' => 'nullable|string|max:255',
+            'app_android_file'    => 'nullable|file|mimes:apk|max:102400',  // 100 MB max
+            'app_android_version' => 'nullable|string|max:20',
+            'app_android_notes'   => 'nullable|string|max:255',
+            'app_windows_file'    => 'nullable|file|mimes:exe,msi,zip|max:204800', // 200 MB max
+            'app_windows_version' => 'nullable|string|max:20',
+            'app_windows_notes'   => 'nullable|string|max:255',
 
-            'site_galeries'      => 'nullable|array',
-            'site_galeries.*.titre' => 'nullable|string|max:255',
-            'site_galeries.*.image' => 'nullable|string|max:255',
-
-            'site_mission'       => 'nullable|array',
-            'site_mission.*.icone' => 'nullable|string|max:10',
-            'site_mission.*.titre' => 'nullable|string|max:100',
-            'site_mission.*.description' => 'nullable|string|max:255',
-
-            'site_valeurs'       => 'nullable|array',
-            'site_valeurs.*.icone' => 'nullable|string|max:10',
-            'site_valeurs.*.titre' => 'nullable|string|max:100',
-            'site_valeurs.*.description' => 'nullable|string|max:255',
-
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // Google Maps Embed (reste une chaîne)
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'site_maps_embed' => 'nullable|string',
-
-            // ... gardez le reste ...
+            // ... (gardez le reste de vos validations) ...
         ]);
 
         // ===== GESTION DES TOGGLES =====
@@ -77,7 +56,8 @@ class ConfigurationController extends Controller
             'certificat_duplicata_active',
             'certificat_show_note',
             'certificat_show_mention',
-            'certificat_show_qrcode'
+            'certificat_show_qrcode',
+            'app_download_active', // ✅ AJOUTÉ
         ];
         foreach ($toggles as $toggle) {
             Configuration::set($toggle, $request->has($toggle) ? 1 : 0);
@@ -89,14 +69,16 @@ class ConfigurationController extends Controller
         }
 
         // ===== 2. GESTION DES CHAMPS (SIMPLES ET TABLEAUX) =====
-        $champsExclure = array_merge(['_token', '_method', 'certificat_background_file', 'galerie_files'], $toggles);
+        $champsExclure = array_merge(
+            ['_token', '_method', 'certificat_background_file', 'galerie_files', 'app_android_file', 'app_windows_file'], // ✅ AJOUTÉ
+            $toggles
+        );
 
         foreach ($request->except($champsExclure) as $cle => $valeur) {
             if (in_array($cle, $toggles)) {
-                continue; // déjà traité
+                continue;
             }
 
-            // SI C'EST UN TABLEAU, ON LE CONVERTIT EN JSON
             if (is_array($valeur)) {
                 $valeur = json_encode($valeur);
             }
@@ -114,10 +96,31 @@ class ConfigurationController extends Controller
             Configuration::set('site_galeries', json_encode($galeries));
         }
 
-        // ===== 4. VIDER LE CACHE =====
+        // ===== 4. GESTION FICHIERS APPLICATIONS =====
+        if ($request->hasFile('app_android_file')) {
+            // Supprimer l'ancien fichier
+            $ancien = Configuration::get('app_android_path');
+            if ($ancien && Storage::disk('public')->exists($ancien)) {
+                Storage::disk('public')->delete($ancien);
+            }
+            $path = $request->file('app_android_file')->store('apps', 'public');
+            Configuration::set('app_android_path', $path);
+        }
+
+        if ($request->hasFile('app_windows_file')) {
+            // Supprimer l'ancien fichier
+            $ancien = Configuration::get('app_windows_path');
+            if ($ancien && Storage::disk('public')->exists($ancien)) {
+                Storage::disk('public')->delete($ancien);
+            }
+            $path = $request->file('app_windows_file')->store('apps', 'public');
+            Configuration::set('app_windows_path', $path);
+        }
+
+        // ===== 5. VIDER LE CACHE =====
         Cache::flush();
 
-        // ===== 5. LOG =====
+        // ===== 6. LOG =====
         Log::info('Configurations mises à jour par ' . auth()->user()->email);
 
         return back()->with('success', '✅ Toutes les configurations ont été mises à jour !');

@@ -40,6 +40,10 @@
                     class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
                     📊 Stats & Arguments
                 </button>
+                <button type="button" onclick="showTab('apps')" id="tab-apps"
+                    class="tab-btn px-4 py-2.5 rounded-lg border font-semibold text-xs transition-all whitespace-nowrap shrink-0 bg-slate-950 border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30">
+                    📱 Applications
+                </button>
             </div>
         </div>
 
@@ -157,6 +161,90 @@
                     <label class="edc-label">Taille maximale des images (MB)</label>
                     <input type="number" name="upload_image_taille_max_mb" min="1" max="10"
                         value="{{ \App\Models\Configuration::get('upload_image_taille_max_mb', 2) }}" class="edc-input">
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ PANEL : APPLICATIONS MOBILES ══ --}}
+        <div id="panel-apps" class="settings-panel space-y-6" style="display:none;">
+            <div class="edc-card p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold" style="color: var(--edc-text-primary);">📱 Applications Mobiles & Desktop</h3>
+                    <span class="text-xs text-slate-500">Versions disponibles au téléchargement public</span>
+                </div>
+
+                <p class="text-xs text-slate-500">
+                    Les fichiers uploadés ici seront disponibles en téléchargement depuis la page d'accueil du site.
+                </p>
+
+                {{-- Android APK --}}
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🤖</span>
+                        <span class="text-sm font-bold text-slate-200">Android (APK)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Fichier APK</label>
+                            <input type="file" name="app_android_file" accept=".apk" class="text-xs text-slate-300 w-full">
+                            @if(\App\Models\Configuration::get('app_android_path'))
+                                <p class="text-[10px] text-emerald-400 mt-1">✅ Fichier actuel : {{ \App\Models\Configuration::get('app_android_path') }}</p>
+                            @endif
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Version</label>
+                            <input type="text" name="app_android_version" value="{{ \App\Models\Configuration::get('app_android_version', '1.0.0') }}" 
+                                class="edc-input text-xs p-2" placeholder="ex: 2.1.0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Notes de version</label>
+                            <input type="text" name="app_android_notes" value="{{ \App\Models\Configuration::get('app_android_notes') }}" 
+                                class="edc-input text-xs p-2" placeholder="Correctifs et améliorations">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Windows EXE --}}
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">💻</span>
+                        <span class="text-sm font-bold text-slate-200">Windows (EXE)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Fichier EXE</label>
+                            <input type="file" name="app_windows_file" accept=".exe,.msi,.zip" class="text-xs text-slate-300 w-full">
+                            @if(\App\Models\Configuration::get('app_windows_path'))
+                                <p class="text-[10px] text-emerald-400 mt-1">✅ Fichier actuel : {{ \App\Models\Configuration::get('app_windows_path') }}</p>
+                            @endif
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Version</label>
+                            <input type="text" name="app_windows_version" value="{{ \App\Models\Configuration::get('app_windows_version', '1.0.0') }}" 
+                                class="edc-input text-xs p-2" placeholder="ex: 1.5.0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Notes de version</label>
+                            <input type="text" name="app_windows_notes" value="{{ \App\Models\Configuration::get('app_windows_notes') }}" 
+                                class="edc-input text-xs p-2" placeholder="Première version stable">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Activation --}}
+                <div class="toggle-container p-4 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-bold text-slate-200 block">📢 Afficher la section téléchargement</span>
+                        <span class="text-xs text-slate-500">Affiche les boutons de téléchargement sur la page d'accueil</span>
+                    </div>
+                    @php $active = \App\Models\Configuration::get('app_download_active', '0'); @endphp
+                    <label class="toggle-wrapper flex items-center gap-3 cursor-pointer shrink-0">
+                        <input type="checkbox" name="app_download_active" value="1" class="absolute opacity-0 w-0 h-0 structural-toggle" {{ $active == '1' ? 'checked' : '' }}>
+                        <span class="toggle-slider w-11 h-6 bg-slate-800 rounded-full relative transition-all duration-200 block border border-slate-700 after:content-[''] after:absolute after:w-4 after:h-4 after:bg-white after:rounded-full after:top-0.5 after:left-0.5 after:transition-all"></span>
+                        <span class="toggle-status text-xs font-bold w-16 {{ $active == '1' ? 'text-emerald-400' : 'text-slate-500' }}">
+                            {{ $active == '1' ? 'Activé' : 'Désactivé' }}
+                        </span>
+                    </label>
                 </div>
             </div>
         </div>
