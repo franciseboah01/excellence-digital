@@ -5,7 +5,7 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-extrabold" style="color: var(--edc-text-primary);">📚 Mes Formations</h1>
-        <a href="{{ route('client.formations-disponibles') }}" class="btn-primary btn-sm">
+        <a href="{{ route('client.formations.disponibles') }}" class="btn-primary btn-sm">
             + Voir les formations disponibles
         </a>
     </div>

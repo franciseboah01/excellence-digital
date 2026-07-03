@@ -110,8 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
     Route::get('/messages/non-lus/count', [MessageController::class, 'compterNonLus'])->name('messages.non-lus');
     Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
-    Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('certificats.telecharger');
-    Route::get('/certificats/{certificat}/apercu', [CertificatController::class, 'apercu'])->name('certificats.apercu');
+    //Route::get('/certificats/{certificat}/telecharger', [CertificatController::class, 'telecharger'])->name('certificats.telecharger');
+    //Route::get('/certificats/{certificat}/apercu', [CertificatController::class, 'apercu'])->name('certificats.apercu');
 
 
 });
