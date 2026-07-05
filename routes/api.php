@@ -244,3 +244,16 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
+Route::get('/app/version', function () {
+    $androidVersion = \App\Models\Configuration::get('app_android_version');
+    $androidPath = \App\Models\Configuration::get('app_android_path');
+    
+    return response()->json([
+        'android' => [
+            'version' => $androidVersion ?: null,
+            'apk_url' => $androidVersion ? asset('storage/' . $androidPath) : null,
+            'notes' => \App\Models\Configuration::get('app_android_notes'),
+        ],
+    ]);
+});
